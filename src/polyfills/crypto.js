@@ -1,3 +1,5 @@
+/* global globalThis */
+
 const getRandomValues =
   globalThis.crypto && typeof globalThis.crypto.getRandomValues === 'function'
     ? globalThis.crypto.getRandomValues.bind(globalThis.crypto)
