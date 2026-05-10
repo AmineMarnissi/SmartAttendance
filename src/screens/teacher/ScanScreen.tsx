@@ -9,7 +9,7 @@ const ScanScreen = ({navigation, route}: any) => {
   const {classId} = route.params || {};
   const [hasPermission, setHasPermission] = useState(false);
   const device = useCameraDevice('front'); // Or 'back' depending on preference
-  const {frameOutput, detectedStudents, modelState} =
+  const {frameProcessor, detectedStudents, modelState} =
     useFaceRecognition(classId);
 
   useEffect(() => {
@@ -49,7 +49,8 @@ const ScanScreen = ({navigation, route}: any) => {
         style={StyleSheet.absoluteFill}
         device={device}
         isActive={true}
-        outputs={[frameOutput]}
+        pixelFormat="yuv"
+        frameProcessor={frameProcessor}
       />
 
       {/* Overlays for bounding boxes */}

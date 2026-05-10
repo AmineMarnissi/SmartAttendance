@@ -6,18 +6,17 @@ jest.mock('@op-engineering/op-sqlite', () => ({
   })),
 }));
 
-jest.mock('react-native-vision-camera', () => ({
-  Camera: () => null,
-  VisionCamera: {
-    cameraPermissionStatus: 'authorized',
-    requestCameraPermission: jest.fn().mockResolvedValue(true),
-  },
-  useCameraDevice: jest.fn().mockReturnValue({position: 'front'}),
-  useFrameOutput: jest.fn().mockReturnValue({
-    thread: {},
-    setOnFrameDroppedCallback: jest.fn(),
-  }),
-}));
+jest.mock('react-native-vision-camera', () => {
+  const Camera = () => null;
+  Camera.requestCameraPermission = jest.fn().mockResolvedValue('granted');
+  Camera.getCameraPermissionStatus = jest.fn().mockReturnValue('granted');
+
+  return {
+    Camera,
+    useCameraDevice: jest.fn().mockReturnValue({position: 'front'}),
+    useFrameProcessor: jest.fn(callback => callback),
+  };
+});
 
 jest.mock('react-native-fast-tflite', () => ({
   loadTensorflowModel: jest.fn().mockResolvedValue({
@@ -41,8 +40,11 @@ jest.mock('react-native-nitro-modules', () => ({
   },
 }));
 
-jest.mock('vision-camera-face-detector', () => ({
-  scanFaces: jest.fn().mockReturnValue([]),
+jest.mock('react-native-vision-camera-face-detector', () => ({
+  useFaceDetector: jest.fn().mockReturnValue({
+    detectFaces: jest.fn().mockReturnValue([]),
+    stopListeners: jest.fn(),
+  }),
 }));
 
 jest.mock('vision-camera-resize-plugin', () => ({

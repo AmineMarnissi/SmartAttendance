@@ -3,10 +3,10 @@ import {View, StyleSheet, Text, Alert} from 'react-native';
 import {
   Camera,
   useCameraDevice,
-  useFrameOutput,
+  useFrameProcessor,
 } from 'react-native-vision-camera';
 import {Button, ProgressBar, Title, IconButton} from 'react-native-paper';
-import {scanFaces} from 'vision-camera-face-detector';
+import {useFaceDetector} from 'react-native-vision-camera-face-detector';
 import {useResizePlugin} from 'vision-camera-resize-plugin';
 import {useRunOnJS} from 'react-native-worklets-core';
 import {studentRepository} from '../../services/database/studentRepository';
@@ -37,6 +37,18 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
   const latestQuality = useRef(0);
   const {resize} = useResizePlugin();
   const embedder = useFaceEmbedder();
+  const {detectFaces} = useFaceDetector(
+    React.useMemo(
+      () => ({
+        performanceMode: 'accurate' as const,
+        contourMode: 'all' as const,
+        classificationMode: 'all' as const,
+        minFaceSize: 0.15,
+        cameraFacing: 'front' as const,
+      }),
+      [],
+    ),
+  );
 
   useEffect(() => {
     (async () => {
@@ -55,65 +67,57 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
   }, []);
 
   const updateLiveFaceOnJS = useRunOnJS(updateLiveFace, [updateLiveFace]);
-  const frameOutput = useFrameOutput({
-    pixelFormat: 'yuv',
-    onFrame(frame) {
+  const frameProcessor = useFrameProcessor(
+    frame => {
       'worklet';
 
-      try {
-        const faces = scanFaces(frame);
-        const tflite = embedder.boxedModel?.unbox();
+      const faces = detectFaces(frame);
+      const tflite = embedder.boxedModel?.unbox();
 
-        if (faces.length === 0 || tflite == null) {
-          updateLiveFaceOnJS(null);
-          return;
-        }
-
-        let primaryFace = faces[0];
-        for (const face of faces) {
-          if (
-            face.bounds.width * face.bounds.height >
-            primaryFace.bounds.width * primaryFace.bounds.height
-          ) {
-            primaryFace = face;
-          }
-        }
-
-        const crop = buildFaceCrop(
-          primaryFace.bounds,
-          frame.width,
-          frame.height,
-        );
-        const resizedFace = resize(frame, {
-          crop,
-          scale: {
-            width: FACE_EMBEDDING_INPUT_SIZE,
-            height: FACE_EMBEDDING_INPUT_SIZE,
-          },
-          pixelFormat: 'rgb',
-          dataType: 'float32',
-        }) as Float32Array;
-        const input = createEmbeddingInput(resizedFace);
-        const output = tflite.runSync([getExactArrayBuffer(input)]);
-        const embedding = l2NormalizeEmbedding(new Float32Array(output[0]));
-        const quality = estimateFaceQuality(
-          primaryFace.bounds,
-          frame.width,
-          frame.height,
-          primaryFace.yawAngle,
-          primaryFace.pitchAngle,
-        );
-
-        updateLiveFaceOnJS({
-          bounds: primaryFace.bounds,
-          quality,
-          embedding: Array.from(embedding),
-        });
-      } finally {
-        frame.dispose();
+      if (faces.length === 0 || tflite == null) {
+        updateLiveFaceOnJS(null);
+        return;
       }
+
+      let primaryFace = faces[0];
+      for (const face of faces) {
+        if (
+          face.bounds.width * face.bounds.height >
+          primaryFace.bounds.width * primaryFace.bounds.height
+        ) {
+          primaryFace = face;
+        }
+      }
+
+      const crop = buildFaceCrop(primaryFace.bounds, frame.width, frame.height);
+      const resizedFace = resize(frame, {
+        crop,
+        scale: {
+          width: FACE_EMBEDDING_INPUT_SIZE,
+          height: FACE_EMBEDDING_INPUT_SIZE,
+        },
+        pixelFormat: 'rgb',
+        dataType: 'float32',
+      }) as Float32Array;
+      const input = createEmbeddingInput(resizedFace);
+      const output = tflite.runSync([getExactArrayBuffer(input)]);
+      const embedding = l2NormalizeEmbedding(new Float32Array(output[0]));
+      const quality = estimateFaceQuality(
+        primaryFace.bounds,
+        frame.width,
+        frame.height,
+        primaryFace.yawAngle,
+        primaryFace.pitchAngle,
+      );
+
+      updateLiveFaceOnJS({
+        bounds: primaryFace.bounds,
+        quality,
+        embedding: Array.from(embedding),
+      });
     },
-  });
+    [detectFaces, embedder.boxedModel, resize, updateLiveFaceOnJS],
+  );
 
   const handleCapture = async () => {
     if (captureCount >= FACE_EMBEDDING_CAPTURE_TARGETS || isCapturing) {
@@ -210,7 +214,8 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
           style={styles.camera}
           device={device}
           isActive={true}
-          outputs={[frameOutput]}
+          pixelFormat="yuv"
+          frameProcessor={frameProcessor}
         />
 
         {liveFaceBounds && (

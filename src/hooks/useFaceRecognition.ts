@@ -1,6 +1,6 @@
-import {useState, useCallback, useEffect} from 'react';
-import {useFrameOutput} from 'react-native-vision-camera';
-import {scanFaces} from 'vision-camera-face-detector';
+import {useState, useCallback, useEffect, useMemo} from 'react';
+import {useFrameProcessor} from 'react-native-vision-camera';
+import {useFaceDetector} from 'react-native-vision-camera-face-detector';
 import {useResizePlugin} from 'vision-camera-resize-plugin';
 import {useRunOnJS} from 'react-native-worklets-core';
 import {
@@ -88,6 +88,17 @@ export const useFaceRecognition = (classId?: number) => {
   const [studentNames, setStudentNames] = useState<Record<number, string>>({});
   const {resize} = useResizePlugin();
   const embedder = useFaceEmbedder();
+  const faceDetectionOptions = useMemo(
+    () => ({
+      performanceMode: 'accurate' as const,
+      contourMode: 'all' as const,
+      classificationMode: 'all' as const,
+      minFaceSize: 0.15,
+      cameraFacing: 'front' as const,
+    }),
+    [],
+  );
+  const {detectFaces} = useFaceDetector(faceDetectionOptions);
 
   useEffect(() => {
     if (classId) {
@@ -120,58 +131,61 @@ export const useFaceRecognition = (classId?: number) => {
   const updateResultsOnJS = useRunOnJS(updateResults, [updateResults]);
   const boxedModel = embedder.boxedModel;
 
-  const frameOutput = useFrameOutput({
-    pixelFormat: 'yuv',
-    onFrame(frame) {
+  const frameProcessor = useFrameProcessor(
+    frame => {
       'worklet';
 
-      try {
-        const faces = scanFaces(frame);
-        const results: DetectedStudent[] = [];
-        const tflite = boxedModel?.unbox();
+      const faces = detectFaces(frame);
+      const results: DetectedStudent[] = [];
+      const tflite = boxedModel?.unbox();
 
-        for (const face of faces) {
-          let match: {studentId: number; confidence: number} | null = null;
+      for (const face of faces) {
+        let match: {studentId: number; confidence: number} | null = null;
 
-          if (tflite != null && enrolledEmbeddings.length > 0) {
-            const crop = buildFaceCrop(face.bounds, frame.width, frame.height);
-            const resizedFace = resize(frame, {
-              crop,
-              scale: {
-                width: FACE_EMBEDDING_INPUT_SIZE,
-                height: FACE_EMBEDDING_INPUT_SIZE,
-              },
-              pixelFormat: 'rgb',
-              dataType: 'float32',
-            }) as Float32Array;
-            const input = createEmbeddingInput(resizedFace);
-            const output = tflite.runSync([getExactArrayBuffer(input)]);
-            const liveEmbedding = l2NormalizeEmbedding(
-              new Float32Array(output[0]),
-            );
-            match = matchEmbeddingWorklet(liveEmbedding, enrolledEmbeddings);
-          }
-
-          results.push({
-            studentId: match?.studentId ?? null,
-            studentName:
-              match?.studentId != null
-                ? studentNames[match.studentId]
-                : undefined,
-            confidence: match?.confidence ?? 0,
-            bounds: face.bounds,
-          });
+        if (tflite != null && enrolledEmbeddings.length > 0) {
+          const crop = buildFaceCrop(face.bounds, frame.width, frame.height);
+          const resizedFace = resize(frame, {
+            crop,
+            scale: {
+              width: FACE_EMBEDDING_INPUT_SIZE,
+              height: FACE_EMBEDDING_INPUT_SIZE,
+            },
+            pixelFormat: 'rgb',
+            dataType: 'float32',
+          }) as Float32Array;
+          const input = createEmbeddingInput(resizedFace);
+          const output = tflite.runSync([getExactArrayBuffer(input)]);
+          const liveEmbedding = l2NormalizeEmbedding(
+            new Float32Array(output[0]),
+          );
+          match = matchEmbeddingWorklet(liveEmbedding, enrolledEmbeddings);
         }
 
-        updateResultsOnJS(results);
-      } finally {
-        frame.dispose();
+        results.push({
+          studentId: match?.studentId ?? null,
+          studentName:
+            match?.studentId != null
+              ? studentNames[match.studentId]
+              : undefined,
+          confidence: match?.confidence ?? 0,
+          bounds: face.bounds,
+        });
       }
+
+      updateResultsOnJS(results);
     },
-  });
+    [
+      boxedModel,
+      detectFaces,
+      enrolledEmbeddings,
+      resize,
+      studentNames,
+      updateResultsOnJS,
+    ],
+  );
 
   return {
-    frameOutput,
+    frameProcessor,
     detectedStudents,
     modelState: embedder.state,
   };

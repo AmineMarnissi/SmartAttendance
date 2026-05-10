@@ -1,17 +1,19 @@
-import {open, type QueryResult, type Scalar} from '@op-engineering/op-sqlite';
+import {open, type QueryResult} from '@op-engineering/op-sqlite';
 
-export type DbRow = Record<string, Scalar>;
+type DbValue = string | number | boolean | null | ArrayBuffer | Uint8Array;
+
+export type DbRow = Record<string, DbValue>;
 export type DbQueryResult = Omit<QueryResult, 'rows'> & {
   rows: DbRow[];
 };
 
-type DbParam = Scalar | undefined;
+type DbParam = DbValue | undefined;
 
 const sqlite = open({
   name: 'SmartAttendance.db',
 });
 
-const normalizeParams = (params: DbParam[] = []): Scalar[] =>
+const normalizeParams = (params: DbParam[] = []): DbValue[] =>
   params.map(param => (param === undefined ? null : param));
 
 export const db = {
@@ -22,7 +24,7 @@ export const db = {
     const result = await sqlite.execute(query, normalizeParams(params));
     return {
       ...result,
-      rows: result.rows ?? [],
+      rows: result.rows?._array ?? [],
     };
   },
 };

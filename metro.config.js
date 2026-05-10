@@ -12,6 +12,9 @@ const {assetExts} = defaultConfig.resolver;
 const config = {
   resolver: {
     assetExts: [...assetExts, 'tflite'],
+    extraNodeModules: {
+      crypto: require.resolve('./src/polyfills/crypto.js'),
+    },
   },
 };
 
