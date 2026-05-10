@@ -1,14 +1,32 @@
 import RNFS from 'react-native-fs';
 import {Share} from 'react-native';
 
+const ATTENDANCE_EXPORT_COLUMNS = [
+  'date',
+  'student_id',
+  'status',
+  'arrival_time',
+  'method',
+];
+
+const escapeCsvValue = (value: unknown): string => {
+  if (value == null) {
+    return '';
+  }
+
+  const text = String(value);
+  const escaped = text.replace(/"/g, '""');
+  return /[",\r\n]/.test(escaped) ? `"${escaped}"` : escaped;
+};
+
 export const CSVExportService = {
   exportAttendance: async (data: any[], fileName: string): Promise<void> => {
-    if (data.length === 0) {
-      throw new Error('No data to export');
-    }
-
-    const headers = Object.keys(data[0]).join(',');
-    const rows = data.map(obj => Object.values(obj).join(',')).join('\n');
+    const columns =
+      data.length > 0 ? Object.keys(data[0]) : ATTENDANCE_EXPORT_COLUMNS;
+    const headers = columns.join(',');
+    const rows = data
+      .map(obj => columns.map(column => escapeCsvValue(obj[column])).join(','))
+      .join('\n');
     const csvContent = `${headers}\n${rows}`;
 
     const path = `${RNFS.DocumentDirectoryPath}/${fileName}.csv`;

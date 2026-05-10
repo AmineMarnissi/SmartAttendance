@@ -37,6 +37,7 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
   const latestQuality = useRef(0);
   const {resize} = useResizePlugin();
   const embedder = useFaceEmbedder();
+  const boxedModel = embedder.boxedModel;
   const {detectFaces} = useFaceDetector(
     React.useMemo(
       () => ({
@@ -72,7 +73,7 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
       'worklet';
 
       const faces = detectFaces(frame);
-      const tflite = embedder.boxedModel?.unbox();
+      const tflite = boxedModel?.unbox();
 
       if (faces.length === 0 || tflite == null) {
         updateLiveFaceOnJS(null);
@@ -89,7 +90,13 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
         }
       }
 
-      const crop = buildFaceCrop(primaryFace.bounds, frame.width, frame.height);
+      const bounds = {
+        x: primaryFace.bounds.x,
+        y: primaryFace.bounds.y,
+        width: primaryFace.bounds.width,
+        height: primaryFace.bounds.height,
+      };
+      const crop = buildFaceCrop(bounds, frame.width, frame.height);
       const resizedFace = resize(frame, {
         crop,
         scale: {
@@ -103,7 +110,7 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
       const output = tflite.runSync([getExactArrayBuffer(input)]);
       const embedding = l2NormalizeEmbedding(new Float32Array(output[0]));
       const quality = estimateFaceQuality(
-        primaryFace.bounds,
+        bounds,
         frame.width,
         frame.height,
         primaryFace.yawAngle,
@@ -111,12 +118,12 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
       );
 
       updateLiveFaceOnJS({
-        bounds: primaryFace.bounds,
+        bounds,
         quality,
         embedding: Array.from(embedding),
       });
     },
-    [detectFaces, embedder.boxedModel, resize, updateLiveFaceOnJS],
+    [boxedModel, detectFaces, resize, updateLiveFaceOnJS],
   );
 
   const handleCapture = async () => {
