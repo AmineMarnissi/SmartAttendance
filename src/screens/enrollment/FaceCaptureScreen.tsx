@@ -172,9 +172,11 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
         averageEmbedding[i] = sum / capturedEmbeddings.current.length;
       }
 
+      const normalizedAverage = l2NormalizeEmbedding(averageEmbedding);
+
       await embeddingStorage.save(
         studentId,
-        averageEmbedding,
+        normalizedAverage,
         latestQuality.current,
       );
 

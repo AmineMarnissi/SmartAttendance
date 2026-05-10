@@ -130,7 +130,14 @@ export const createEmbeddingInput = (resizedFace: Float32Array) => {
 
 export const getExactArrayBuffer = (data: Uint8Array | Float32Array) => {
   'worklet';
-  return data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
+  if (data.byteOffset === 0 && data.byteLength === data.buffer.byteLength) {
+    return data.buffer;
+  }
+  const buffer = new ArrayBuffer(data.byteLength);
+  new Uint8Array(buffer).set(
+    new Uint8Array(data.buffer, data.byteOffset, data.byteLength),
+  );
+  return buffer;
 };
 
 export const l2NormalizeEmbedding = (embedding: Float32Array) => {
