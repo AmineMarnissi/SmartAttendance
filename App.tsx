@@ -45,7 +45,7 @@ function App(): React.JSX.Element {
             <>
               <ActivityIndicator size="large" />
               <Text style={styles.startupTitle}>
-                Preparing SmartAttendance…
+                Preparing RegistreIntelligent...
               </Text>
               <Text style={styles.startupText}>
                 Opening attendance mode without login.

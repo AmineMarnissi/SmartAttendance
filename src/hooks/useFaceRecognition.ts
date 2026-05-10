@@ -71,6 +71,14 @@ const matchEmbeddingWorklet = (
     }
   }
 
+  // Log best similarity every ~30 frames (rough throttle via modulo not available in worklet,
+  // so we always log — remove in production)
+  console.log(
+    `[FaceRecognition] Best similarity=${bestConfidence.toFixed(
+      4,
+    )} studentId=${bestStudentId} threshold=${MATCH_THRESHOLD}`,
+  );
+
   if (bestStudentId == null || bestConfidence < MATCH_THRESHOLD) {
     return null;
   }
@@ -101,20 +109,39 @@ export const useFaceRecognition = (classId?: number) => {
   const {detectFaces} = useFaceDetector(faceDetectionOptions);
 
   useEffect(() => {
-    if (classId) {
-      loadClassData(classId);
+    const numericClassId = classId ? Number(classId) : null;
+    console.log(
+      '[useFaceRecognition] classId prop:',
+      classId,
+      'numeric:',
+      numericClassId,
+    );
+    if (numericClassId) {
+      loadClassData(numericClassId);
     } else {
+      console.warn(
+        '[useFaceRecognition] classId is null/undefined — no embeddings loaded',
+      );
       setEnrolledEmbeddings([]);
       setStudentNames({});
     }
   }, [classId]);
 
   const loadClassData = async (id: number) => {
+    console.log('[useFaceRecognition] Loading data for classId:', id);
     const [embeddings, students] = await Promise.all([
       embeddingStorage.getAllForClass(id),
       studentRepository.getForClass(id),
     ]);
 
+    console.log(
+      '[useFaceRecognition] Loaded',
+      embeddings.length,
+      'embeddings and',
+      students.length,
+      'students for class',
+      id,
+    );
     setEnrolledEmbeddings(embeddings);
     setStudentNames(
       students.reduce<Record<number, string>>((acc, student) => {

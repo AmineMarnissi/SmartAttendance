@@ -1,7 +1,6 @@
 import React, {useState, useEffect} from 'react';
 import {View, StyleSheet, ScrollView, Text} from 'react-native';
 import {Button, List, Avatar} from 'react-native-paper';
-import {useAuthStore} from '../../store/useAuthStore';
 import {classRepository} from '../../services/database/classRepository';
 import {Class} from '../../types/models';
 import {attendanceRepository} from '../../services/database/attendanceRepository';
@@ -9,7 +8,6 @@ import StatCard from '../../components/analytics/StatCard';
 import AttendanceChart from '../../components/analytics/AttendanceChart';
 
 const HomeScreen = ({navigation}: any) => {
-  const user = useAuthStore(state => state.user);
   const [classes, setClasses] = useState<Class[]>([]);
   const [overallRate, setOverallRate] = useState(0);
   const [trendData, setTrendData] = useState<{date: string; rate: number}[]>(
@@ -18,23 +16,29 @@ const HomeScreen = ({navigation}: any) => {
 
   useEffect(() => {
     const loadClasses = async () => {
-      const teacherClasses = await classRepository.getByTeacher(user.id);
-      setClasses(teacherClasses);
+      // Use getAll so classes appear for any user role (admin or teacher)
+      const allClasses = await classRepository.getAll();
+      console.log(
+        '[HomeScreen] Loaded classes:',
+        allClasses.length,
+        allClasses.map(c => `${c.id}:${c.name}`),
+      );
+      setClasses(allClasses);
 
-      if (teacherClasses.length > 0) {
+      if (allClasses.length > 0) {
         const trend = await attendanceRepository.getDailyAttendanceTrend(
-          teacherClasses[0].id,
+          allClasses[0].id,
         );
         setTrendData(trend);
       }
     };
 
     const loadOverallStats = async () => {
-      const teacherClasses = await classRepository.getByTeacher(user.id);
+      const allClasses = await classRepository.getAll();
       let totalPresent = 0;
       let totalRecords = 0;
 
-      for (const cls of teacherClasses) {
+      for (const cls of allClasses) {
         const stats = await attendanceRepository.getClassAttendanceStats(
           cls.id,
         );
@@ -51,11 +55,9 @@ const HomeScreen = ({navigation}: any) => {
       );
     };
 
-    if (user) {
-      loadClasses();
-      loadOverallStats();
-    }
-  }, [user]);
+    loadClasses();
+    loadOverallStats();
+  }, []);
 
   return (
     <ScrollView style={styles.container}>

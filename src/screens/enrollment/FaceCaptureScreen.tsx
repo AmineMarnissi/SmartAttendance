@@ -155,14 +155,28 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
 
   const saveStudent = async () => {
     try {
+      console.log('[FaceCapture] Saving student...', studentData);
       const studentId = await studentRepository.create({
         student_code: studentData.studentCode,
         first_name: studentData.firstName,
         last_name: studentData.lastName,
       });
+      console.log('[FaceCapture] Created student with id:', studentId);
       await classRepository.enrollStudent(studentId, studentData.classId);
+      console.log(
+        '[FaceCapture] Enrolled student',
+        studentId,
+        'in class',
+        studentData.classId,
+      );
 
       const embeddingLength = capturedEmbeddings.current[0]?.length ?? 0;
+      console.log(
+        '[FaceCapture] Averaging',
+        capturedEmbeddings.current.length,
+        'embeddings of length',
+        embeddingLength,
+      );
       const averageEmbedding = new Float32Array(embeddingLength);
       for (let i = 0; i < embeddingLength; i++) {
         let sum = 0;
@@ -173,18 +187,25 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
       }
 
       const normalizedAverage = l2NormalizeEmbedding(averageEmbedding);
+      console.log(
+        '[FaceCapture] Normalized embedding, length:',
+        normalizedAverage.length,
+        'quality:',
+        latestQuality.current,
+      );
 
       await embeddingStorage.save(
         studentId,
         normalizedAverage,
         latestQuality.current,
       );
+      console.log('[FaceCapture] Embedding saved successfully!');
 
       Alert.alert('Success', 'Student enrolled successfully', [
         {text: 'OK', onPress: () => navigation.navigate('AdminDashboard')},
       ]);
     } catch (error) {
-      console.error(error);
+      console.error('[FaceCapture] Failed to save student:', error);
       Alert.alert('Error', 'Failed to save student data');
     }
   };

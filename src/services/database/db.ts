@@ -37,10 +37,35 @@ export const getFirstRow = <TRow extends object = DbRow>(
   result: DbQueryResult,
 ): TRow | null => (result.rows[0] as unknown as TRow | undefined) ?? null;
 
+export const DB_VERSION = 2; // Increment to force wipe corrupt embedding data
+
 export const initDatabase = async () => {
   try {
     // Enable foreign keys
     await db.execute('PRAGMA foreign_keys = ON;');
+
+    // Check DB version — wipe all data if version changed (clears corrupt BLOBs from old builds)
+    const versionResult = await db.execute('PRAGMA user_version;');
+    const currentVersion = (versionResult.rows[0] as any)?.user_version ?? 0;
+    console.log(
+      `[DB] Current version: ${currentVersion}, expected: ${DB_VERSION}`,
+    );
+
+    if (currentVersion !== DB_VERSION) {
+      console.log(
+        '[DB] Version mismatch — dropping tables to clear corrupt data...',
+      );
+      await db.execute('DROP TABLE IF EXISTS face_embeddings;');
+      await db.execute('DROP TABLE IF EXISTS attendance_records;');
+      await db.execute('DROP TABLE IF EXISTS attendance_sessions;');
+      await db.execute('DROP TABLE IF EXISTS enrollments;');
+      await db.execute('DROP TABLE IF EXISTS students;');
+      await db.execute('DROP TABLE IF EXISTS classes;');
+      await db.execute('DROP TABLE IF EXISTS users;');
+      await db.execute('DROP TABLE IF EXISTS schools;');
+      await db.execute(`PRAGMA user_version = ${DB_VERSION};`);
+      console.log('[DB] Tables dropped, will re-create and re-seed.');
+    }
 
     // Users table
     await db.execute(`

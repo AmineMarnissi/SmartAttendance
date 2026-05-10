@@ -1,7 +1,6 @@
 import {userRepository} from './userRepository';
 import {classRepository} from './classRepository';
 import {studentRepository} from './studentRepository';
-import {embeddingStorage} from '../faceRecognition/EmbeddingStorage';
 import bcrypt from 'bcryptjs';
 
 export const seedData = async () => {
@@ -53,15 +52,9 @@ export const seedData = async () => {
       last_name: 'Johnson',
     });
 
-    // Enroll Students
+    // Enroll Students (no face embeddings in seed - they must be enrolled via FaceCaptureScreen)
     await classRepository.enrollStudent(student1Id, classId);
     await classRepository.enrollStudent(student2Id, classId);
-
-    // Create Dummy Embeddings for testing
-    const dummyAlice = new Float32Array(128).fill(0.1);
-    const dummyBob = new Float32Array(128).fill(0.2);
-    await embeddingStorage.save(student1Id, dummyAlice);
-    await embeddingStorage.save(student2Id, dummyBob);
 
     console.log('Seeding completed successfully');
   } catch (error) {

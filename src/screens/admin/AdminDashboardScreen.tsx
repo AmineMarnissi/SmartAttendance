@@ -2,28 +2,41 @@ import React, {useEffect, useState} from 'react';
 import {View, StyleSheet, ScrollView, Text} from 'react-native';
 import {Card, Button, List} from 'react-native-paper';
 import {useAuthStore} from '../../store/useAuthStore';
-import {attendanceRepository} from '../../services/database/attendanceRepository';
+import {studentRepository} from '../../services/database/studentRepository';
+import {db} from '../../services/database/db';
 import StatCard from '../../components/analytics/StatCard';
 
 const AdminDashboardScreen = ({navigation}: any) => {
   useAuthStore(state => state.user);
-  const [stats, setStats] = useState({present: 0, absent: 0, total: 0});
+  const [stats, setStats] = useState({enrolled: 0, withFace: 0, total: 0});
 
   useEffect(() => {
     loadStats();
   }, []);
 
   const loadStats = async () => {
-    const rawStats = await attendanceRepository.getSchoolWideStats();
-    let present = 0;
-    let total = 0;
-    rawStats.forEach((s: any) => {
-      if (s.status === 'present' || s.status === 'late') {
-        present += s.count;
-      }
-      total += s.count;
-    });
-    setStats({present, absent: total - present, total});
+    try {
+      // Count total active students
+      const allStudents = await studentRepository.getAllActive();
+      // Count students with face embeddings
+      const embedResult = await db.execute(
+        'SELECT COUNT(DISTINCT student_id) as cnt FROM face_embeddings;',
+      );
+      const withFace = (embedResult.rows[0] as any)?.cnt ?? 0;
+      console.log(
+        '[AdminDashboard] Students:',
+        allStudents.length,
+        'With face:',
+        withFace,
+      );
+      setStats({
+        enrolled: allStudents.length,
+        withFace,
+        total: allStudents.length,
+      });
+    } catch (e) {
+      console.error('[AdminDashboard] Failed to load stats:', e);
+    }
   };
 
   return (
@@ -34,15 +47,15 @@ const AdminDashboardScreen = ({navigation}: any) => {
 
       <View style={styles.statGrid}>
         <StatCard
-          title="School Rate"
-          value={`${
-            stats.total > 0
-              ? Math.round((stats.present / stats.total) * 100)
-              : 0
-          }%`}
+          title="Enrolled Students"
+          value={stats.enrolled}
           color="#4CAF50"
         />
-        <StatCard title="Total Records" value={stats.total} color="#FF9800" />
+        <StatCard
+          title="Face Enrolled"
+          value={stats.withFace}
+          color="#FF9800"
+        />
       </View>
 
       <Card style={styles.card}>
