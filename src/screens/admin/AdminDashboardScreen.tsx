@@ -2,8 +2,6 @@ import React, {useEffect, useState} from 'react';
 import {View, StyleSheet, ScrollView, Text} from 'react-native';
 import {Card, Button, List} from 'react-native-paper';
 import {useAuthStore} from '../../store/useAuthStore';
-import {AuthService} from '../../services/auth/AuthService';
-
 import {attendanceRepository} from '../../services/database/attendanceRepository';
 import StatCard from '../../components/analytics/StatCard';
 
@@ -31,10 +29,7 @@ const AdminDashboardScreen = ({navigation}: any) => {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.pageTitle}>Admin Panel</Text>
-        <Button mode="outlined" onPress={() => AuthService.logout()}>
-          Logout
-        </Button>
+        <Text style={styles.pageTitle}>Students & Reports</Text>
       </View>
 
       <View style={styles.statGrid}>

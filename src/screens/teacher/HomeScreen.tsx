@@ -4,8 +4,6 @@ import {Button, List, Avatar} from 'react-native-paper';
 import {useAuthStore} from '../../store/useAuthStore';
 import {classRepository} from '../../services/database/classRepository';
 import {Class} from '../../types/models';
-import {AuthService} from '../../services/auth/AuthService';
-
 import {attendanceRepository} from '../../services/database/attendanceRepository';
 import StatCard from '../../components/analytics/StatCard';
 import AttendanceChart from '../../components/analytics/AttendanceChart';
@@ -59,17 +57,10 @@ const HomeScreen = ({navigation}: any) => {
     }
   }, [user]);
 
-  const handleLogout = () => {
-    AuthService.logout();
-  };
-
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Welcome, {user?.name}</Text>
-        <Button mode="outlined" onPress={handleLogout}>
-          Logout
-        </Button>
+        <Text style={styles.title}>Attendance Mode</Text>
       </View>
 
       <View style={styles.statGrid}>

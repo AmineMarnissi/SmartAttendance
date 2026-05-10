@@ -17,7 +17,5 @@ export type AdminStackParamList = {
 };
 
 export type RootStackParamList = {
-  Auth: undefined;
-  Teacher: undefined;
-  Admin: undefined;
+  Main: undefined;
 };

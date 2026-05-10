@@ -1,10 +1,26 @@
-import {useMemo} from 'react';
-import {useTensorflowModel} from 'react-native-fast-tflite';
+import {useEffect, useMemo, useState} from 'react';
+import {loadTensorflowModel, type TfliteModel} from 'react-native-fast-tflite';
 import {NitroModules} from 'react-native-nitro-modules';
+import {resolveFaceEmbeddingModelSource} from './faceEmbeddingModelSource';
 
 export const FACE_EMBEDDING_MODEL = require('../../assets/models/mobilefacenet.tflite');
 export const FACE_EMBEDDING_INPUT_SIZE = 112;
 export const FACE_EMBEDDING_CAPTURE_TARGETS = 5;
+
+type FaceEmbedderPlugin =
+  | {
+      model: TfliteModel;
+      state: 'loaded';
+    }
+  | {
+      model: undefined;
+      state: 'loading';
+    }
+  | {
+      model: undefined;
+      error: Error;
+      state: 'error';
+    };
 
 type FaceBounds = {
   x: number;
@@ -14,7 +30,43 @@ type FaceBounds = {
 };
 
 export const useFaceEmbedder = () => {
-  const plugin = useTensorflowModel(FACE_EMBEDDING_MODEL, []);
+  const [plugin, setPlugin] = useState<FaceEmbedderPlugin>({
+    model: undefined,
+    state: 'loading',
+  });
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadModel = async () => {
+      try {
+        setPlugin({model: undefined, state: 'loading'});
+        const modelSource = await resolveFaceEmbeddingModelSource({
+          bundledModel: FACE_EMBEDDING_MODEL,
+        });
+        const model = await loadTensorflowModel(modelSource, []);
+
+        if (isMounted) {
+          setPlugin({model, state: 'loaded'});
+        }
+      } catch (error) {
+        const loadError =
+          error instanceof Error ? error : new Error(String(error));
+        console.error('Failed to load face embedding model:', loadError);
+
+        if (isMounted) {
+          setPlugin({model: undefined, state: 'error', error: loadError});
+        }
+      }
+    };
+
+    loadModel();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const model = plugin.state === 'loaded' ? plugin.model : undefined;
   const boxedModel = useMemo(() => {
     if (model == null) {

@@ -6,13 +6,21 @@ export const userRepository = {
     const createdAt = new Date().toISOString();
     const result = await db.execute(
       'INSERT INTO users (name, role, pin_hash, created_at) VALUES (?, ?, ?, ?);',
-      [user.name, user.role, user.pin_hash, createdAt],
+      [user.name.trim(), user.role, user.pin_hash, createdAt],
     );
     return result.insertId!;
   },
 
   getById: async (id: number): Promise<User | null> => {
     const result = await db.execute('SELECT * FROM users WHERE id = ?;', [id]);
+    return getFirstRow<User>(result);
+  },
+
+  getByName: async (name: string): Promise<User | null> => {
+    const result = await db.execute(
+      'SELECT * FROM users WHERE lower(name) = lower(?) LIMIT 1;',
+      [name.trim()],
+    );
     return getFirstRow<User>(result);
   },
 
@@ -24,7 +32,7 @@ export const userRepository = {
   },
 
   getAll: async (): Promise<User[]> => {
-    const result = await db.execute('SELECT * FROM users;');
+    const result = await db.execute('SELECT * FROM users ORDER BY role, name;');
     return getRows<User>(result);
   },
 

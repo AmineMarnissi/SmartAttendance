@@ -90,6 +90,7 @@ jest.mock('@react-navigation/native', () => {
   return {
     NavigationContainer: ({children}) =>
       React.createElement(React.Fragment, null, children),
+    useFocusEffect: callback => callback(),
   };
 });
 
@@ -144,6 +145,9 @@ jest.mock('react-native-gesture-handler', () => {
 
 jest.mock('react-native-fs', () => ({
   writeFile: jest.fn(),
+  exists: jest.fn().mockResolvedValue(false),
+  copyFileRes: jest.fn().mockResolvedValue(undefined),
+  CachesDirectoryPath: '/mock-cache',
   DocumentDirectoryPath: '/mock-path',
 }));
 
