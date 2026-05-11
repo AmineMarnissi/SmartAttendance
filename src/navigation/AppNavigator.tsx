@@ -1,6 +1,7 @@
 import React from 'react';
 import {NavigationContainer} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
+import {theme} from '../theme/theme';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {TeacherTabParamList} from './types';
@@ -11,6 +12,7 @@ import ScanReviewScreen from '../screens/teacher/ScanReviewScreen';
 import AttendanceHistoryScreen from '../screens/teacher/AttendanceHistoryScreen';
 import SettingsScreen from '../screens/settings/SettingsScreen';
 import AdminDashboardScreen from '../screens/admin/AdminDashboardScreen';
+import StudentListScreen from '../screens/admin/StudentListScreen';
 import ReportsScreen from '../screens/admin/ReportsScreen';
 import StudentEnrollmentScreen from '../screens/enrollment/StudentEnrollmentScreen';
 import FaceCaptureScreen from '../screens/enrollment/FaceCaptureScreen';
@@ -32,7 +34,12 @@ const AdminNavigator = () => (
     <AdminStack.Screen
       name="AdminDashboard"
       component={AdminDashboardScreen}
-      options={{title: 'Students & Reports'}}
+      options={{title: 'Admin Dashboard'}}
+    />
+    <AdminStack.Screen
+      name="StudentList"
+      component={StudentListScreen}
+      options={{title: 'Students'}}
     />
     <AdminStack.Screen
       name="StudentEnrollment"
@@ -95,7 +102,7 @@ const MainTabs = () => (
 );
 
 const AppNavigator = () => (
-  <NavigationContainer>
+  <NavigationContainer theme={theme}>
     <RootStack.Navigator screenOptions={{headerShown: false}}>
       <RootStack.Screen name="Main" component={MainTabs} />
     </RootStack.Navigator>

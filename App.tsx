@@ -1,6 +1,7 @@
 import React, {useCallback, useEffect, useState} from 'react';
-import {ActivityIndicator, StyleSheet, Text, View} from 'react-native';
+import {ActivityIndicator, StyleSheet, Text, View, StatusBar} from 'react-native';
 import {Button, PaperProvider} from 'react-native-paper';
+import {theme} from './src/theme/theme';
 import {initDatabase} from './src/services/database/db';
 import {seedData} from './src/services/database/seedData';
 import {bootstrapDefaultSession} from './src/services/bootstrap/defaultSession';
@@ -36,14 +37,18 @@ function App(): React.JSX.Element {
   }, [setup]);
 
   return (
-    <PaperProvider>
+    <PaperProvider theme={theme}>
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor={theme.colors.background}
+      />
       {status === 'ready' ? (
         <AppNavigator />
       ) : (
         <View style={styles.startupContainer}>
           {status === 'initializing' ? (
             <>
-              <ActivityIndicator size="large" />
+              <ActivityIndicator size="large" color={theme.colors.primary} />
               <Text style={styles.startupTitle}>
                 Preparing RegistreIntelligent...
               </Text>
@@ -75,28 +80,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#121212',
   },
   startupTitle: {
     marginTop: 16,
     fontSize: 20,
     fontWeight: '700',
     textAlign: 'center',
+    color: '#FFFFFF',
   },
   startupText: {
     marginTop: 8,
-    color: '#666',
+    color: '#AAAAAA',
     textAlign: 'center',
   },
   errorTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#B00020',
+    color: '#FF5252',
     textAlign: 'center',
   },
   errorText: {
     marginTop: 12,
-    color: '#333',
+    color: '#FFFFFF',
     textAlign: 'center',
   },
   retryButton: {

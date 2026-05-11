@@ -9,7 +9,7 @@ export const requestCameraPermission = async (): Promise<boolean> => {
     const currentStatus = Camera.getCameraPermissionStatus();
     Alert.alert(
       'Camera Permission',
-      'SmartAttendance needs camera access to perform face recognition. Please enable it in settings.',
+      'RegistreIntelligent needs camera access to perform face recognition. Please enable it in settings.',
       [
         {text: 'Cancel', style: 'cancel'},
         ...(currentStatus === 'denied' || currentStatus === 'restricted'

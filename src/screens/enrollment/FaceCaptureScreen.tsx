@@ -1,55 +1,78 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
-import {View, StyleSheet, Text, Alert} from 'react-native';
+import {View, StyleSheet, Text, Alert, Image} from 'react-native';
 import {
   Camera,
+  runAsync,
   useCameraDevice,
   useFrameProcessor,
 } from 'react-native-vision-camera';
-import {Button, ProgressBar, Title, IconButton} from 'react-native-paper';
-import {useFaceDetector} from 'react-native-vision-camera-face-detector';
-import {useResizePlugin} from 'vision-camera-resize-plugin';
-import {useRunOnJS} from 'react-native-worklets-core';
+import {
+  Button,
+  ProgressBar,
+  Title,
+  IconButton,
+  useTheme,
+} from 'react-native-paper';
+import {
+  useFaceDetector,
+} from 'react-native-vision-camera-face-detector';
+import {Worklets} from 'react-native-worklets-core';
+import RNFS from 'react-native-fs';
 import {studentRepository} from '../../services/database/studentRepository';
 import {embeddingStorage} from '../../services/faceRecognition/EmbeddingStorage';
 import {requestCameraPermission} from '../../utils/permissions';
 import {classRepository} from '../../services/database/classRepository';
 import {
-  buildFaceCrop,
-  createEmbeddingInput,
   estimateFaceQuality,
   FACE_EMBEDDING_CAPTURE_TARGETS,
-  FACE_EMBEDDING_INPUT_SIZE,
-  getExactArrayBuffer,
-  l2NormalizeEmbedding,
   useFaceEmbedder,
 } from '../../services/faceRecognition/FaceEmbedder';
+import {extractFaceEmbeddingsFromPhoto} from '../../services/faceRecognition/photoEmbedding';
+import {isFaceCentered} from '../../utils/faceBounds';
+
+const MIN_CAPTURE_QUALITY = 0.45;
+
+type FaceBounds = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
 
 const FaceCaptureScreen = ({navigation, route}: any) => {
+  const theme = useTheme();
   const {studentData} = route.params;
   const [hasPermission, setHasPermission] = useState(false);
   const [captureCount, setCaptureCount] = useState(0);
   const [isCapturing, setIsCapturing] = useState(false);
-  const [liveFaceBounds, setLiveFaceBounds] = useState<any | null>(null);
+  const [liveFaceCount, setLiveFaceCount] = useState(0);
+  const [isFaceReady, setIsFaceReady] = useState(false);
   const [liveQuality, setLiveQuality] = useState(0);
+  const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
+  const camera = useRef<Camera>(null);
   const device = useCameraDevice('front');
-  const capturedEmbeddings = useRef<Float32Array[]>([]);
-  const latestEmbedding = useRef<Float32Array | null>(null);
   const latestQuality = useRef(0);
-  const {resize} = useResizePlugin();
+  const latestFaceBounds = useRef<FaceBounds | null>(null);
+  const latestFrameSize = useRef({width: 1, height: 1});
+  const capturedPhotoRef = useRef<string | null>(null);
+  const hasSavedRef = useRef(false);
+  const capturedEmbeddings = useRef<
+    Array<{embedding: Float32Array; quality: number}>
+  >([]);
   const embedder = useFaceEmbedder();
-  const boxedModel = embedder.boxedModel;
-  const {detectFaces} = useFaceDetector(
-    React.useMemo(
-      () => ({
-        performanceMode: 'accurate' as const,
-        contourMode: 'all' as const,
-        classificationMode: 'all' as const,
-        minFaceSize: 0.15,
-        cameraFacing: 'front' as const,
-      }),
-      [],
-    ),
+  const faceDetectionOptions = React.useMemo(
+    () => ({
+      performanceMode: 'fast' as const,
+      landmarkMode: 'none' as const,
+      contourMode: 'none' as const,
+      classificationMode: 'none' as const,
+      minFaceSize: 0.15,
+      trackingEnabled: true,
+      cameraFacing: 'front' as const,
+    }),
+    [],
   );
+  const {detectFaces, stopListeners} = useFaceDetector(faceDetectionOptions);
 
   useEffect(() => {
     (async () => {
@@ -58,72 +81,93 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
     })();
   }, []);
 
+  useEffect(() => stopListeners, [stopListeners]);
+
   const updateLiveFace = useCallback((payload: any) => {
-    setLiveFaceBounds(payload?.bounds ?? null);
+    setLiveFaceCount(payload?.faceCount ?? 0);
+    setIsFaceReady(Boolean(payload?.ready));
     setLiveQuality(payload?.quality ?? 0);
     latestQuality.current = payload?.quality ?? 0;
-    latestEmbedding.current = payload?.embedding
-      ? new Float32Array(payload.embedding)
-      : null;
+    latestFaceBounds.current = payload?.bounds ?? null;
+    if (payload?.frameWidth && payload?.frameHeight) {
+      latestFrameSize.current = {
+        width: payload.frameWidth,
+        height: payload.frameHeight,
+      };
+    }
   }, []);
 
-  const updateLiveFaceOnJS = useRunOnJS(updateLiveFace, [updateLiveFace]);
+  const updateLiveFaceOnJS = React.useMemo(
+    () => Worklets.createRunOnJS(updateLiveFace),
+    [updateLiveFace],
+  );
   const frameProcessor = useFrameProcessor(
     frame => {
       'worklet';
 
-      const faces = detectFaces(frame);
-      const tflite = boxedModel?.unbox();
+      runAsync(frame, () => {
+        'worklet';
 
-      if (faces.length === 0 || tflite == null) {
-        updateLiveFaceOnJS(null);
-        return;
-      }
+        const faces = detectFaces(frame);
 
-      let primaryFace = faces[0];
-      for (const face of faces) {
-        if (
-          face.bounds.width * face.bounds.height >
-          primaryFace.bounds.width * primaryFace.bounds.height
-        ) {
-          primaryFace = face;
+        if (faces.length !== 1) {
+          updateLiveFaceOnJS({
+            bounds: faces[0]?.bounds ?? null,
+            faceCount: faces.length,
+            frameWidth: frame.width,
+            frameHeight: frame.height,
+          });
+          return;
         }
-      }
 
-      const bounds = {
-        x: primaryFace.bounds.x,
-        y: primaryFace.bounds.y,
-        width: primaryFace.bounds.width,
-        height: primaryFace.bounds.height,
-      };
-      const crop = buildFaceCrop(bounds, frame.width, frame.height);
-      const resizedFace = resize(frame, {
-        crop,
-        scale: {
-          width: FACE_EMBEDDING_INPUT_SIZE,
-          height: FACE_EMBEDDING_INPUT_SIZE,
-        },
-        pixelFormat: 'rgb',
-        dataType: 'float32',
-      }) as Float32Array;
-      const input = createEmbeddingInput(resizedFace);
-      const output = tflite.runSync([getExactArrayBuffer(input)]);
-      const embedding = l2NormalizeEmbedding(new Float32Array(output[0]));
-      const quality = estimateFaceQuality(
-        bounds,
-        frame.width,
-        frame.height,
-        primaryFace.yawAngle,
-        primaryFace.pitchAngle,
-      );
+        const primaryFace = faces[0];
+        const bounds = {
+          x: primaryFace.bounds.x,
+          y: primaryFace.bounds.y,
+          width: primaryFace.bounds.width,
+          height: primaryFace.bounds.height,
+        };
+        const quality = estimateFaceQuality(
+          bounds,
+          frame.width,
+          frame.height,
+          primaryFace.yawAngle,
+          primaryFace.pitchAngle,
+        );
+        const ready =
+          quality >= MIN_CAPTURE_QUALITY &&
+          isFaceCentered(bounds, {
+            width: frame.width,
+            height: frame.height,
+          });
 
-      updateLiveFaceOnJS({
-        bounds,
-        quality,
-        embedding: Array.from(embedding),
+        updateLiveFaceOnJS({
+          bounds,
+          faceCount: 1,
+          quality,
+          ready,
+          frameWidth: frame.width,
+          frameHeight: frame.height,
+        });
       });
     },
-    [boxedModel, detectFaces, resize, updateLiveFaceOnJS],
+    [detectFaces, updateLiveFaceOnJS],
+  );
+
+  const extractEmbeddingFromPhoto = useCallback(
+    async (photoPath: string) => {
+      if (embedder.state !== 'loaded') {
+        throw new Error('Face embedding model is not ready yet.');
+      }
+
+      const {base64, embeddings} = await extractFaceEmbeddingsFromPhoto(
+        photoPath,
+        embedder.model,
+        latestFaceBounds.current,
+      );
+      return {base64, embedding: embeddings[0].embedding};
+    },
+    [embedder],
   );
 
   const handleCapture = async () => {
@@ -131,35 +175,78 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
       return;
     }
 
-    if (!latestEmbedding.current) {
+    if (!isFaceReady || liveFaceCount !== 1) {
       Alert.alert(
-        'No Face',
-        'Place one face clearly inside the camera before capturing.',
+        'Face Not Ready',
+        'Keep exactly one face centered and steady before capturing.',
       );
       return;
     }
 
-    setIsCapturing(true);
-    const embeddingCopy = new Float32Array(latestEmbedding.current);
-    capturedEmbeddings.current.push(embeddingCopy);
-
-    const nextCount = captureCount + 1;
-    setCaptureCount(nextCount);
-
-    if (nextCount === FACE_EMBEDDING_CAPTURE_TARGETS) {
-      await saveStudent();
+    if (embedder.state !== 'loaded') {
+      Alert.alert('Model Loading', 'Face embedding model is not ready yet.');
+      return;
     }
 
-    setIsCapturing(false);
+    setIsCapturing(true);
+
+    try {
+      if (!camera.current) {
+        throw new Error('Camera is not ready.');
+      }
+
+      const photo = await camera.current.takePhoto({
+        flash: 'off',
+        enableShutterSound: false,
+      });
+      const {base64, embedding} = await extractEmbeddingFromPhoto(photo.path);
+
+      capturedEmbeddings.current.push({
+        embedding,
+        quality: latestQuality.current,
+      });
+      setCaptureCount(capturedEmbeddings.current.length);
+
+      if (captureCount === 0) {
+        const dataUri = `data:image/jpeg;base64,${base64}`;
+        capturedPhotoRef.current = dataUri;
+        setCapturedPhoto(dataUri);
+      }
+    } catch (e) {
+      console.error('[FaceCapture] Capture failed:', e);
+      const message = e instanceof Error ? e.message : 'Failed to capture face image';
+      Alert.alert('Error', message);
+      setIsCapturing(false);
+      return;
+    } finally {
+      if (capturedEmbeddings.current.length < FACE_EMBEDDING_CAPTURE_TARGETS) {
+        setIsCapturing(false);
+      }
+    }
   };
 
-  const saveStudent = async () => {
+  const saveStudent = useCallback(async () => {
     try {
+      setIsCapturing(true);
       console.log('[FaceCapture] Saving student...', studentData);
+
+      // Convert captured photo to Uint8Array for storage if available
+      let thumbnail: Uint8Array | undefined;
+      const thumbnailSource = capturedPhotoRef.current || capturedPhoto;
+      if (thumbnailSource) {
+        const base64Data = thumbnailSource.split(',')[1];
+        const binaryString = atob(base64Data);
+        thumbnail = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          thumbnail[i] = binaryString.charCodeAt(i);
+        }
+      }
+
       const studentId = await studentRepository.create({
         student_code: studentData.studentCode,
         first_name: studentData.firstName,
         last_name: studentData.lastName,
+        thumbnail,
       });
       console.log('[FaceCapture] Created student with id:', studentId);
       await classRepository.enrollStudent(studentId, studentData.classId);
@@ -170,105 +257,133 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
         studentData.classId,
       );
 
-      const embeddingLength = capturedEmbeddings.current[0]?.length ?? 0;
-      console.log(
-        '[FaceCapture] Averaging',
-        capturedEmbeddings.current.length,
-        'embeddings of length',
-        embeddingLength,
-      );
-      const averageEmbedding = new Float32Array(embeddingLength);
-      for (let i = 0; i < embeddingLength; i++) {
-        let sum = 0;
-        capturedEmbeddings.current.forEach(emb => {
-          sum += emb[i];
-        });
-        averageEmbedding[i] = sum / capturedEmbeddings.current.length;
+      for (const capture of capturedEmbeddings.current) {
+        await embeddingStorage.save(
+          studentId,
+          capture.embedding,
+          capture.quality,
+        );
       }
-
-      const normalizedAverage = l2NormalizeEmbedding(averageEmbedding);
       console.log(
-        '[FaceCapture] Normalized embedding, length:',
-        normalizedAverage.length,
-        'quality:',
-        latestQuality.current,
+        '[FaceCapture] Saved embeddings:',
+        capturedEmbeddings.current.length,
       );
-
-      await embeddingStorage.save(
-        studentId,
-        normalizedAverage,
-        latestQuality.current,
-      );
-      console.log('[FaceCapture] Embedding saved successfully!');
 
       Alert.alert('Success', 'Student enrolled successfully', [
         {text: 'OK', onPress: () => navigation.navigate('AdminDashboard')},
       ]);
     } catch (error) {
+      hasSavedRef.current = false;
       console.error('[FaceCapture] Failed to save student:', error);
       Alert.alert('Error', 'Failed to save student data');
+    } finally {
+      setIsCapturing(false);
     }
-  };
+  }, [capturedPhoto, navigation, studentData]);
+
+  useEffect(() => {
+    if (
+      captureCount === FACE_EMBEDDING_CAPTURE_TARGETS &&
+      !hasSavedRef.current
+    ) {
+      hasSavedRef.current = true;
+      saveStudent();
+    }
+  }, [captureCount, saveStudent]);
 
   if (!hasPermission) {
     return (
       <View style={styles.center}>
-        <Text>No Camera Permission</Text>
+        <Text style={{color: theme.colors.onSurface}}>No Camera Permission</Text>
       </View>
     );
   }
   if (!device) {
     return (
       <View style={styles.center}>
-        <Text>No Camera Device</Text>
+        <Text style={{color: theme.colors.onSurface}}>No Camera Device</Text>
       </View>
     );
   }
 
+  const guideColor =
+    liveFaceCount > 1
+      ? theme.colors.error
+      : isFaceReady
+      ? theme.colors.primary
+      : theme.colors.tertiary;
+  const helperText =
+    embedder.state === 'loading'
+      ? 'Loading face embedding model...'
+      : embedder.state === 'error'
+      ? 'Face embedding model failed to load.'
+      : liveFaceCount === 0
+      ? 'No face detected.'
+      : liveFaceCount > 1
+      ? 'Only one face is allowed during enrollment.'
+      : isFaceReady
+      ? `Ready to capture (${Math.round(liveQuality * 100)}% quality).`
+      : 'Center your face and hold still for a clean capture.';
+
   return (
-    <View style={styles.container}>
-      <Title style={styles.title}>Face Capture: {studentData.firstName}</Title>
-      <Text style={styles.subtitle}>
+    <View style={[styles.container, {backgroundColor: theme.colors.background}]}>
+      <Title style={[styles.title, {color: theme.colors.onSurface}]}>
+        Face Capture: {studentData.firstName}
+      </Title>
+      <Text style={[styles.subtitle, {color: theme.colors.onSurfaceVariant}]}>
         Capture {FACE_EMBEDDING_CAPTURE_TARGETS} stable face samples. Keep the
         face centered and change angle slightly.
       </Text>
 
       <ProgressBar
         progress={captureCount / FACE_EMBEDDING_CAPTURE_TARGETS}
-        color="#4CAF50"
+        color={theme.colors.primary}
         style={styles.progress}
       />
 
-      <View style={styles.cameraContainer}>
+      <View
+        style={styles.cameraContainer}>
         <Camera
+          ref={camera}
           style={styles.camera}
           device={device}
           isActive={true}
           pixelFormat="yuv"
+          photo={true}
           frameProcessor={frameProcessor}
         />
 
-        {liveFaceBounds && (
-          <View
-            style={[
-              styles.faceBox,
-              {
-                left: liveFaceBounds.x,
-                top: liveFaceBounds.y,
-                width: liveFaceBounds.width,
-                height: liveFaceBounds.height,
-              },
-            ]}
-          />
+        <View
+          pointerEvents="none"
+          style={[
+            styles.faceGuide,
+            {
+              borderColor: guideColor,
+              shadowColor: guideColor,
+            },
+          ]}>
+          <Text style={[styles.faceHint, {backgroundColor: guideColor}]}>
+            {liveFaceCount > 1
+              ? 'Multiple Faces'
+              : isFaceReady
+              ? 'Ready'
+              : liveFaceCount === 1
+              ? 'Center Face'
+              : 'No Face'}
+          </Text>
+        </View>
+
+        {capturedPhoto && (
+          <View style={styles.previewContainer}>
+            <Text style={styles.previewLabel}>Last Capture:</Text>
+            <Image source={{uri: capturedPhoto}} style={styles.previewImage} />
+          </View>
         )}
       </View>
 
-      <Text style={styles.qualityText}>
-        {embedder.state === 'loading'
-          ? 'Loading embedding model...'
-          : embedder.state === 'error'
-          ? 'Embedding model failed to load.'
-          : `Live capture quality: ${Math.round(liveQuality * 100)}%`}
+      <Text
+        style={[styles.qualityText, {color: theme.colors.onSurfaceVariant}]}>
+        {helperText}
       </Text>
 
       <View style={styles.controls}>
@@ -286,7 +401,8 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
             isCapturing ||
             captureCount >= FACE_EMBEDDING_CAPTURE_TARGETS ||
             embedder.state !== 'loaded' ||
-            !latestEmbedding.current
+            !isFaceReady ||
+            liveFaceCount !== 1
           }
           contentStyle={styles.captureBtn}>
           {captureCount < FACE_EMBEDDING_CAPTURE_TARGETS
@@ -301,7 +417,6 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
     padding: 20,
   },
   center: {
@@ -314,7 +429,6 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     textAlign: 'center',
-    color: '#666',
     marginBottom: 10,
   },
   progress: {
@@ -327,19 +441,57 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     overflow: 'hidden',
     backgroundColor: '#000',
+    position: 'relative',
   },
   camera: {
     flex: 1,
   },
-  faceBox: {
+  faceGuide: {
     position: 'absolute',
-    borderWidth: 2,
-    borderColor: '#4CAF50',
+    alignSelf: 'center',
+    top: '18%',
+    width: '58%',
+    aspectRatio: 0.72,
+    borderWidth: 3,
+    borderRadius: 999,
+    shadowOpacity: 0.55,
+    shadowRadius: 12,
+    shadowOffset: {width: 0, height: 0},
+  },
+  faceHint: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    position: 'absolute',
+    top: -28,
+    alignSelf: 'center',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  previewContainer: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    padding: 8,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  previewLabel: {
+    color: '#fff',
+    fontSize: 10,
+    marginBottom: 4,
+  },
+  previewImage: {
+    width: 80,
+    height: 80,
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#fff',
   },
   qualityText: {
     textAlign: 'center',
-    color: '#666',
     marginTop: 12,
   },
   controls: {

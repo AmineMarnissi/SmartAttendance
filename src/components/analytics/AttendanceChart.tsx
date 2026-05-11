@@ -2,10 +2,10 @@ import React from 'react';
 import {View, StyleSheet, Dimensions, Text} from 'react-native';
 import {
   VictoryChart,
-  VictoryTheme,
   VictoryAxis,
   VictoryLine,
 } from 'victory-native';
+import {useTheme} from 'react-native-paper';
 
 interface AttendanceChartProps {
   data: {date: string; rate: number}[];
@@ -13,11 +13,15 @@ interface AttendanceChartProps {
 }
 
 const AttendanceChart = ({data, title}: AttendanceChartProps) => {
+  const theme = useTheme();
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>{title}</Text>
+    <View
+      style={[
+        styles.container,
+        {backgroundColor: theme.colors.elevation.level1},
+      ]}>
+      <Text style={[styles.title, {color: theme.colors.onSurface}]}>{title}</Text>
       <VictoryChart
-        theme={VictoryTheme.material}
         width={Dimensions.get('window').width - 40}
         height={250}
         domainPadding={20}>
@@ -28,18 +32,24 @@ const AttendanceChart = ({data, title}: AttendanceChartProps) => {
               month: 'short',
             })
           }
-          style={{tickLabels: {fontSize: 10}}}
+          style={{
+            tickLabels: {fontSize: 10, fill: theme.colors.onSurfaceVariant},
+            axis: {stroke: theme.colors.outline},
+          }}
         />
         <VictoryAxis
           dependentAxis
           tickFormat={(y: string | number) => `${y}%`}
-          style={{tickLabels: {fontSize: 10}}}
+          style={{
+            tickLabels: {fontSize: 10, fill: theme.colors.onSurfaceVariant},
+            axis: {stroke: theme.colors.outline},
+          }}
         />
         <VictoryLine
           data={data}
           x="date"
           y="rate"
-          style={{data: {stroke: '#4CAF50', strokeWidth: 3}}}
+          style={{data: {stroke: theme.colors.primary, strokeWidth: 3}}}
           interpolation="natural"
         />
       </VictoryChart>
@@ -49,7 +59,6 @@ const AttendanceChart = ({data, title}: AttendanceChartProps) => {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#fff',
     borderRadius: 10,
     padding: 10,
     marginVertical: 10,

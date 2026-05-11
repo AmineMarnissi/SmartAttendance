@@ -3,7 +3,7 @@ import {
   EnrolledEmbedding,
 } from '../src/services/faceRecognition/FaceMatcher';
 
-describe("🚀 Simulation de l'IA SmartAttendance", () => {
+describe("🚀 Simulation de l'IA RegistreIntelligent", () => {
   // 1. On prépare une "base de données" de visages (embeddings de 128 dimensions)
   // On simule Alice avec un vecteur simple pour le test
   const aliceEmbedding = new Float32Array(128).fill(0);

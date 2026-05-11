@@ -4,11 +4,13 @@ import {Camera, useCameraDevice} from 'react-native-vision-camera';
 import {useFaceRecognition} from '../../hooks/useFaceRecognition';
 import {requestCameraPermission} from '../../utils/permissions';
 import {Button, IconButton} from 'react-native-paper';
+import {mapFaceBoundsToView} from '../../utils/faceBounds';
 
 const ScanScreen = ({navigation, route}: any) => {
   const {classId} = route.params || {};
   const [hasPermission, setHasPermission] = useState(false);
-  const device = useCameraDevice('front'); // Or 'back' depending on preference
+  const [previewSize, setPreviewSize] = useState({width: 1, height: 1});
+  const device = useCameraDevice('front');
   const {frameProcessor, detectedStudents, modelState} =
     useFaceRecognition(classId);
 
@@ -39,12 +41,16 @@ const ScanScreen = ({navigation, route}: any) => {
   }
 
   const handleCapture = () => {
-    // Save results and navigate to Review
     navigation.navigate('ScanReview', {classId, results: detectedStudents});
   };
 
   return (
-    <View style={styles.container}>
+    <View
+      style={styles.container}
+      onLayout={event => {
+        const {width, height} = event.nativeEvent.layout;
+        setPreviewSize({width, height});
+      }}>
       <Camera
         style={StyleSheet.absoluteFill}
         device={device}
@@ -54,21 +60,41 @@ const ScanScreen = ({navigation, route}: any) => {
       />
 
       {/* Overlays for bounding boxes */}
-      {detectedStudents.map((face, index) => (
-        <View
-          key={index}
-          style={[
-            styles.faceBox,
-            {
-              left: face.bounds.x,
-              top: face.bounds.y,
-              width: face.bounds.width,
-              height: face.bounds.height,
-            },
-          ]}>
-          <Text style={styles.faceLabel}>{face.studentName || 'Unknown'}</Text>
-        </View>
-      ))}
+      {detectedStudents.map((face, index) => {
+        const projectedBounds = mapFaceBoundsToView(
+          face.bounds,
+          {width: face.frameWidth, height: face.frameHeight},
+          previewSize,
+          true,
+        );
+        const isRecognized = face.studentId != null;
+
+        return (
+          <View
+            key={index}
+            style={[
+              styles.faceBox,
+              isRecognized ? styles.faceBoxRecognized : styles.faceBoxPending,
+              {
+                left: projectedBounds.left,
+                top: projectedBounds.top,
+                width: projectedBounds.width,
+                height: projectedBounds.height,
+              },
+            ]}>
+            <Text
+              style={[
+                styles.faceLabel,
+                isRecognized
+                  ? styles.faceLabelRecognized
+                  : styles.faceLabelPending,
+              ]}>
+              {face.studentName ||
+                (face.quality < 0.32 ? 'Align Face' : 'Scanning...')}
+            </Text>
+          </View>
+        );
+      })}
 
       <View style={styles.controls}>
         <IconButton
@@ -119,17 +145,27 @@ const styles = StyleSheet.create({
   faceBox: {
     position: 'absolute',
     borderWidth: 2,
-    borderColor: '#4CAF50',
     borderRadius: 4,
   },
+  faceBoxRecognized: {
+    borderColor: '#4CAF50',
+  },
+  faceBoxPending: {
+    borderColor: '#FFB300',
+  },
   faceLabel: {
-    backgroundColor: '#4CAF50',
     color: 'white',
     fontSize: 12,
     paddingHorizontal: 4,
     position: 'absolute',
     top: -20,
     left: -2,
+  },
+  faceLabelRecognized: {
+    backgroundColor: '#4CAF50',
+  },
+  faceLabelPending: {
+    backgroundColor: '#FFB300',
   },
   controls: {
     position: 'absolute',

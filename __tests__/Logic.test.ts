@@ -10,7 +10,7 @@ jest.mock('../src/services/database/attendanceRepository');
 jest.mock('../src/services/database/studentRepository');
 jest.mock('../src/services/database/classRepository');
 
-describe('SmartAttendance Core Logic', () => {
+describe('RegistreIntelligent Core Logic', () => {
   describe('AI: Cosine Similarity', () => {
     it('should return 1.0 for identical vectors', () => {
       const vec = new Float32Array([1, 0, 0, 1]);

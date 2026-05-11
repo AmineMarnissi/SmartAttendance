@@ -1,12 +1,13 @@
 import React, {useState, useEffect} from 'react';
 import {StyleSheet, ScrollView, Alert, Text} from 'react-native';
-import {List, Button, Card} from 'react-native-paper';
+import {List, Button, Card, useTheme} from 'react-native-paper';
 import {classRepository} from '../../services/database/classRepository';
 import {attendanceRepository} from '../../services/database/attendanceRepository';
 import {CSVExportService} from '../../services/export/CSVExportService';
 import {Class} from '../../types/models';
 
 const ReportsScreen = () => {
+  const theme = useTheme();
   const [classes, setClasses] = useState<Class[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -58,21 +59,34 @@ const ReportsScreen = () => {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Export Reports</Text>
-      <Card style={styles.card}>
+    <ScrollView
+      style={[styles.container, {backgroundColor: theme.colors.background}]}>
+      <Text style={[styles.title, {color: theme.colors.onSurface}]}>
+        Export Reports
+      </Text>
+      <Card
+        style={[
+          styles.card,
+          {backgroundColor: theme.colors.elevation.level1},
+        ]}>
         <Card.Content>
-          <Text>Generate and share attendance reports in CSV format.</Text>
+          <Text style={{color: theme.colors.onSurfaceVariant}}>
+            Generate and share attendance reports in CSV format.
+          </Text>
         </Card.Content>
       </Card>
 
       <List.Section>
-        <Text style={styles.sectionTitle}>Select Class for Report</Text>
+        <Text style={[styles.sectionTitle, {color: theme.colors.onSurface}]}>
+          Select Class for Report
+        </Text>
         {classes.map(cls => (
           <List.Item
             key={cls.id}
             title={cls.name}
+            titleStyle={{color: theme.colors.onSurface}}
             description={`Grade: ${cls.grade || 'N/A'}`}
+            descriptionStyle={{color: theme.colors.onSurfaceVariant}}
             left={props => <List.Icon {...props} icon="file-export" />}
             right={() => (
               <Button
@@ -93,7 +107,6 @@ const ReportsScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
   title: {
     padding: 20,
@@ -103,7 +116,6 @@ const styles = StyleSheet.create({
   },
   card: {
     margin: 10,
-    backgroundColor: '#f9f9f9',
   },
   sectionTitle: {
     fontSize: 16,

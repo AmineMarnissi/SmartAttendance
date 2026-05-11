@@ -1,12 +1,21 @@
 import React, {useState, useEffect} from 'react';
 import {View, StyleSheet, ScrollView, Alert} from 'react-native';
-import {Title, List, Checkbox, Avatar, Divider, FAB} from 'react-native-paper';
+import {
+  Title,
+  List,
+  Checkbox,
+  Avatar,
+  Divider,
+  FAB,
+  useTheme,
+} from 'react-native-paper';
 import {studentRepository} from '../../services/database/studentRepository';
 import {AttendanceService} from '../../services/attendance/AttendanceService';
 import {AttendanceRecord, Student} from '../../types/models';
 import {useAuthStore} from '../../store/useAuthStore';
 
 const ScanReviewScreen = ({navigation, route}: any) => {
+  const theme = useTheme();
   const {classId, results} = route.params;
   const user = useAuthStore(state => state.user);
   const [students, setStudents] = useState<Student[]>([]);
@@ -79,8 +88,10 @@ const ScanReviewScreen = ({navigation, route}: any) => {
   };
 
   return (
-    <View style={styles.container}>
-      <Title style={styles.title}>Review Attendance</Title>
+    <View style={[styles.container, {backgroundColor: theme.colors.background}]}>
+      <Title style={[styles.title, {color: theme.colors.onSurface}]}>
+        Review Attendance
+      </Title>
       <Divider />
 
       <ScrollView>
@@ -89,7 +100,9 @@ const ScanReviewScreen = ({navigation, route}: any) => {
             <List.Item
               key={student.id}
               title={`${student.first_name} ${student.last_name}`}
+              titleStyle={{color: theme.colors.onSurface}}
               description={attendance[student.id]?.toUpperCase()}
+              descriptionStyle={{color: theme.colors.onSurfaceVariant}}
               left={props => (
                 <Avatar.Text
                   {...props}
@@ -114,7 +127,7 @@ const ScanReviewScreen = ({navigation, route}: any) => {
       </ScrollView>
 
       <FAB
-        style={styles.fab}
+        style={[styles.fab, {backgroundColor: theme.colors.primary}]}
         icon="check"
         label="Confirm & Save"
         onPress={handleConfirm}
@@ -128,7 +141,6 @@ const ScanReviewScreen = ({navigation, route}: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
   title: {
     padding: 20,

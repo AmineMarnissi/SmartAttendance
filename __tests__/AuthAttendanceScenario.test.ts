@@ -17,7 +17,7 @@ jest.mock('../src/services/notification/LocalNotificationService', () => ({
   },
 }));
 
-describe('SmartAttendance first-run scenario', () => {
+describe('RegistreIntelligent first-run scenario', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     useAuthStore.getState().logout();

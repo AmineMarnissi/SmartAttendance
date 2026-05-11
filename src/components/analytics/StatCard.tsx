@@ -1,6 +1,6 @@
 import React from 'react';
 import {StyleSheet, Text} from 'react-native';
-import {Card} from 'react-native-paper';
+import {Card, useTheme} from 'react-native-paper';
 
 interface StatCardProps {
   title: string;
@@ -10,15 +10,22 @@ interface StatCardProps {
   icon?: string;
 }
 
-const StatCard = ({title, value, subtitle, color}: StatCardProps) => (
-  <Card style={styles.card}>
-    <Card.Content>
-      <Text style={styles.title}>{title}</Text>
-      <Text style={[styles.value, {color: color || '#000'}]}>{value}</Text>
-      {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
-    </Card.Content>
-  </Card>
-);
+const StatCard = ({title, value, subtitle, color}: StatCardProps) => {
+  const theme = useTheme();
+  return (
+    <Card style={[styles.card, {backgroundColor: theme.colors.elevation.level2}]}>
+      <Card.Content>
+        <Text style={[styles.title, {color: theme.colors.onSurfaceVariant}]}>{title}</Text>
+        <Text style={[styles.value, {color: color || theme.colors.primary}]}>{value}</Text>
+        {subtitle && (
+          <Text style={[styles.subtitle, {color: theme.colors.onSurfaceVariant}]}>
+            {subtitle}
+          </Text>
+        )}
+      </Card.Content>
+    </Card>
+  );
+};
 
 const styles = StyleSheet.create({
   card: {
@@ -29,7 +36,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 12,
     textTransform: 'uppercase',
-    color: '#666',
   },
   value: {
     fontSize: 24,
@@ -37,7 +43,6 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 10,
-    color: '#888',
   },
 });
 

@@ -1,6 +1,6 @@
 import React, {useState, useEffect} from 'react';
 import {View, StyleSheet, ScrollView, Text} from 'react-native';
-import {Button, List, Avatar} from 'react-native-paper';
+import {Button, List, Avatar, useTheme} from 'react-native-paper';
 import {classRepository} from '../../services/database/classRepository';
 import {Class} from '../../types/models';
 import {attendanceRepository} from '../../services/database/attendanceRepository';
@@ -8,6 +8,7 @@ import StatCard from '../../components/analytics/StatCard';
 import AttendanceChart from '../../components/analytics/AttendanceChart';
 
 const HomeScreen = ({navigation}: any) => {
+  const theme = useTheme();
   const [classes, setClasses] = useState<Class[]>([]);
   const [overallRate, setOverallRate] = useState(0);
   const [trendData, setTrendData] = useState<{date: string; rate: number}[]>(
@@ -60,9 +61,12 @@ const HomeScreen = ({navigation}: any) => {
   }, []);
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={[styles.container, {backgroundColor: theme.colors.background}]}>
       <View style={styles.header}>
-        <Text style={styles.title}>Attendance Mode</Text>
+        <Text style={[styles.title, {color: theme.colors.onSurface}]}>
+          Attendance Mode
+        </Text>
       </View>
 
       <View style={styles.statGrid}>
@@ -83,12 +87,16 @@ const HomeScreen = ({navigation}: any) => {
       )}
 
       <List.Section>
-        <Text style={styles.sectionTitle}>Your Classes</Text>
+        <Text style={[styles.sectionTitle, {color: theme.colors.onSurface}]}>
+          Your Classes
+        </Text>
         {classes.map(cls => (
           <List.Item
             key={cls.id}
             title={cls.name}
+            titleStyle={{color: theme.colors.onSurface}}
             description={`Grade: ${cls.grade || 'N/A'}`}
+            descriptionStyle={{color: theme.colors.onSurfaceVariant}}
             left={props => <Avatar.Icon {...props} icon="book" size={40} />}
             right={() => (
               <Button
@@ -109,13 +117,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 10,
-    backgroundColor: '#fff',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 20,
+    marginTop: 10,
   },
   title: {
     fontSize: 24,
@@ -130,9 +138,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     marginBottom: 8,
-  },
-  card: {
-    marginBottom: 20,
+    marginLeft: 8,
   },
   scanButton: {
     alignSelf: 'center',

@@ -1,11 +1,18 @@
 import React, {useState, useEffect, useCallback} from 'react';
 import {View, StyleSheet, FlatList} from 'react-native';
-import {Title, List, Avatar, Paragraph} from 'react-native-paper';
+import {
+  Title,
+  List,
+  Avatar,
+  Paragraph,
+  useTheme,
+} from 'react-native-paper';
 import {useAuthStore} from '../../store/useAuthStore';
 import {attendanceRepository} from '../../services/database/attendanceRepository';
 import {classRepository} from '../../services/database/classRepository';
 
 const AttendanceHistoryScreen = () => {
+  const theme = useTheme();
   const user = useAuthStore(state => state.user);
   const [sessions, setSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,9 +51,11 @@ const AttendanceHistoryScreen = () => {
     ({item}: {item: any}) => (
       <List.Item
         title={item.className}
+        titleStyle={{color: theme.colors.onSurface}}
         description={`Date: ${item.date} | Started: ${new Date(
           item.start_time,
         ).toLocaleTimeString()}`}
+        descriptionStyle={{color: theme.colors.onSurfaceVariant}}
         left={props => (
           <Avatar.Icon {...props} icon="calendar-check" size={40} />
         )}
@@ -54,12 +63,14 @@ const AttendanceHistoryScreen = () => {
         onPress={() => {}}
       />
     ),
-    [],
+    [theme.colors.onSurface, theme.colors.onSurfaceVariant],
   );
 
   return (
-    <View style={styles.container}>
-      <Title style={styles.title}>Attendance History</Title>
+    <View style={[styles.container, {backgroundColor: theme.colors.background}]}>
+      <Title style={[styles.title, {color: theme.colors.onSurface}]}>
+        Attendance History
+      </Title>
       <FlatList
         data={sessions}
         renderItem={renderSession}
@@ -67,7 +78,8 @@ const AttendanceHistoryScreen = () => {
         onRefresh={loadHistory}
         refreshing={loading}
         ListEmptyComponent={
-          <Paragraph style={styles.empty}>
+          <Paragraph
+            style={[styles.empty, {color: theme.colors.onSurfaceVariant}]}>
             No attendance sessions found.
           </Paragraph>
         }
@@ -79,7 +91,6 @@ const AttendanceHistoryScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
   title: {
     padding: 20,
@@ -88,7 +99,6 @@ const styles = StyleSheet.create({
   empty: {
     textAlign: 'center',
     marginTop: 50,
-    color: '#666',
   },
 });
 

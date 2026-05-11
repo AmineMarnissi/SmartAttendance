@@ -1,0 +1,1336 @@
+Initialized native services in: /home/amine/.gradle/native
+Initialized jansi services in: /home/amine/.gradle/native
+Found daemon DaemonInfo{pid=53162, address=[19b8bce1-a574-4376-a79f-86e20188fad7 port:46497, addresses:[/127.0.0.1]], state=Idle, lastBusy=1778506619647, context=DefaultDaemonContext[uid=586983e5-da64-4d33-9f2b-188c85a9cfe5,javaHome=/home/amine/.antigravity/extensions/redhat.java-1.54.0-linux-x64/jre/21.0.10-linux-x86_64,javaVersion=21,javaVendor=Eclipse Adoptium,daemonRegistryDir=/home/amine/.gradle/daemon,pid=53162,idleTimeout=10800000,priority=NORMAL,applyInstrumentationAgent=true,nativeServicesMode=ENABLED,daemonOpts=-XX:MaxMetaspaceSize=1024m,-Xmx4096m,-Dfile.encoding=UTF-8,-Duser.country=US,-Duser.language=en,-Duser.variant]} however its context does not match the desired criteria.
+JVM is incompatible.
+Wanted: DaemonRequestContext{jvmCriteria=/usr/lib/jvm/java-17-openjdk-amd64 (no JDK specified, using current Java home), daemonOpts=[-XX:MaxMetaspaceSize=1024m, -Xmx4096m, -Dfile.encoding=UTF-8, -Duser.country=US, -Duser.language=en, -Duser.variant], applyInstrumentationAgent=true, nativeServicesMode=ENABLED, priority=NORMAL}
+Actual: DefaultDaemonContext[uid=586983e5-da64-4d33-9f2b-188c85a9cfe5,javaHome=/home/amine/.antigravity/extensions/redhat.java-1.54.0-linux-x64/jre/21.0.10-linux-x86_64,javaVersion=21,javaVendor=Eclipse Adoptium,daemonRegistryDir=/home/amine/.gradle/daemon,pid=53162,idleTimeout=10800000,priority=NORMAL,applyInstrumentationAgent=true,nativeServicesMode=ENABLED,daemonOpts=-XX:MaxMetaspaceSize=1024m,-Xmx4096m,-Dfile.encoding=UTF-8,-Duser.country=US,-Duser.language=en,-Duser.variant]
+
+  Looking for a different daemon...
+The client will now receive all logging from the daemon (pid: 45267). The daemon log file: /home/amine/.gradle/daemon/8.13/daemon-45267.out.log
+Starting 11th build in daemon [uptime: 16 mins 39.049 secs, performance: 100%, GC rate: 0.00/s, heap usage: 0% of 4 GiB, non-heap usage: 26% of 1 GiB]
+Using 28 worker leases.
+Now considering [/home/amine/site_amine/SmartAttendance/android, /home/amine/site_amine/SmartAttendance/node_modules/@react-native/gradle-plugin] as hierarchies to watch
+Watching the file system is configured to be enabled if available
+File system watching is active
+Starting Build
+Now considering [/home/amine/site_amine/SmartAttendance/node_modules/@react-native/gradle-plugin, /home/amine/site_amine/SmartAttendance/android] as hierarchies to watch
+Resolved plugin [id: 'org.gradle.toolchains.foojay-resolver-convention', version: '0.5.0']
+Invalidating in-memory cache of /home/amine/.gradle/caches/journal-1/file-access.bin
+
+> Configure project :gradle-plugin
+Evaluating project ':gradle-plugin' using build file '/home/amine/site_amine/SmartAttendance/node_modules/@react-native/gradle-plugin/build.gradle.kts'.
+Resolved plugin [id: 'org.jetbrains.kotlin.jvm', version: '2.0.21', apply: false]
+
+> Configure project :gradle-plugin:react-native-gradle-plugin
+Evaluating project ':gradle-plugin:react-native-gradle-plugin' using build file '/home/amine/site_amine/SmartAttendance/node_modules/@react-native/gradle-plugin/react-native-gradle-plugin/build.gradle.kts'.
+Resolved plugin [id: 'org.jetbrains.kotlin.jvm', version: '2.0.21']
+Resolved plugin [id: 'java-gradle-plugin']
+Using Kotlin Gradle Plugin gradle85 variant
+kotlin scripting plugin: created the scripting discovery configuration: kotlinScriptDef
+kotlin scripting plugin: created the scripting discovery configuration: testKotlinScriptDef
+
+> Configure project :gradle-plugin:settings-plugin
+Evaluating project ':gradle-plugin:settings-plugin' using build file '/home/amine/site_amine/SmartAttendance/node_modules/@react-native/gradle-plugin/settings-plugin/build.gradle.kts'.
+Resolved plugin [id: 'org.jetbrains.kotlin.jvm', version: '2.0.21']
+Resolved plugin [id: 'java-gradle-plugin']
+Using Kotlin Gradle Plugin gradle85 variant
+kotlin scripting plugin: created the scripting discovery configuration: kotlinScriptDef
+kotlin scripting plugin: created the scripting discovery configuration: testKotlinScriptDef
+
+> Configure project :gradle-plugin:shared
+Evaluating project ':gradle-plugin:shared' using build file '/home/amine/site_amine/SmartAttendance/node_modules/@react-native/gradle-plugin/shared/build.gradle.kts'.
+Resolved plugin [id: 'org.jetbrains.kotlin.jvm', version: '2.0.21']
+Using Kotlin Gradle Plugin gradle85 variant
+kotlin scripting plugin: created the scripting discovery configuration: kotlinScriptDef
+kotlin scripting plugin: created the scripting discovery configuration: testKotlinScriptDef
+
+> Configure project :gradle-plugin:shared-testutil
+Evaluating project ':gradle-plugin:shared-testutil' using build file '/home/amine/site_amine/SmartAttendance/node_modules/@react-native/gradle-plugin/shared-testutil/build.gradle.kts'.
+Resolved plugin [id: 'org.jetbrains.kotlin.jvm', version: '2.0.21']
+Using Kotlin Gradle Plugin gradle85 variant
+kotlin scripting plugin: created the scripting discovery configuration: kotlinScriptDef
+kotlin scripting plugin: created the scripting discovery configuration: testKotlinScriptDef
+Resolved plugin [id: 'com.facebook.react.settings']
+Path for java installation '/usr/lib/jvm/openjdk-17' (Common Linux Locations) auto-detected does not contain a java executable
+Path for java installation '/usr/lib/jvm/openjdk-21' (Common Linux Locations) auto-detected does not contain a java executable
+Resolve mutations for :gradle-plugin:settings-plugin:checkKotlinGradlePluginConfigurationErrors (Thread[Execution worker,5,main]) started.
+:gradle-plugin:settings-plugin:checkKotlinGradlePluginConfigurationErrors (Thread[Execution worker,5,main]) started.
+
+> Task :gradle-plugin:settings-plugin:checkKotlinGradlePluginConfigurationErrors SKIPPED
+Skipping task ':gradle-plugin:settings-plugin:checkKotlinGradlePluginConfigurationErrors' as task onlyIf 'errorDiagnostics are present' is false.
+Resolve mutations for :gradle-plugin:shared:checkKotlinGradlePluginConfigurationErrors (Thread[Execution worker Thread 12,5,main]) started.
+:gradle-plugin:shared:checkKotlinGradlePluginConfigurationErrors (Thread[Execution worker Thread 12,5,main]) started.
+
+> Task :gradle-plugin:shared:checkKotlinGradlePluginConfigurationErrors SKIPPED
+Skipping task ':gradle-plugin:shared:checkKotlinGradlePluginConfigurationErrors' as task onlyIf 'errorDiagnostics are present' is false.
+Resolve mutations for :gradle-plugin:shared:compileKotlin (Thread[Execution worker Thread 12,5,main]) started.
+:gradle-plugin:shared:compileKotlin (Thread[Execution worker Thread 24,5,main]) started.
+
+> Task :gradle-plugin:shared:compileKotlin UP-TO-DATE
+Caching disabled for task ':gradle-plugin:shared:compileKotlin' because:
+  Build cache is disabled
+Skipping task ':gradle-plugin:shared:compileKotlin' as it is up-to-date.
+Resolve mutations for :gradle-plugin:shared:compileJava (Thread[Execution worker Thread 24,5,main]) started.
+:gradle-plugin:shared:compileJava (Thread[Execution worker Thread 24,5,main]) started.
+
+> Task :gradle-plugin:shared:compileJava NO-SOURCE
+Skipping task ':gradle-plugin:shared:compileJava' as it has no source files and no previous output files.
+Resolve mutations for :gradle-plugin:shared:processResources (Thread[Execution worker Thread 24,5,main]) started.
+:gradle-plugin:shared:processResources (Thread[Execution worker Thread 20,5,main]) started.
+
+> Task :gradle-plugin:shared:processResources NO-SOURCE
+Skipping task ':gradle-plugin:shared:processResources' as it has no source files and no previous output files.
+Resolve mutations for :gradle-plugin:shared:classes (Thread[Execution worker Thread 20,5,main]) started.
+:gradle-plugin:shared:classes (Thread[Execution worker Thread 20,5,main]) started.
+
+> Task :gradle-plugin:shared:classes UP-TO-DATE
+Skipping task ':gradle-plugin:shared:classes' as it has no actions.
+Resolve mutations for :gradle-plugin:shared:jar (Thread[Execution worker Thread 20,5,main]) started.
+:gradle-plugin:shared:jar (Thread[Execution worker Thread 9,5,main]) started.
+
+> Task :gradle-plugin:shared:jar UP-TO-DATE
+Caching disabled for task ':gradle-plugin:shared:jar' because:
+  Build cache is disabled
+  Not worth caching
+Skipping task ':gradle-plugin:shared:jar' as it is up-to-date.
+work action resolve shared.jar (project :gradle-plugin:shared) (Thread[Execution worker Thread 9,5,main]) started.
+Resolve mutations for :gradle-plugin:settings-plugin:compileKotlin (Thread[Execution worker Thread 17,5,main]) started.
+:gradle-plugin:settings-plugin:compileKotlin (Thread[Execution worker Thread 17,5,main]) started.
+
+> Task :gradle-plugin:settings-plugin:compileKotlin UP-TO-DATE
+Caching disabled for task ':gradle-plugin:settings-plugin:compileKotlin' because:
+  Build cache is disabled
+Skipping task ':gradle-plugin:settings-plugin:compileKotlin' as it is up-to-date.
+Resolve mutations for :gradle-plugin:settings-plugin:compileJava (Thread[Execution worker Thread 17,5,main]) started.
+:gradle-plugin:settings-plugin:compileJava (Thread[Execution worker Thread 4,5,main]) started.
+
+> Task :gradle-plugin:settings-plugin:compileJava NO-SOURCE
+Skipping task ':gradle-plugin:settings-plugin:compileJava' as it has no source files and no previous output files.
+Resolve mutations for :gradle-plugin:settings-plugin:pluginDescriptors (Thread[Execution worker Thread 4,5,main]) started.
+:gradle-plugin:settings-plugin:pluginDescriptors (Thread[Execution worker Thread 4,5,main]) started.
+
+> Task :gradle-plugin:settings-plugin:pluginDescriptors UP-TO-DATE
+Caching disabled for task ':gradle-plugin:settings-plugin:pluginDescriptors' because:
+  Build cache is disabled
+  Not worth caching
+Skipping task ':gradle-plugin:settings-plugin:pluginDescriptors' as it is up-to-date.
+Resolve mutations for :gradle-plugin:settings-plugin:processResources (Thread[Execution worker Thread 4,5,main]) started.
+:gradle-plugin:settings-plugin:processResources (Thread[Execution worker Thread 24,5,main]) started.
+
+> Task :gradle-plugin:settings-plugin:processResources UP-TO-DATE
+Caching disabled for task ':gradle-plugin:settings-plugin:processResources' because:
+  Build cache is disabled
+  Not worth caching
+Skipping task ':gradle-plugin:settings-plugin:processResources' as it is up-to-date.
+Resolve mutations for :gradle-plugin:settings-plugin:classes (Thread[Execution worker Thread 24,5,main]) started.
+:gradle-plugin:settings-plugin:classes (Thread[Execution worker Thread 24,5,main]) started.
+
+> Task :gradle-plugin:settings-plugin:classes UP-TO-DATE
+Skipping task ':gradle-plugin:settings-plugin:classes' as it has no actions.
+Resolve mutations for :gradle-plugin:settings-plugin:jar (Thread[Execution worker Thread 24,5,main]) started.
+:gradle-plugin:settings-plugin:jar (Thread[Execution worker Thread 24,5,main]) started.
+
+> Task :gradle-plugin:settings-plugin:jar UP-TO-DATE
+Caching disabled for task ':gradle-plugin:settings-plugin:jar' because:
+  Build cache is disabled
+  Not worth caching
+Skipping task ':gradle-plugin:settings-plugin:jar' as it is up-to-date.
+Settings evaluated using settings file '/home/amine/site_amine/SmartAttendance/android/settings.gradle'.
+Projects loaded. Root project using build file '/home/amine/site_amine/SmartAttendance/android/build.gradle'.
+Included projects: [root project 'SmartAttendance', project ':app', project ':notifee_react-native', project ':op-engineering_op-sqlite', project ':react-native-camera-roll_camera-roll', project ':react-native-fast-tflite', project ':react-native-fs', project ':react-native-gesture-handler', project ':react-native-mmkv', project ':react-native-nitro-modules', project ':react-native-reanimated', project ':react-native-safe-area-context', project ':react-native-screens', project ':react-native-vector-icons', project ':react-native-vision-camera', project ':react-native-vision-camera-face-detector', project ':react-native-worklets-core', project ':shopify_react-native-skia', project ':vision-camera-resize-plugin']
+Registering project ':gradle-plugin' in composite build. Will substitute for module ':gradle-plugin-root'.
+Registering project ':gradle-plugin:react-native-gradle-plugin' in composite build. Will substitute for module 'com.facebook.react:react-native-gradle-plugin'.
+Registering project ':gradle-plugin:settings-plugin' in composite build. Will substitute for module 'com.facebook.react:settings-plugin'.
+Registering project ':gradle-plugin:shared' in composite build. Will substitute for module 'com.facebook.react:shared'.
+Registering project ':gradle-plugin:shared-testutil' in composite build. Will substitute for module 'com.facebook.react:shared-testutil'.
+:gradle-plugin:react-native-gradle-plugin:checkKotlinGradlePluginConfigurationErrors (Thread[Execution worker Thread 20,5,main]) started.
+
+> Task :gradle-plugin:react-native-gradle-plugin:checkKotlinGradlePluginConfigurationErrors SKIPPED
+Skipping task ':gradle-plugin:react-native-gradle-plugin:checkKotlinGradlePluginConfigurationErrors' as task onlyIf 'errorDiagnostics are present' is false.
+Resolve mutations for :gradle-plugin:react-native-gradle-plugin:compileKotlin (Thread[Execution worker Thread 20,5,main]) started.
+:gradle-plugin:react-native-gradle-plugin:compileKotlin (Thread[Execution worker Thread 17,5,main]) started.
+
+> Task :gradle-plugin:react-native-gradle-plugin:compileKotlin UP-TO-DATE
+Caching disabled for task ':gradle-plugin:react-native-gradle-plugin:compileKotlin' because:
+  Build cache is disabled
+Skipping task ':gradle-plugin:react-native-gradle-plugin:compileKotlin' as it is up-to-date.
+Resolve mutations for :gradle-plugin:react-native-gradle-plugin:compileJava (Thread[Execution worker Thread 17,5,main]) started.
+:gradle-plugin:react-native-gradle-plugin:compileJava (Thread[Execution worker Thread 17,5,main]) started.
+
+> Task :gradle-plugin:react-native-gradle-plugin:compileJava NO-SOURCE
+Skipping task ':gradle-plugin:react-native-gradle-plugin:compileJava' as it has no source files and no previous output files.
+Resolve mutations for :gradle-plugin:react-native-gradle-plugin:pluginDescriptors (Thread[Execution worker Thread 17,5,main]) started.
+:gradle-plugin:react-native-gradle-plugin:pluginDescriptors (Thread[Execution worker Thread 25,5,main]) started.
+
+> Task :gradle-plugin:react-native-gradle-plugin:pluginDescriptors UP-TO-DATE
+Caching disabled for task ':gradle-plugin:react-native-gradle-plugin:pluginDescriptors' because:
+  Build cache is disabled
+  Not worth caching
+Skipping task ':gradle-plugin:react-native-gradle-plugin:pluginDescriptors' as it is up-to-date.
+Resolve mutations for :gradle-plugin:react-native-gradle-plugin:processResources (Thread[Execution worker Thread 25,5,main]) started.
+:gradle-plugin:react-native-gradle-plugin:processResources (Thread[Execution worker Thread 24,5,main]) started.
+
+> Task :gradle-plugin:react-native-gradle-plugin:processResources UP-TO-DATE
+Caching disabled for task ':gradle-plugin:react-native-gradle-plugin:processResources' because:
+  Build cache is disabled
+  Not worth caching
+Skipping task ':gradle-plugin:react-native-gradle-plugin:processResources' as it is up-to-date.
+Resolve mutations for :gradle-plugin:react-native-gradle-plugin:classes (Thread[Execution worker Thread 24,5,main]) started.
+:gradle-plugin:react-native-gradle-plugin:classes (Thread[Execution worker Thread 24,5,main]) started.
+
+> Task :gradle-plugin:react-native-gradle-plugin:classes UP-TO-DATE
+Skipping task ':gradle-plugin:react-native-gradle-plugin:classes' as it has no actions.
+Resolve mutations for :gradle-plugin:react-native-gradle-plugin:jar (Thread[Execution worker Thread 9,5,main]) started.
+:gradle-plugin:react-native-gradle-plugin:jar (Thread[Execution worker Thread 7,5,main]) started.
+
+> Task :gradle-plugin:react-native-gradle-plugin:jar UP-TO-DATE
+Caching disabled for task ':gradle-plugin:react-native-gradle-plugin:jar' because:
+  Build cache is disabled
+  Not worth caching
+Skipping task ':gradle-plugin:react-native-gradle-plugin:jar' as it is up-to-date.
+
+> Configure project :app
+Evaluating project ':app' using build file '/home/amine/site_amine/SmartAttendance/android/app/build.gradle'.
+Using default execution profile
+Using Kotlin Gradle Plugin gradle85 variant
+
+> Configure project :
+Evaluating root project 'SmartAttendance' using build file '/home/amine/site_amine/SmartAttendance/android/build.gradle'.
+Found project 'project :gradle-plugin:react-native-gradle-plugin' as substitute for module 'com.facebook.react:react-native-gradle-plugin'.
+Ignoring listeners of task graph ready event, as this build (:gradle-plugin) has already executed work.
+Resolve mutations for :gradle-plugin:react-native-gradle-plugin:checkKotlinGradlePluginConfigurationErrors (Thread[included builds,5,main]) started.
+
+> Configure project :notifee_react-native
+Evaluating project ':notifee_react-native' using build file '/home/amine/site_amine/SmartAttendance/node_modules/@notifee/react-native/android/build.gradle'.
+Resolved plugin [id: 'io.invertase.gradle.build', version: '1.5']
+Using default execution profile
+:notifee_react-native @notifee/react-native found at /home/amine/site_amine/SmartAttendance/node_modules/@notifee/react-native
+:notifee_react-native package.json found at /home/amine/site_amine/SmartAttendance/node_modules/@notifee/react-native/package.json
+:notifee_react-native:version set from package.json: 9.1.8 (9,1,8 - 9001008)
+:notifee_react-native:android.compileSdk using custom value: 36
+:notifee_react-native:android.targetSdk using custom value: 34
+:notifee_react-native:android.minSdk using custom value: 26
+:notifee_react-native:reactNativeAndroidDir /home/amine/site_amine/SmartAttendance/node_modules/react-native/android
+
+> Configure project :react-native-camera-roll_camera-roll
+Evaluating project ':react-native-camera-roll_camera-roll' using build file '/home/amine/site_amine/SmartAttendance/node_modules/@react-native-camera-roll/camera-roll/android/build.gradle'.
+Using default execution profile
+
+> Configure project :react-native-fast-tflite
+Evaluating project ':react-native-fast-tflite' using build file '/home/amine/site_amine/SmartAttendance/node_modules/react-native-fast-tflite/android/build.gradle'.
+Using default execution profile
+Using Kotlin Gradle Plugin gradle85 variant
+[NitroModules] 🔥 NitroTflite is boosted by nitro!
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+
+> Configure project :react-native-fs
+Evaluating project ':react-native-fs' using build file '/home/amine/site_amine/SmartAttendance/node_modules/react-native-fs/android/build.gradle'.
+Using default execution profile
+
+> Configure project :react-native-gesture-handler
+Evaluating project ':react-native-gesture-handler' using build file '/home/amine/site_amine/SmartAttendance/node_modules/react-native-gesture-handler/android/build.gradle'.
+Using default execution profile
+Using Kotlin Gradle Plugin gradle85 variant
+
+> Configure project :react-native-mmkv
+Evaluating project ':react-native-mmkv' using build file '/home/amine/site_amine/SmartAttendance/node_modules/react-native-mmkv/android/build.gradle'.
+Using default execution profile
+Using Kotlin Gradle Plugin gradle85 variant
+[NitroModules] 🔥 NitroMmkv is boosted by nitro!
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+
+> Configure project :react-native-nitro-modules
+Evaluating project ':react-native-nitro-modules' using build file '/home/amine/site_amine/SmartAttendance/node_modules/react-native-nitro-modules/android/build.gradle'.
+Using default execution profile
+Using Kotlin Gradle Plugin gradle85 variant
+[NitroModules] 🔥 Your app is boosted by nitro modules!
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+
+> Configure project :react-native-reanimated
+Evaluating project ':react-native-reanimated' using build file '/home/amine/site_amine/SmartAttendance/node_modules/react-native-reanimated/android/build.gradle'.
+Using default execution profile
+Android gradle plugin: 8.8.0
+Gradle: 8.13
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+
+> Configure project :react-native-safe-area-context
+Evaluating project ':react-native-safe-area-context' using build file '/home/amine/site_amine/SmartAttendance/node_modules/react-native-safe-area-context/android/build.gradle'.
+Using default execution profile
+Using Kotlin Gradle Plugin gradle85 variant
+
+> Configure project :react-native-screens
+Evaluating project ':react-native-screens' using build file '/home/amine/site_amine/SmartAttendance/node_modules/react-native-screens/android/build.gradle'.
+Using default execution profile
+Using Kotlin Gradle Plugin gradle85 variant
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+
+> Configure project :react-native-vector-icons
+Evaluating project ':react-native-vector-icons' using build file '/home/amine/site_amine/SmartAttendance/node_modules/react-native-vector-icons/android/build.gradle'.
+Using default execution profile
+
+> Configure project :react-native-vision-camera
+Evaluating project ':react-native-vision-camera' using build file '/home/amine/site_amine/SmartAttendance/node_modules/react-native-vision-camera/android/build.gradle'.
+Using default execution profile
+Using Kotlin Gradle Plugin gradle85 variant
+[VisionCamera] Thank you for using VisionCamera ❤️
+[VisionCamera] If you enjoy using VisionCamera, please consider sponsoring this project: https://github.com/sponsors/mrousavy
+[VisionCamera] node_modules found at /home/amine/site_amine/SmartAttendance/node_modules
+[VisionCamera] VisionCamera_enableFrameProcessors is set to true!
+[VisionCamera] react-native-worklets-core found, Frame Processors are enabled!
+[VisionCamera] VisionCamera_enableCodeScanner is set to false!
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+
+> Configure project :react-native-vision-camera-face-detector
+Evaluating project ':react-native-vision-camera-face-detector' using build file '/home/amine/site_amine/SmartAttendance/node_modules/react-native-vision-camera-face-detector/android/build.gradle'.
+Using default execution profile
+Using Kotlin Gradle Plugin gradle85 variant
+
+> Configure project :react-native-worklets-core
+Evaluating project ':react-native-worklets-core' using build file '/home/amine/site_amine/SmartAttendance/node_modules/react-native-worklets-core/android/build.gradle'.
+Using default execution profile
+C/C++: android.ndkVersion from module build.gradle is [27.0.12077973]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [27.0.12077973]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [27.0.12077973]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [27.0.12077973]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [27.0.12077973]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [27.0.12077973]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [27.0.12077973]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [27.0.12077973]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [27.0.12077973]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [27.0.12077973]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [27.0.12077973]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [27.0.12077973]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [27.0.12077973]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+
+> Configure project :shopify_react-native-skia
+Evaluating project ':shopify_react-native-skia' using build file '/home/amine/site_amine/SmartAttendance/node_modules/@shopify/react-native-skia/android/build.gradle'.
+Using default execution profile
+react-native-skia: node_modules/ found at: /home/amine/site_amine/SmartAttendance/node_modules
+react-native-skia: RN Version: 78 / 0.78.3
+react-native-skia: isSourceBuild: false
+react-native-skia: PrebuiltDir: /home/amine/site_amine/SmartAttendance/node_modules/@shopify/react-native-skia/android/build/react-native-0*/jni
+react-native-skia: buildType: debug
+react-native-skia: buildDir: /home/amine/site_amine/SmartAttendance/node_modules/@shopify/react-native-skia/android/build
+react-native-skia: node_modules: /home/amine/site_amine/SmartAttendance/node_modules
+react-native-skia: Enable Prefab: true
+react-native-skia: aar state post 70, do nothing
+C/C++: android.ndkVersion from module build.gradle is [27.0.12077973]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [27.0.12077973]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [27.0.12077973]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [27.0.12077973]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [27.0.12077973]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [27.0.12077973]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [27.0.12077973]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [27.0.12077973]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [27.0.12077973]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [27.0.12077973]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [27.0.12077973]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [27.0.12077973]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [27.0.12077973]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+
+> Configure project :vision-camera-resize-plugin
+Evaluating project ':vision-camera-resize-plugin' using build file '/home/amine/site_amine/SmartAttendance/node_modules/vision-camera-resize-plugin/android/build.gradle'.
+Using default execution profile
+Using Kotlin Gradle Plugin gradle85 variant
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+
+> Configure project :op-engineering_op-sqlite
+Evaluating project ':op-engineering_op-sqlite' using build file '/home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android/build.gradle'.
+[OP-SQLITE] using Vanilla SQLite
+Using default execution profile
+Using Kotlin Gradle Plugin gradle85 variant
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.1.10909125]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /home/amine/Android/Sdk
+All projects evaluated.
+Task path ':op-engineering_op-sqlite:configureCMakeDebug' matched project ':op-engineering_op-sqlite'
+Task name matched 'configureCMakeDebug'
+Selected primary task 'configureCMakeDebug' from project :op-engineering_op-sqlite
+Tasks to be executed: [task ':op-engineering_op-sqlite:preBuild', task ':op-engineering_op-sqlite:preDebugBuild', task ':op-engineering_op-sqlite:configureCMakeDebug[arm64-v8a]', task ':op-engineering_op-sqlite:configureCMakeDebug[armeabi-v7a]', task ':op-engineering_op-sqlite:configureCMakeDebug[x86]', task ':op-engineering_op-sqlite:configureCMakeDebug[x86_64]', task ':op-engineering_op-sqlite:configureCMakeDebug']
+Tasks that were excluded: []
+Resolve mutations for :op-engineering_op-sqlite:preBuild (Thread[Execution worker Thread 10,5,main]) started.
+:op-engineering_op-sqlite:preBuild (Thread[Execution worker Thread 10,5,main]) started.
+
+> Task :op-engineering_op-sqlite:preBuild UP-TO-DATE
+Skipping task ':op-engineering_op-sqlite:preBuild' as it has no actions.
+Resolve mutations for :op-engineering_op-sqlite:preDebugBuild (Thread[Execution worker Thread 6,5,main]) started.
+:op-engineering_op-sqlite:preDebugBuild (Thread[Execution worker Thread 6,5,main]) started.
+
+> Task :op-engineering_op-sqlite:preDebugBuild UP-TO-DATE
+Skipping task ':op-engineering_op-sqlite:preDebugBuild' as it has no actions.
+Resolve mutations for :op-engineering_op-sqlite:configureCMakeDebug[arm64-v8a] (Thread[Execution worker Thread 6,5,main]) started.
+:op-engineering_op-sqlite:configureCMakeDebug[arm64-v8a] (Thread[Execution worker Thread 6,5,main]) started.
+
+> Task :op-engineering_op-sqlite:configureCMakeDebug[arm64-v8a] FAILED
+Caching disabled for task ':op-engineering_op-sqlite:configureCMakeDebug[arm64-v8a]' because:
+  Build cache is disabled
+  Caching has been disabled for the task
+Task ':op-engineering_op-sqlite:configureCMakeDebug[arm64-v8a]' is not up-to-date because:
+  Task.upToDateWhen is false.
+C/C++: /home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android/CMakeLists.txt debug|arm64-v8a : Start JSON generation. Platform version: 26 min SDK version: arm64-v8a
+C/C++: /home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android/CMakeLists.txt debug|arm64-v8a : rebuilding JSON /home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android/.cxx/Debug/17361o1n/arm64-v8a/android_gradle_build.json due to:
+C/C++: /home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android/CMakeLists.txt debug|arm64-v8a : - no fingerprint file, will remove stale configuration folder
+C/C++: /home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android/CMakeLists.txt debug|arm64-v8a : /usr/lib/jvm/java-17-openjdk-amd64/bin/java \
+  --class-path \
+  /home/amine/.gradle/caches/modules-2/files-2.1/com.google.prefab/cli/2.1.0/aa32fec809c44fa531f01dcfb739b5b3304d3050/cli-2.1.0-all.jar \
+  com.google.prefab.cli.AppKt \
+  --build-system \
+  cmake \
+  --platform \
+  android \
+  --abi \
+  arm64-v8a \
+  --os-version \
+  26 \
+  --stl \
+  c++_shared \
+  --ndk-version \
+  26 \
+  --output \
+  /tmp/agp-prefab-staging15567761488031957930/staged-cli-output \
+  /home/amine/.gradle/caches/8.13/transforms/c23c4a55978a6e3b163bd864a5f8213f/transformed/jetified-react-android-0.78.3-debug/prefab \
+  /home/amine/.gradle/caches/8.13/transforms/ad08402961b5586240dcf0b3ef463747/transformed/jetified-fbjni-0.7.0/prefab
+
+Starting process 'command '/home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android/build/intermediates/cxx/Debug/17361o1n/logs/arm64-v8a/prefab_command''. Working directory: /home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android Command: /home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android/build/intermediates/cxx/Debug/17361o1n/logs/arm64-v8a/prefab_command 
+Successfully started process 'command '/home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android/build/intermediates/cxx/Debug/17361o1n/logs/arm64-v8a/prefab_command''
+C/C++: /home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android/CMakeLists.txt debug|arm64-v8a : Received process result: 0
+C/C++: /home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android/CMakeLists.txt debug|arm64-v8a : removing stale contents from '/home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android/.cxx/Debug/17361o1n/arm64-v8a'
+C/C++: /home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android/CMakeLists.txt debug|arm64-v8a : created folder '/home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android/.cxx/Debug/17361o1n/arm64-v8a'
+C/C++: /home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android/CMakeLists.txt debug|arm64-v8a : executing cmake /home/amine/Android/Sdk/cmake/3.22.1/bin/cmake \
+  -H/home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android \
+  -DCMAKE_SYSTEM_NAME=Android \
+  -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+  -DCMAKE_SYSTEM_VERSION=26 \
+  -DANDROID_PLATFORM=android-26 \
+  -DANDROID_ABI=arm64-v8a \
+  -DCMAKE_ANDROID_ARCH_ABI=arm64-v8a \
+  -DANDROID_NDK=/home/amine/Android/Sdk/ndk/26.1.10909125 \
+  -DCMAKE_ANDROID_NDK=/home/amine/Android/Sdk/ndk/26.1.10909125 \
+  -DCMAKE_TOOLCHAIN_FILE=/home/amine/Android/Sdk/ndk/26.1.10909125/build/cmake/android.toolchain.cmake \
+  -DCMAKE_MAKE_PROGRAM=/home/amine/Android/Sdk/cmake/3.22.1/bin/ninja \
+  "-DCMAKE_CXX_FLAGS=-O2 -fexceptions -frtti -std=c++1y -DONANDROID" \
+  -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=/home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android/build/intermediates/cxx/Debug/17361o1n/obj/arm64-v8a \
+  -DCMAKE_RUNTIME_OUTPUT_DIRECTORY=/home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android/build/intermediates/cxx/Debug/17361o1n/obj/arm64-v8a \
+  -DCMAKE_BUILD_TYPE=Debug \
+  -DCMAKE_FIND_ROOT_PATH=/home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android/.cxx/Debug/17361o1n/prefab/arm64-v8a/prefab \
+  -B/home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android/.cxx/Debug/17361o1n/arm64-v8a \
+  -GNinja \
+  -DANDROID_STL=c++_shared \
+  "-DSQLITE_FLAGS=''" \
+  -DUSE_SQLCIPHER=0 \
+  -DUSE_CRSQLITE=0 \
+  -DUSE_LIBSQL=0 \
+  -DUSE_SQLITE_VEC=0
+
+C/C++: /home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android/CMakeLists.txt debug|arm64-v8a : /home/amine/Android/Sdk/cmake/3.22.1/bin/cmake \
+  -H/home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android \
+  -DCMAKE_SYSTEM_NAME=Android \
+  -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+  -DCMAKE_SYSTEM_VERSION=26 \
+  -DANDROID_PLATFORM=android-26 \
+  -DANDROID_ABI=arm64-v8a \
+  -DCMAKE_ANDROID_ARCH_ABI=arm64-v8a \
+  -DANDROID_NDK=/home/amine/Android/Sdk/ndk/26.1.10909125 \
+  -DCMAKE_ANDROID_NDK=/home/amine/Android/Sdk/ndk/26.1.10909125 \
+  -DCMAKE_TOOLCHAIN_FILE=/home/amine/Android/Sdk/ndk/26.1.10909125/build/cmake/android.toolchain.cmake \
+  -DCMAKE_MAKE_PROGRAM=/home/amine/Android/Sdk/cmake/3.22.1/bin/ninja \
+  "-DCMAKE_CXX_FLAGS=-O2 -fexceptions -frtti -std=c++1y -DONANDROID" \
+  -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=/home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android/build/intermediates/cxx/Debug/17361o1n/obj/arm64-v8a \
+  -DCMAKE_RUNTIME_OUTPUT_DIRECTORY=/home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android/build/intermediates/cxx/Debug/17361o1n/obj/arm64-v8a \
+  -DCMAKE_BUILD_TYPE=Debug \
+  -DCMAKE_FIND_ROOT_PATH=/home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android/.cxx/Debug/17361o1n/prefab/arm64-v8a/prefab \
+  -B/home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android/.cxx/Debug/17361o1n/arm64-v8a \
+  -GNinja \
+  -DANDROID_STL=c++_shared \
+  "-DSQLITE_FLAGS=''" \
+  -DUSE_SQLCIPHER=0 \
+  -DUSE_CRSQLITE=0 \
+  -DUSE_LIBSQL=0 \
+  -DUSE_SQLITE_VEC=0
+
+Starting process 'command '/home/amine/Android/Sdk/cmake/3.22.1/bin/cmake''. Working directory: /home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android Command: /home/amine/Android/Sdk/cmake/3.22.1/bin/cmake -H/home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android -DCMAKE_SYSTEM_NAME=Android -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_SYSTEM_VERSION=26 -DANDROID_PLATFORM=android-26 -DANDROID_ABI=arm64-v8a -DCMAKE_ANDROID_ARCH_ABI=arm64-v8a -DANDROID_NDK=/home/amine/Android/Sdk/ndk/26.1.10909125 -DCMAKE_ANDROID_NDK=/home/amine/Android/Sdk/ndk/26.1.10909125 -DCMAKE_TOOLCHAIN_FILE=/home/amine/Android/Sdk/ndk/26.1.10909125/build/cmake/android.toolchain.cmake -DCMAKE_MAKE_PROGRAM=/home/amine/Android/Sdk/cmake/3.22.1/bin/ninja -DCMAKE_CXX_FLAGS=-O2 -fexceptions -frtti -std=c++1y -DONANDROID -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=/home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android/build/intermediates/cxx/Debug/17361o1n/obj/arm64-v8a -DCMAKE_RUNTIME_OUTPUT_DIRECTORY=/home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android/build/intermediates/cxx/Debug/17361o1n/obj/arm64-v8a -DCMAKE_BUILD_TYPE=Debug -DCMAKE_FIND_ROOT_PATH=/home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android/.cxx/Debug/17361o1n/prefab/arm64-v8a/prefab -B/home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android/.cxx/Debug/17361o1n/arm64-v8a -GNinja -DANDROID_STL=c++_shared -DSQLITE_FLAGS='' -DUSE_SQLCIPHER=0 -DUSE_CRSQLITE=0 -DUSE_LIBSQL=0 -DUSE_SQLITE_VEC=0
+Successfully started process 'command '/home/amine/Android/Sdk/cmake/3.22.1/bin/cmake''
+C/C++: CMake Error at CMakeLists.txt:19 (add_library):
+C/C++:   Target "op-sqlite" links to target "ReactAndroid::turbomodulejsijni" but
+C/C++:   the target was not found.  Perhaps a find_package() call is missing for an
+C/C++:   IMPORTED target, or an ALIAS target is missing?
+C/C++: CMake Error at CMakeLists.txt:19 (add_library):
+C/C++:   Target "op-sqlite" links to target "ReactAndroid::react_nativemodule_core"
+C/C++:   but the target was not found.  Perhaps a find_package() call is missing for
+C/C++:   an IMPORTED target, or an ALIAS target is missing?
+C/C++: CMake Generate step failed.  Build files cannot be regenerated correctly.
+C/C++: /home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android/CMakeLists.txt debug|arm64-v8a : Received process result: 1
+C/C++: /home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android/CMakeLists.txt debug|arm64-v8a : JSON generation completed with problem. Exception: com.android.ide.common.process.ProcessException: -- The C compiler identification is Clang 17.0.2
+-- The CXX compiler identification is Clang 17.0.2
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /home/amine/Android/Sdk/ndk/26.1.10909125/toolchains/llvm/prebuilt/linux-x86_64/bin/clang - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /home/amine/Android/Sdk/ndk/26.1.10909125/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Configuring done
+-- Generating done
+
+C++ build system [configure] failed while executing:
+    /home/amine/Android/Sdk/cmake/3.22.1/bin/cmake \
+      -H/home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android \
+      -DCMAKE_SYSTEM_NAME=Android \
+      -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+      -DCMAKE_SYSTEM_VERSION=26 \
+      -DANDROID_PLATFORM=android-26 \
+      -DANDROID_ABI=arm64-v8a \
+      -DCMAKE_ANDROID_ARCH_ABI=arm64-v8a \
+      -DANDROID_NDK=/home/amine/Android/Sdk/ndk/26.1.10909125 \
+      -DCMAKE_ANDROID_NDK=/home/amine/Android/Sdk/ndk/26.1.10909125 \
+      -DCMAKE_TOOLCHAIN_FILE=/home/amine/Android/Sdk/ndk/26.1.10909125/build/cmake/android.toolchain.cmake \
+      -DCMAKE_MAKE_PROGRAM=/home/amine/Android/Sdk/cmake/3.22.1/bin/ninja \
+      "-DCMAKE_CXX_FLAGS=-O2 -fexceptions -frtti -std=c++1y -DONANDROID" \
+      -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=/home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android/build/intermediates/cxx/Debug/17361o1n/obj/arm64-v8a \
+      -DCMAKE_RUNTIME_OUTPUT_DIRECTORY=/home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android/build/intermediates/cxx/Debug/17361o1n/obj/arm64-v8a \
+      -DCMAKE_BUILD_TYPE=Debug \
+      -DCMAKE_FIND_ROOT_PATH=/home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android/.cxx/Debug/17361o1n/prefab/arm64-v8a/prefab \
+      -B/home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android/.cxx/Debug/17361o1n/arm64-v8a \
+      -GNinja \
+      -DANDROID_STL=c++_shared \
+      "-DSQLITE_FLAGS=''" \
+      -DUSE_SQLCIPHER=0 \
+      -DUSE_CRSQLITE=0 \
+      -DUSE_LIBSQL=0 \
+      -DUSE_SQLITE_VEC=0
+  from /home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android
+CMake Error at CMakeLists.txt:19 (add_library):
+  Target "op-sqlite" links to target "ReactAndroid::turbomodulejsijni" but
+  the target was not found.  Perhaps a find_package() call is missing for an
+  IMPORTED target, or an ALIAS target is missing?
+
+
+CMake Error at CMakeLists.txt:19 (add_library):
+  Target "op-sqlite" links to target "ReactAndroid::react_nativemodule_core"
+  but the target was not found.  Perhaps a find_package() call is missing for
+  an IMPORTED target, or an ALIAS target is missing?
+
+
+CMake Generate step failed.  Build files cannot be regenerated correctly.
+C/C++: /home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android/CMakeLists.txt debug|arm64-v8a : Writing build model to /home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android/build/intermediates/cxx/Debug/17361o1n/logs/arm64-v8a/build_model.json
+
+[Incubating] Problems report is available at: file:///home/amine/site_amine/SmartAttendance/android/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':op-engineering_op-sqlite:configureCMakeDebug[arm64-v8a]'.
+> [CXX1429] error when building with cmake using /home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android/CMakeLists.txt: -- The C compiler identification is Clang 17.0.2
+  -- The CXX compiler identification is Clang 17.0.2
+  -- Detecting C compiler ABI info
+  -- Detecting C compiler ABI info - done
+  -- Check for working C compiler: /home/amine/Android/Sdk/ndk/26.1.10909125/toolchains/llvm/prebuilt/linux-x86_64/bin/clang - skipped
+  -- Detecting C compile features
+  -- Detecting C compile features - done
+  -- Detecting CXX compiler ABI info
+  -- Detecting CXX compiler ABI info - done
+  -- Check for working CXX compiler: /home/amine/Android/Sdk/ndk/26.1.10909125/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ - skipped
+  -- Detecting CXX compile features
+  -- Detecting CXX compile features - done
+  -- Configuring done
+  -- Generating done
+  
+  C++ build system [configure] failed while executing:
+      /home/amine/Android/Sdk/cmake/3.22.1/bin/cmake \
+        -H/home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android \
+        -DCMAKE_SYSTEM_NAME=Android \
+        -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+        -DCMAKE_SYSTEM_VERSION=26 \
+        -DANDROID_PLATFORM=android-26 \
+        -DANDROID_ABI=arm64-v8a \
+        -DCMAKE_ANDROID_ARCH_ABI=arm64-v8a \
+        -DANDROID_NDK=/home/amine/Android/Sdk/ndk/26.1.10909125 \
+        -DCMAKE_ANDROID_NDK=/home/amine/Android/Sdk/ndk/26.1.10909125 \
+        -DCMAKE_TOOLCHAIN_FILE=/home/amine/Android/Sdk/ndk/26.1.10909125/build/cmake/android.toolchain.cmake \
+        -DCMAKE_MAKE_PROGRAM=/home/amine/Android/Sdk/cmake/3.22.1/bin/ninja \
+        "-DCMAKE_CXX_FLAGS=-O2 -fexceptions -frtti -std=c++1y -DONANDROID" \
+        -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=/home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android/build/intermediates/cxx/Debug/17361o1n/obj/arm64-v8a \
+        -DCMAKE_RUNTIME_OUTPUT_DIRECTORY=/home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android/build/intermediates/cxx/Debug/17361o1n/obj/arm64-v8a \
+        -DCMAKE_BUILD_TYPE=Debug \
+        -DCMAKE_FIND_ROOT_PATH=/home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android/.cxx/Debug/17361o1n/prefab/arm64-v8a/prefab \
+        -B/home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android/.cxx/Debug/17361o1n/arm64-v8a \
+        -GNinja \
+        -DANDROID_STL=c++_shared \
+        "-DSQLITE_FLAGS=''" \
+        -DUSE_SQLCIPHER=0 \
+        -DUSE_CRSQLITE=0 \
+        -DUSE_LIBSQL=0 \
+        -DUSE_SQLITE_VEC=0
+    from /home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android
+  CMake Error at CMakeLists.txt:19 (add_library):
+    Target "op-sqlite" links to target "ReactAndroid::turbomodulejsijni" but
+    the target was not found.  Perhaps a find_package() call is missing for an
+    IMPORTED target, or an ALIAS target is missing?
+  
+  
+  CMake Error at CMakeLists.txt:19 (add_library):
+    Target "op-sqlite" links to target "ReactAndroid::react_nativemodule_core"
+    but the target was not found.  Perhaps a find_package() call is missing for
+    an IMPORTED target, or an ALIAS target is missing?
+  
+  
+  CMake Generate step failed.  Build files cannot be regenerated correctly. : com.android.ide.common.process.ProcessException: -- The C compiler identification is Clang 17.0.2
+  -- The CXX compiler identification is Clang 17.0.2
+  -- Detecting C compiler ABI info
+  -- Detecting C compiler ABI info - done
+  -- Check for working C compiler: /home/amine/Android/Sdk/ndk/26.1.10909125/toolchains/llvm/prebuilt/linux-x86_64/bin/clang - skipped
+  -- Detecting C compile features
+  -- Detecting C compile features - done
+  -- Detecting CXX compiler ABI info
+  -- Detecting CXX compiler ABI info - done
+  -- Check for working CXX compiler: /home/amine/Android/Sdk/ndk/26.1.10909125/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ - skipped
+  -- Detecting CXX compile features
+  -- Detecting CXX compile features - done
+  -- Configuring done
+  -- Generating done
+  
+  C++ build system [configure] failed while executing:
+      /home/amine/Android/Sdk/cmake/3.22.1/bin/cmake \
+        -H/home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android \
+        -DCMAKE_SYSTEM_NAME=Android \
+        -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+        -DCMAKE_SYSTEM_VERSION=26 \
+        -DANDROID_PLATFORM=android-26 \
+        -DANDROID_ABI=arm64-v8a \
+        -DCMAKE_ANDROID_ARCH_ABI=arm64-v8a \
+        -DANDROID_NDK=/home/amine/Android/Sdk/ndk/26.1.10909125 \
+        -DCMAKE_ANDROID_NDK=/home/amine/Android/Sdk/ndk/26.1.10909125 \
+        -DCMAKE_TOOLCHAIN_FILE=/home/amine/Android/Sdk/ndk/26.1.10909125/build/cmake/android.toolchain.cmake \
+        -DCMAKE_MAKE_PROGRAM=/home/amine/Android/Sdk/cmake/3.22.1/bin/ninja \
+        "-DCMAKE_CXX_FLAGS=-O2 -fexceptions -frtti -std=c++1y -DONANDROID" \
+        -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=/home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android/build/intermediates/cxx/Debug/17361o1n/obj/arm64-v8a \
+        -DCMAKE_RUNTIME_OUTPUT_DIRECTORY=/home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android/build/intermediates/cxx/Debug/17361o1n/obj/arm64-v8a \
+        -DCMAKE_BUILD_TYPE=Debug \
+        -DCMAKE_FIND_ROOT_PATH=/home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android/.cxx/Debug/17361o1n/prefab/arm64-v8a/prefab \
+        -B/home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android/.cxx/Debug/17361o1n/arm64-v8a \
+        -GNinja \
+        -DANDROID_STL=c++_shared \
+        "-DSQLITE_FLAGS=''" \
+        -DUSE_SQLCIPHER=0 \
+        -DUSE_CRSQLITE=0 \
+        -DUSE_LIBSQL=0 \
+        -DUSE_SQLITE_VEC=0
+    from /home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android
+  CMake Error at CMakeLists.txt:19 (add_library):
+    Target "op-sqlite" links to target "ReactAndroid::turbomodulejsijni" but
+    the target was not found.  Perhaps a find_package() call is missing for an
+    IMPORTED target, or an ALIAS target is missing?
+  
+  
+  CMake Error at CMakeLists.txt:19 (add_library):
+    Target "op-sqlite" links to target "ReactAndroid::react_nativemodule_core"
+    but the target was not found.  Perhaps a find_package() call is missing for
+    an IMPORTED target, or an ALIAS target is missing?
+  
+  
+  CMake Generate step failed.  Build files cannot be regenerated correctly.
+  	at com.android.build.gradle.internal.cxx.process.ExecuteProcessKt.execute(ExecuteProcess.kt:288)
+  	at com.android.build.gradle.internal.cxx.process.ExecuteProcessKt$executeProcess$1.invoke(ExecuteProcess.kt:108)
+  	at com.android.build.gradle.internal.cxx.process.ExecuteProcessKt$executeProcess$1.invoke(ExecuteProcess.kt:106)
+  	at com.android.build.gradle.internal.cxx.timing.TimingEnvironmentKt.time(TimingEnvironment.kt:32)
+  	at com.android.build.gradle.internal.cxx.process.ExecuteProcessKt.executeProcess(ExecuteProcess.kt:106)
+  	at com.android.build.gradle.internal.cxx.process.ExecuteProcessKt.executeProcess$default(ExecuteProcess.kt:85)
+  	at com.android.build.gradle.tasks.CmakeQueryMetadataGenerator.executeProcess(CmakeFileApiMetadataGenerator.kt:59)
+  	at com.android.build.gradle.tasks.ExternalNativeJsonGenerator$configureOneAbi$1$1$3.invoke(ExternalNativeJsonGenerator.kt:247)
+  	at com.android.build.gradle.tasks.ExternalNativeJsonGenerator$configureOneAbi$1$1$3.invoke(ExternalNativeJsonGenerator.kt:247)
+  	at com.android.build.gradle.internal.cxx.timing.TimingEnvironmentKt.time(TimingEnvironment.kt:32)
+  	at com.android.build.gradle.tasks.ExternalNativeJsonGenerator.configureOneAbi(ExternalNativeJsonGenerator.kt:247)
+  	at com.android.build.gradle.tasks.ExternalNativeJsonGenerator.configure(ExternalNativeJsonGenerator.kt:113)
+  	at com.android.build.gradle.tasks.ExternalNativeBuildJsonTask.doTaskAction(ExternalNativeBuildJsonTask.kt:89)
+  	at com.android.build.gradle.internal.tasks.UnsafeOutputsTask$taskAction$$inlined$recordTaskAction$1.invoke(BaseTask.kt:59)
+  	at com.android.build.gradle.internal.tasks.Blocks.recordSpan(Blocks.java:51)
+  	at com.android.build.gradle.internal.tasks.UnsafeOutputsTask.taskAction(UnsafeOutputsTask.kt:81)
+  	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+  	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+  	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+  	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+  	at org.gradle.internal.reflect.JavaMethod.invoke(JavaMethod.java:125)
+  	at org.gradle.api.internal.project.taskfactory.StandardTaskAction.doExecute(StandardTaskAction.java:58)
+  	at org.gradle.api.internal.project.taskfactory.StandardTaskAction.execute(StandardTaskAction.java:51)
+  	at org.gradle.api.internal.project.taskfactory.StandardTaskAction.execute(StandardTaskAction.java:29)
+  	at org.gradle.api.internal.tasks.execution.TaskExecution$3.run(TaskExecution.java:244)
+  	at org.gradle.internal.operations.DefaultBuildOperationRunner$1.execute(DefaultBuildOperationRunner.java:30)
+  	at org.gradle.internal.operations.DefaultBuildOperationRunner$1.execute(DefaultBuildOperationRunner.java:27)
+  	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
+  	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:60)
+  	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
+  	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
+  	at org.gradle.internal.operations.DefaultBuildOperationRunner.run(DefaultBuildOperationRunner.java:48)
+  	at org.gradle.api.internal.tasks.execution.TaskExecution.executeAction(TaskExecution.java:229)
+  	at org.gradle.api.internal.tasks.execution.TaskExecution.executeActions(TaskExecution.java:212)
+  	at org.gradle.api.internal.tasks.execution.TaskExecution.executeWithPreviousOutputFiles(TaskExecution.java:195)
+  	at org.gradle.api.internal.tasks.execution.TaskExecution.execute(TaskExecution.java:162)
+  	at org.gradle.internal.execution.steps.ExecuteStep.executeInternal(ExecuteStep.java:105)
+  	at org.gradle.internal.execution.steps.ExecuteStep.access$000(ExecuteStep.java:44)
+  	at org.gradle.internal.execution.steps.ExecuteStep$1.call(ExecuteStep.java:59)
+  	at org.gradle.internal.execution.steps.ExecuteStep$1.call(ExecuteStep.java:56)
+  	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:210)
+  	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:205)
+  	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
+  	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:60)
+  	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
+  	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
+  	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:54)
+  	at org.gradle.internal.execution.steps.ExecuteStep.execute(ExecuteStep.java:56)
+  	at org.gradle.internal.execution.steps.ExecuteStep.execute(ExecuteStep.java:44)
+  	at org.gradle.internal.execution.steps.CancelExecutionStep.execute(CancelExecutionStep.java:42)
+  	at org.gradle.internal.execution.steps.TimeoutStep.executeWithoutTimeout(TimeoutStep.java:75)
+  	at org.gradle.internal.execution.steps.TimeoutStep.execute(TimeoutStep.java:55)
+  	at org.gradle.internal.execution.steps.PreCreateOutputParentsStep.execute(PreCreateOutputParentsStep.java:50)
+  	at org.gradle.internal.execution.steps.PreCreateOutputParentsStep.execute(PreCreateOutputParentsStep.java:28)
+  	at org.gradle.internal.execution.steps.RemovePreviousOutputsStep.execute(RemovePreviousOutputsStep.java:67)
+  	at org.gradle.internal.execution.steps.RemovePreviousOutputsStep.execute(RemovePreviousOutputsStep.java:37)
+  	at org.gradle.internal.execution.steps.BroadcastChangingOutputsStep.execute(BroadcastChangingOutputsStep.java:61)
+  	at org.gradle.internal.execution.steps.BroadcastChangingOutputsStep.execute(BroadcastChangingOutputsStep.java:26)
+  	at org.gradle.internal.execution.steps.CaptureOutputsAfterExecutionStep.execute(CaptureOutputsAfterExecutionStep.java:69)
+  	at org.gradle.internal.execution.steps.CaptureOutputsAfterExecutionStep.execute(CaptureOutputsAfterExecutionStep.java:46)
+  	at org.gradle.internal.execution.steps.ResolveInputChangesStep.execute(ResolveInputChangesStep.java:40)
+  	at org.gradle.internal.execution.steps.ResolveInputChangesStep.execute(ResolveInputChangesStep.java:29)
+  	at org.gradle.internal.execution.steps.BuildCacheStep.executeWithoutCache(BuildCacheStep.java:189)
+  	at org.gradle.internal.execution.steps.BuildCacheStep.lambda$execute$1(BuildCacheStep.java:75)
+  	at org.gradle.internal.Either$Right.fold(Either.java:175)
+  	at org.gradle.internal.execution.caching.CachingState.fold(CachingState.java:62)
+  	at org.gradle.internal.execution.steps.BuildCacheStep.execute(BuildCacheStep.java:73)
+  	at org.gradle.internal.execution.steps.BuildCacheStep.execute(BuildCacheStep.java:48)
+  	at org.gradle.internal.execution.steps.StoreExecutionStateStep.execute(StoreExecutionStateStep.java:46)
+  	at org.gradle.internal.execution.steps.StoreExecutionStateStep.execute(StoreExecutionStateStep.java:35)
+  	at org.gradle.internal.execution.steps.SkipUpToDateStep.executeBecause(SkipUpToDateStep.java:75)
+  	at org.gradle.internal.execution.steps.SkipUpToDateStep.lambda$execute$2(SkipUpToDateStep.java:53)
+  	at java.base/java.util.Optional.orElseGet(Optional.java:364)
+  	at org.gradle.internal.execution.steps.SkipUpToDateStep.execute(SkipUpToDateStep.java:53)
+  	at org.gradle.internal.execution.steps.SkipUpToDateStep.execute(SkipUpToDateStep.java:35)
+  	at org.gradle.internal.execution.steps.legacy.MarkSnapshottingInputsFinishedStep.execute(MarkSnapshottingInputsFinishedStep.java:37)
+  	at org.gradle.internal.execution.steps.legacy.MarkSnapshottingInputsFinishedStep.execute(MarkSnapshottingInputsFinishedStep.java:27)
+  	at org.gradle.internal.execution.steps.ResolveIncrementalCachingStateStep.executeDelegate(ResolveIncrementalCachingStateStep.java:49)
+  	at org.gradle.internal.execution.steps.ResolveIncrementalCachingStateStep.executeDelegate(ResolveIncrementalCachingStateStep.java:27)
+  	at org.gradle.internal.execution.steps.AbstractResolveCachingStateStep.execute(AbstractResolveCachingStateStep.java:71)
+  	at org.gradle.internal.execution.steps.AbstractResolveCachingStateStep.execute(AbstractResolveCachingStateStep.java:39)
+  	at org.gradle.internal.execution.steps.ResolveChangesStep.execute(ResolveChangesStep.java:65)
+  	at org.gradle.internal.execution.steps.ResolveChangesStep.execute(ResolveChangesStep.java:36)
+  	at org.gradle.internal.execution.steps.ValidateStep.execute(ValidateStep.java:107)
+  	at org.gradle.internal.execution.steps.ValidateStep.execute(ValidateStep.java:56)
+  	at org.gradle.internal.execution.steps.AbstractCaptureStateBeforeExecutionStep.execute(AbstractCaptureStateBeforeExecutionStep.java:64)
+  	at org.gradle.internal.execution.steps.AbstractCaptureStateBeforeExecutionStep.execute(AbstractCaptureStateBeforeExecutionStep.java:43)
+  	at org.gradle.internal.execution.steps.AbstractSkipEmptyWorkStep.executeWithNonEmptySources(AbstractSkipEmptyWorkStep.java:125)
+  	at org.gradle.internal.execution.steps.AbstractSkipEmptyWorkStep.execute(AbstractSkipEmptyWorkStep.java:56)
+  	at org.gradle.internal.execution.steps.AbstractSkipEmptyWorkStep.execute(AbstractSkipEmptyWorkStep.java:36)
+  	at org.gradle.internal.execution.steps.legacy.MarkSnapshottingInputsStartedStep.execute(MarkSnapshottingInputsStartedStep.java:38)
+  	at org.gradle.internal.execution.steps.LoadPreviousExecutionStateStep.execute(LoadPreviousExecutionStateStep.java:36)
+  	at org.gradle.internal.execution.steps.LoadPreviousExecutionStateStep.execute(LoadPreviousExecutionStateStep.java:23)
+  	at org.gradle.internal.execution.steps.HandleStaleOutputsStep.execute(HandleStaleOutputsStep.java:75)
+  	at org.gradle.internal.execution.steps.HandleStaleOutputsStep.execute(HandleStaleOutputsStep.java:41)
+  	at org.gradle.internal.execution.steps.AssignMutableWorkspaceStep.lambda$execute$0(AssignMutableWorkspaceStep.java:35)
+  	at org.gradle.api.internal.tasks.execution.TaskExecution$4.withWorkspace(TaskExecution.java:289)
+  	at org.gradle.internal.execution.steps.AssignMutableWorkspaceStep.execute(AssignMutableWorkspaceStep.java:31)
+  	at org.gradle.internal.execution.steps.AssignMutableWorkspaceStep.execute(AssignMutableWorkspaceStep.java:22)
+  	at org.gradle.internal.execution.steps.ChoosePipelineStep.execute(ChoosePipelineStep.java:40)
+  	at org.gradle.internal.execution.steps.ChoosePipelineStep.execute(ChoosePipelineStep.java:23)
+  	at org.gradle.internal.execution.steps.ExecuteWorkBuildOperationFiringStep.lambda$execute$2(ExecuteWorkBuildOperationFiringStep.java:67)
+  	at java.base/java.util.Optional.orElseGet(Optional.java:364)
+  	at org.gradle.internal.execution.steps.ExecuteWorkBuildOperationFiringStep.execute(ExecuteWorkBuildOperationFiringStep.java:67)
+  	at org.gradle.internal.execution.steps.ExecuteWorkBuildOperationFiringStep.execute(ExecuteWorkBuildOperationFiringStep.java:39)
+  	at org.gradle.internal.execution.steps.IdentityCacheStep.execute(IdentityCacheStep.java:46)
+  	at org.gradle.internal.execution.steps.IdentityCacheStep.execute(IdentityCacheStep.java:34)
+  	at org.gradle.internal.execution.steps.IdentifyStep.execute(IdentifyStep.java:48)
+  	at org.gradle.internal.execution.steps.IdentifyStep.execute(IdentifyStep.java:35)
+  	at org.gradle.internal.execution.impl.DefaultExecutionEngine$1.execute(DefaultExecutionEngine.java:61)
+  	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:127)
+  	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.execute(ExecuteActionsTaskExecuter.java:116)
+  	at org.gradle.api.internal.tasks.execution.ProblemsTaskPathTrackingTaskExecuter.execute(ProblemsTaskPathTrackingTaskExecuter.java:40)
+  	at org.gradle.api.internal.tasks.execution.FinalizePropertiesTaskExecuter.execute(FinalizePropertiesTaskExecuter.java:46)
+  	at org.gradle.api.internal.tasks.execution.ResolveTaskExecutionModeExecuter.execute(ResolveTaskExecutionModeExecuter.java:51)
+  	at org.gradle.api.internal.tasks.execution.SkipTaskWithNoActionsExecuter.execute(SkipTaskWithNoActionsExecuter.java:57)
+  	at org.gradle.api.internal.tasks.execution.SkipOnlyIfTaskExecuter.execute(SkipOnlyIfTaskExecuter.java:74)
+  	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
+  	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.executeTask(EventFiringTaskExecuter.java:77)
+  	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:55)
+  	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:52)
+  	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:210)
+  	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:205)
+  	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
+  	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:60)
+  	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
+  	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
+  	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:54)
+  	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter.execute(EventFiringTaskExecuter.java:52)
+  	at org.gradle.execution.plan.LocalTaskNodeExecutor.execute(LocalTaskNodeExecutor.java:42)
+  	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:331)
+  	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:318)
+  	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.lambda$execute$0(DefaultTaskExecutionGraph.java:314)
+  	at org.gradle.internal.operations.CurrentBuildOperationRef.with(CurrentBuildOperationRef.java:85)
+  	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:314)
+  	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:303)
+  	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.execute(DefaultPlanExecutor.java:459)
+  	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.run(DefaultPlanExecutor.java:376)
+  	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
+  	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:48)
+  	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+  	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+  	at java.base/java.lang.Thread.run(Thread.java:840)
+  Caused by: com.android.ide.common.process.ProcessException: Error while executing process /home/amine/Android/Sdk/cmake/3.22.1/bin/cmake with arguments {-H/home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android -DCMAKE_SYSTEM_NAME=Android -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_SYSTEM_VERSION=26 -DANDROID_PLATFORM=android-26 -DANDROID_ABI=arm64-v8a -DCMAKE_ANDROID_ARCH_ABI=arm64-v8a -DANDROID_NDK=/home/amine/Android/Sdk/ndk/26.1.10909125 -DCMAKE_ANDROID_NDK=/home/amine/Android/Sdk/ndk/26.1.10909125 -DCMAKE_TOOLCHAIN_FILE=/home/amine/Android/Sdk/ndk/26.1.10909125/build/cmake/android.toolchain.cmake -DCMAKE_MAKE_PROGRAM=/home/amine/Android/Sdk/cmake/3.22.1/bin/ninja -DCMAKE_CXX_FLAGS=-O2 -fexceptions -frtti -std=c++1y -DONANDROID -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=/home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android/build/intermediates/cxx/Debug/17361o1n/obj/arm64-v8a -DCMAKE_RUNTIME_OUTPUT_DIRECTORY=/home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android/build/intermediates/cxx/Debug/17361o1n/obj/arm64-v8a -DCMAKE_BUILD_TYPE=Debug -DCMAKE_FIND_ROOT_PATH=/home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android/.cxx/Debug/17361o1n/prefab/arm64-v8a/prefab -B/home/amine/site_amine/SmartAttendance/node_modules/@op-engineering/op-sqlite/android/.cxx/Debug/17361o1n/arm64-v8a -GNinja -DANDROID_STL=c++_shared -DSQLITE_FLAGS='' -DUSE_SQLCIPHER=0 -DUSE_CRSQLITE=0 -DUSE_LIBSQL=0 -DUSE_SQLITE_VEC=0}
+  	at com.android.build.gradle.internal.process.GradleProcessResult.buildProcessException(GradleProcessResult.java:73)
+  	at com.android.build.gradle.internal.process.GradleProcessResult.assertNormalExitValue(GradleProcessResult.java:48)
+  	at com.android.build.gradle.internal.cxx.process.ExecuteProcessKt.execute(ExecuteProcess.kt:277)
+  	... 142 more
+  Caused by: org.gradle.process.internal.ExecException: Process 'command '/home/amine/Android/Sdk/cmake/3.22.1/bin/cmake'' finished with non-zero exit value 1
+  	at org.gradle.process.internal.DefaultExecHandle$ExecResultImpl.assertNormalExitValue(DefaultExecHandle.java:442)
+  	at com.android.build.gradle.internal.process.GradleProcessResult.assertNormalExitValue(GradleProcessResult.java:46)
+  	... 143 more
+
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD FAILED in 1s
+11 actionable tasks: 1 executed, 10 up-to-date

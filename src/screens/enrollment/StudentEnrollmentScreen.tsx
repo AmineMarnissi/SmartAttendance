@@ -7,12 +7,14 @@ import {
   Surface,
   Avatar,
   RadioButton,
+  useTheme,
 } from 'react-native-paper';
 import {studentRepository} from '../../services/database/studentRepository';
 import {classRepository} from '../../services/database/classRepository';
 import {Class} from '../../types/models';
 
 const StudentEnrollmentScreen = ({navigation}: any) => {
+  const theme = useTheme();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [studentCode, setStudentCode] = useState('');
@@ -59,9 +61,19 @@ const StudentEnrollmentScreen = ({navigation}: any) => {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Surface style={styles.surface}>
-        <Title style={styles.title}>New Student Enrollment</Title>
+    <ScrollView
+      contentContainerStyle={[
+        styles.container,
+        {backgroundColor: theme.colors.background},
+      ]}>
+      <Surface
+        style={[
+          styles.surface,
+          {backgroundColor: theme.colors.elevation.level2},
+        ]}>
+        <Title style={[styles.title, {color: theme.colors.onSurface}]}>
+          New Student Enrollment
+        </Title>
 
         <View style={styles.avatarContainer}>
           <Avatar.Icon icon="account-plus" size={80} />
@@ -87,9 +99,12 @@ const StudentEnrollmentScreen = ({navigation}: any) => {
         />
 
         <View style={styles.classSelector}>
-          <Text style={styles.classLabel}>Assign To Class *</Text>
+          <Text style={[styles.classLabel, {color: theme.colors.onSurface}]}>
+            Assign To Class *
+          </Text>
           {classes.length === 0 ? (
-            <Text style={styles.classHint}>
+            <Text
+              style={[styles.classHint, {color: theme.colors.onSurfaceVariant}]}>
               Create a class first before enrolling students.
             </Text>
           ) : (
@@ -99,7 +114,7 @@ const StudentEnrollmentScreen = ({navigation}: any) => {
               {classes.map(cls => (
                 <View key={cls.id} style={styles.classRow}>
                   <RadioButton value={String(cls.id)} />
-                  <Text>
+                  <Text style={{color: theme.colors.onSurface}}>
                     {cls.name}
                     {cls.grade ? ` • ${cls.grade}` : ''}
                   </Text>
@@ -125,7 +140,6 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     padding: 20,
-    backgroundColor: '#f5f5f5',
     justifyContent: 'center',
   },
   surface: {
@@ -151,7 +165,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   classHint: {
-    color: '#666',
   },
   classRow: {
     flexDirection: 'row',

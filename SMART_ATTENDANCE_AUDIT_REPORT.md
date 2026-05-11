@@ -1,4 +1,4 @@
-# SmartAttendance Deep Audit Report
+# RegistreIntelligent Deep Audit Report
 
 Generated: 2026-05-10
 Repository: `E:\projects\SmartAttendance`
@@ -7,7 +7,7 @@ Initial Git status: clean
 
 ## Executive summary
 
-SmartAttendance is a React Native 0.74 mobile app for school attendance with local PIN authentication, local SQLite-style persistence, camera-based face capture, TensorFlow Lite face embeddings, attendance review, reporting/export, and local absence notifications.
+SmartAttendance (now RegistreIntelligent) is a React Native 0.78 mobile app for school attendance with local PIN authentication, local SQLite-style persistence, camera-based face capture, TensorFlow Lite face embeddings, attendance review, reporting/export, and local absence notifications.
 
 The app has a strong prototype foundation: the data model is clear, database queries mostly use parameter binding, the attendance workflow is understandable, the camera/face-recognition flow is separated into services/hooks, and tests exist for core matching and attendance logic.
 
