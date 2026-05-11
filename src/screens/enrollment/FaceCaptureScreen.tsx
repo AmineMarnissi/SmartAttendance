@@ -13,6 +13,7 @@ import {studentRepository} from '../../services/database/studentRepository';
 import {embeddingStorage} from '../../services/faceRecognition/EmbeddingStorage';
 import {requestCameraPermission} from '../../utils/permissions';
 import {classRepository} from '../../services/database/classRepository';
+import {db} from '../../services/database/db';
 import {
   buildFaceCrop,
   createEmbeddingInput,
@@ -32,7 +33,9 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
   const [liveFaceBounds, setLiveFaceBounds] = useState<any | null>(null);
   const [liveQuality, setLiveQuality] = useState(0);
   const device = useCameraDevice('front');
+  const cameraRef = useRef<Camera>(null);
   const capturedEmbeddings = useRef<Float32Array[]>([]);
+  const capturedPhotoPath = useRef<string | null>(null);
   const latestEmbedding = useRef<Float32Array | null>(null);
   const latestQuality = useRef(0);
   const {resize} = useResizePlugin();
@@ -140,6 +143,17 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
     }
 
     setIsCapturing(true);
+
+    if (!capturedPhotoPath.current && cameraRef.current) {
+      try {
+        const photo = await cameraRef.current.takePhoto({});
+        capturedPhotoPath.current = photo.path;
+        console.log('[FaceCapture] Saved thumbnail photo path:', photo.path);
+      } catch (error) {
+        console.warn('[FaceCapture] Could not capture thumbnail photo:', error);
+      }
+    }
+
     const embeddingCopy = new Float32Array(latestEmbedding.current);
     capturedEmbeddings.current.push(embeddingCopy);
 
@@ -160,6 +174,7 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
         student_code: studentData.studentCode,
         first_name: studentData.firstName,
         last_name: studentData.lastName,
+        thumbnail: capturedPhotoPath.current ?? undefined,
       });
       console.log('[FaceCapture] Created student with id:', studentId);
       await classRepository.enrollStudent(studentId, studentData.classId);
@@ -199,7 +214,26 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
         normalizedAverage,
         latestQuality.current,
       );
-      console.log('[FaceCapture] Embedding saved successfully!');
+
+      const savedFaceResult = await db.execute(
+        'SELECT COUNT(*) as face_count, MAX(LENGTH(embedding)) as embedding_bytes FROM face_embeddings WHERE student_id = ?;',
+        [studentId],
+      );
+      const savedFaceRow = savedFaceResult.rows[0] as any;
+      const savedFaceCount = savedFaceRow?.face_count ?? 0;
+      const savedEmbeddingBytes = savedFaceRow?.embedding_bytes ?? 0;
+      console.log(
+        '[FaceCapture] Embedding saved successfully. Count:',
+        savedFaceCount,
+        'bytes:',
+        savedEmbeddingBytes,
+        'thumbnail:',
+        capturedPhotoPath.current,
+      );
+
+      if (savedFaceCount === 0) {
+        throw new Error('Face embedding was not stored for this student.');
+      }
 
       Alert.alert('Success', 'Student enrolled successfully', [
         {text: 'OK', onPress: () => navigation.navigate('AdminDashboard')},
@@ -241,9 +275,11 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
 
       <View style={styles.cameraContainer}>
         <Camera
+          ref={cameraRef}
           style={styles.camera}
           device={device}
           isActive={true}
+          photo={true}
           pixelFormat="yuv"
           frameProcessor={frameProcessor}
         />

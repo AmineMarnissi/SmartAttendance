@@ -4,7 +4,7 @@ import {FaceEmbedding} from '../../types/models';
 type FaceEmbeddingRow = {
   id: number;
   student_id: number;
-  embedding: Uint8Array;
+  embedding: Uint8Array | ArrayBuffer | number[] | Record<string, unknown>;
   quality?: number;
   created_at: string;
 };
@@ -78,7 +78,11 @@ export const embeddingStorage = {
           Array.isArray(row.embedding) ||
           (row.embedding && typeof row.embedding === 'object')
         ) {
-          buffer = new Uint8Array(Object.values(row.embedding)).buffer;
+          buffer = new Uint8Array(
+            Object.values(row.embedding).filter(
+              (value): value is number => typeof value === 'number',
+            ),
+          ).buffer;
         } else {
           // Absolute fallback, create an empty 128-float buffer so it doesn't crash
           console.error(
@@ -180,7 +184,11 @@ export const embeddingStorage = {
             Array.isArray(row.embedding) ||
             (row.embedding && typeof row.embedding === 'object')
           ) {
-            buffer = new Uint8Array(Object.values(row.embedding)).buffer;
+            buffer = new Uint8Array(
+              Object.values(row.embedding).filter(
+                (value): value is number => typeof value === 'number',
+              ),
+            ).buffer;
           } else {
             console.error(
               '[EmbeddingStorage] Invalid embedding format from DB:',

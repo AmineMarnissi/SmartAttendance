@@ -8,9 +8,15 @@ import {Button, IconButton} from 'react-native-paper';
 const ScanScreen = ({navigation, route}: any) => {
   const {classId} = route.params || {};
   const [hasPermission, setHasPermission] = useState(false);
-  const device = useCameraDevice('front'); // Or 'back' depending on preference
-  const {frameProcessor, detectedStudents, modelState} =
-    useFaceRecognition(classId);
+  const device = useCameraDevice('front');
+  const {
+    frameProcessor,
+    detectedStudents,
+    modelState,
+    enrolledCount,
+    lastDebug,
+    reloadClassData,
+  } = useFaceRecognition(classId);
 
   useEffect(() => {
     (async () => {
@@ -39,9 +45,12 @@ const ScanScreen = ({navigation, route}: any) => {
   }
 
   const handleCapture = () => {
-    // Save results and navigate to Review
     navigation.navigate('ScanReview', {classId, results: detectedStudents});
   };
+
+  const bestScore = lastDebug
+    ? `${Math.round(lastDebug.bestConfidence * 100)}%`
+    : 'n/a';
 
   return (
     <View style={styles.container}>
@@ -53,7 +62,6 @@ const ScanScreen = ({navigation, route}: any) => {
         frameProcessor={frameProcessor}
       />
 
-      {/* Overlays for bounding boxes */}
       {detectedStudents.map((face, index) => (
         <View
           key={index}
@@ -66,7 +74,10 @@ const ScanScreen = ({navigation, route}: any) => {
               height: face.bounds.height,
             },
           ]}>
-          <Text style={styles.faceLabel}>{face.studentName || 'Unknown'}</Text>
+          <Text style={styles.faceLabel}>
+            {face.studentName ||
+              `Unknown ${Math.round((face.bestConfidence ?? 0) * 100)}%`}
+          </Text>
         </View>
       ))}
 
@@ -84,22 +95,25 @@ const ScanScreen = ({navigation, route}: any) => {
         </TouchableOpacity>
 
         <IconButton
-          icon="camera-flip"
+          icon="refresh"
           mode="contained"
           containerColor="rgba(0,0,0,0.5)"
           iconColor="white"
-          onPress={() => {}} // Toggle camera device
+          onPress={reloadClassData}
         />
       </View>
 
       <View style={styles.statusPill}>
         <Text style={styles.statusText}>
           {modelState === 'loaded'
-            ? `${detectedStudents.length} face(s) analyzed`
+            ? `${detectedStudents.length} face(s) • ${enrolledCount} enrolled • best ${bestScore}`
             : modelState === 'error'
             ? 'Embedding model unavailable'
             : 'Loading face embedding model...'}
         </Text>
+        {lastDebug?.reason && (
+          <Text style={styles.debugText}>{lastDebug.reason}</Text>
+        )}
       </View>
     </View>
   );
@@ -152,6 +166,13 @@ const styles = StyleSheet.create({
   statusText: {
     color: '#fff',
     fontSize: 12,
+    textAlign: 'center',
+  },
+  debugText: {
+    color: '#FFD54F',
+    fontSize: 11,
+    textAlign: 'center',
+    marginTop: 2,
   },
   captureBtn: {
     width: 80,
