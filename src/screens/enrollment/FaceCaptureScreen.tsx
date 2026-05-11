@@ -17,7 +17,6 @@ import {
   useFaceDetector,
 } from 'react-native-vision-camera-face-detector';
 import {Worklets} from 'react-native-worklets-core';
-import RNFS from 'react-native-fs';
 import {studentRepository} from '../../services/database/studentRepository';
 import {embeddingStorage} from '../../services/faceRecognition/EmbeddingStorage';
 import {requestCameraPermission} from '../../utils/permissions';
@@ -53,7 +52,6 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
   const device = useCameraDevice('front');
   const latestQuality = useRef(0);
   const latestFaceBounds = useRef<FaceBounds | null>(null);
-  const latestFrameSize = useRef({width: 1, height: 1});
   const capturedPhotoRef = useRef<string | null>(null);
   const hasSavedRef = useRef(false);
   const capturedEmbeddings = useRef<
@@ -89,12 +87,6 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
     setLiveQuality(payload?.quality ?? 0);
     latestQuality.current = payload?.quality ?? 0;
     latestFaceBounds.current = payload?.bounds ?? null;
-    if (payload?.frameWidth && payload?.frameHeight) {
-      latestFrameSize.current = {
-        width: payload.frameWidth,
-        height: payload.frameHeight,
-      };
-    }
   }, []);
 
   const updateLiveFaceOnJS = React.useMemo(
