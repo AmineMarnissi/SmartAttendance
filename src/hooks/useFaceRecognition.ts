@@ -1,11 +1,9 @@
 import {useState, useCallback, useEffect, useMemo, useRef} from 'react';
 import {
   runAsync,
-  runAtTargetFps,
   useFrameProcessor,
 } from 'react-native-vision-camera';
 import {useFaceDetector} from 'react-native-vision-camera-face-detector';
-import {useResizePlugin} from 'vision-camera-resize-plugin';
 import {Worklets} from 'react-native-worklets-core';
 import {
   EnrolledEmbedding,
@@ -14,18 +12,14 @@ import {
 import {embeddingStorage} from '../services/faceRecognition/EmbeddingStorage';
 import {studentRepository} from '../services/database/studentRepository';
 import {
-  buildFaceCrop,
-  createEmbeddingInput,
   estimateFaceQuality,
-  FACE_EMBEDDING_INPUT_SIZE,
-  getExactArrayBuffer,
-  l2NormalizeEmbedding,
   useFaceEmbedder,
 } from '../services/faceRecognition/FaceEmbedder';
+import {extractFaceEmbeddingsFromPhoto} from '../services/faceRecognition/photoEmbedding';
+import type {PhotoEmbeddingFallback} from '../services/faceRecognition/photoEmbedding';
+import {cosineSimilarity} from '../utils/cosineSimilarity';
 
-const RECOGNITION_PROCESS_FPS = 5;
-const MIN_RECOGNITION_QUALITY = 0.32;
-const STABLE_MATCH_FRAMES = 2;
+const MIN_RECOGNITION_QUALITY = 0.2;
 
 export interface DetectedStudent {
   studentId: number | null;
@@ -43,47 +37,32 @@ export interface DetectedStudent {
   frameHeight: number;
 }
 
-const cosineSimilarityWorklet = (a: Float32Array, b: Float32Array) => {
-  'worklet';
-
-  if (a.length !== b.length || a.length === 0) {
-    return 0;
-  }
-
-  let dot = 0;
-  let magnitudeA = 0;
-  let magnitudeB = 0;
-
-  for (let i = 0; i < a.length; i += 1) {
-    dot += a[i] * b[i];
-    magnitudeA += a[i] * a[i];
-    magnitudeB += b[i] * b[i];
-  }
-
-  const denominator = Math.sqrt(magnitudeA) * Math.sqrt(magnitudeB);
-  return denominator === 0 ? 0 : dot / denominator;
-};
-
-const matchEmbeddingWorklet = (
+const matchEmbedding = (
   liveEmbedding: Float32Array,
   enrolledEmbeddings: EnrolledEmbedding[],
   studentNames: Record<number, string>,
 ) => {
-  'worklet';
-
   let bestStudentId: number | null = null;
   let bestConfidence = 0;
+  let secondConfidence = 0;
 
   for (const enrolled of enrolledEmbeddings) {
-    const similarity = cosineSimilarityWorklet(
-      liveEmbedding,
-      enrolled.embedding,
-    );
+    const similarity = cosineSimilarity(liveEmbedding, enrolled.embedding);
     if (similarity > bestConfidence) {
+      secondConfidence = bestConfidence;
       bestConfidence = similarity;
       bestStudentId = enrolled.studentId;
+    } else if (similarity > secondConfidence) {
+      secondConfidence = similarity;
     }
   }
+
+  console.log('[ScanRecognition] best match:', {
+    studentId: bestStudentId,
+    confidence: bestConfidence,
+    secondConfidence,
+    threshold: MATCH_THRESHOLD,
+  });
 
   if (bestStudentId == null || bestConfidence < MATCH_THRESHOLD) {
     return null;
@@ -104,10 +83,7 @@ export const useFaceRecognition = (classId?: number) => {
     [],
   );
   const [studentNames, setStudentNames] = useState<Record<number, string>>({});
-  const stabilityRef = useRef<Record<number, {count: number; studentId: number | null}>>(
-    {},
-  );
-  const {resize} = useResizePlugin();
+  const lastLiveFaceRef = useRef<DetectedStudent | null>(null);
   const embedder = useFaceEmbedder();
   const faceDetectionOptions = useMemo(
     () => ({
@@ -169,127 +145,124 @@ export const useFaceRecognition = (classId?: number) => {
   };
 
   const updateResults = useCallback((matches: DetectedStudent[]) => {
-    const nextStability: Record<number, {count: number; studentId: number | null}> =
-      {};
-    const stabilizedMatches = matches.map((match, index) => {
-      const key = match.trackingId ?? index;
-      const previous = stabilityRef.current[key];
-      const count =
-        match.studentId != null && previous?.studentId === match.studentId
-          ? previous.count + 1
-          : match.studentId != null
-          ? 1
-          : 0;
+    const bestLiveFace =
+      matches
+        .slice()
+        .sort(
+          (a, b) =>
+            b.quality - a.quality ||
+            b.bounds.width * b.bounds.height - a.bounds.width * a.bounds.height,
+        )[0] ?? null;
 
-      nextStability[key] = {
-        count,
-        studentId: match.studentId,
-      };
-
-      if (match.studentId == null || count < STABLE_MATCH_FRAMES) {
-        return {
-          ...match,
-          studentId: null,
-          studentName: undefined,
-          confidence: 0,
-        };
-      }
-
-      return match;
-    });
-
-    stabilityRef.current = nextStability;
-    setDetectedStudents(stabilizedMatches);
+    lastLiveFaceRef.current = bestLiveFace;
+    setDetectedStudents(matches);
   }, []);
 
   const updateResultsOnJS = useMemo(
     () => Worklets.createRunOnJS(updateResults),
     [updateResults],
   );
-  const boxedModel = embedder.boxedModel;
 
   const frameProcessor = useFrameProcessor(
     frame => {
       'worklet';
 
-      runAtTargetFps(RECOGNITION_PROCESS_FPS, () => {
+      runAsync(frame, () => {
         'worklet';
 
-        runAsync(frame, () => {
-          'worklet';
+        const faces = detectFaces(frame);
+        const results: DetectedStudent[] = faces.map(face => ({
+          studentId: null,
+          confidence: 0,
+          quality: estimateFaceQuality(
+            face.bounds,
+            frame.width,
+            frame.height,
+            face.yawAngle,
+            face.pitchAngle,
+          ),
+          trackingId: face.trackingId,
+          bounds: face.bounds,
+          frameWidth: frame.width,
+          frameHeight: frame.height,
+        }));
 
-          const faces = detectFaces(frame);
-          const results: DetectedStudent[] = [];
-          const tflite = boxedModel?.unbox();
-
-          for (const face of faces) {
-            const quality = estimateFaceQuality(
-              face.bounds,
-              frame.width,
-              frame.height,
-              face.yawAngle,
-              face.pitchAngle,
-            );
-            let match:
-              | {studentId: number; confidence: number; studentName?: string}
-              | null = null;
-
-            if (
-              tflite != null &&
-              enrolledEmbeddings.length > 0 &&
-              quality >= MIN_RECOGNITION_QUALITY
-            ) {
-              const crop = buildFaceCrop(face.bounds, frame.width, frame.height);
-              const resizedFace = resize(frame, {
-                crop,
-                scale: {
-                  width: FACE_EMBEDDING_INPUT_SIZE,
-                  height: FACE_EMBEDDING_INPUT_SIZE,
-                },
-                pixelFormat: 'rgb',
-                dataType: 'float32',
-              }) as Float32Array;
-              const input = createEmbeddingInput(resizedFace);
-              const output = tflite.runSync([getExactArrayBuffer(input)]);
-              const liveEmbedding = l2NormalizeEmbedding(
-                new Float32Array(output[0]),
-              );
-              match = matchEmbeddingWorklet(
-                liveEmbedding,
-                enrolledEmbeddings,
-                studentNames,
-              );
-            }
-
-            results.push({
-              studentId: match?.studentId ?? null,
-              studentName: match?.studentName,
-              confidence: match?.confidence ?? 0,
-              quality,
-              trackingId: face.trackingId,
-              bounds: face.bounds,
-              frameWidth: frame.width,
-              frameHeight: frame.height,
-            });
-          }
-
-          updateResultsOnJS(results);
-        });
+        updateResultsOnJS(results);
       });
     },
-    [
-      boxedModel,
-      detectFaces,
-      enrolledEmbeddings,
-      resize,
-      studentNames,
-      updateResultsOnJS,
-    ],
+    [detectFaces, updateResultsOnJS],
+  );
+
+  const recognizePhoto = useCallback(
+    async (photoPath: string): Promise<DetectedStudent[]> => {
+      console.log('[ScanRecognition] Starting photo scan:', {
+        classId,
+        modelState: embedder.state,
+        enrolledEmbeddings: enrolledEmbeddings.length,
+        students: Object.keys(studentNames).length,
+      });
+
+      if (embedder.state !== 'loaded') {
+        throw new Error('Face embedding model is not ready yet.');
+      }
+
+      if (enrolledEmbeddings.length === 0) {
+        throw new Error('No enrolled face embeddings found for this class.');
+      }
+
+      const fallbackFace: PhotoEmbeddingFallback | null = lastLiveFaceRef.current
+        ? {
+            bounds: lastLiveFaceRef.current.bounds,
+            frameWidth: lastLiveFaceRef.current.frameWidth,
+            frameHeight: lastLiveFaceRef.current.frameHeight,
+          }
+        : null;
+
+      console.log('[ScanRecognition] Last live face fallback:', fallbackFace);
+
+      const {embeddings} = await extractFaceEmbeddingsFromPhoto(
+        photoPath,
+        embedder.model,
+        fallbackFace,
+      );
+
+      console.log('[ScanRecognition] Faces extracted from photo:', embeddings.length);
+
+      const matches = embeddings.map((face, index) => {
+        const match =
+          face.quality >= MIN_RECOGNITION_QUALITY
+            ? matchEmbedding(face.embedding, enrolledEmbeddings, studentNames)
+            : null;
+
+        console.log('[ScanRecognition] Face result:', {
+          index,
+          quality: face.quality,
+          studentId: match?.studentId ?? null,
+          studentName: match?.studentName ?? 'Unknown',
+          confidence: match?.confidence ?? 0,
+        });
+
+        return {
+          studentId: match?.studentId ?? null,
+          studentName: match?.studentName,
+          confidence: match?.confidence ?? 0,
+          quality: face.quality,
+          bounds: face.bounds,
+          frameWidth: face.frameWidth,
+          frameHeight: face.frameHeight,
+        };
+      });
+
+      setDetectedStudents(matches);
+      return matches;
+    },
+    [classId, embedder, enrolledEmbeddings, studentNames],
   );
 
   return {
     frameProcessor,
     detectedStudents,
     modelState: embedder.state,
+    recognizePhoto,
   };
 };

@@ -1,5 +1,5 @@
-import React, {useState, useEffect} from 'react';
-import {View, StyleSheet, Text, TouchableOpacity} from 'react-native';
+import React, {useState, useEffect, useRef} from 'react';
+import {Alert, View, StyleSheet, Text, TouchableOpacity} from 'react-native';
 import {Camera, useCameraDevice} from 'react-native-vision-camera';
 import {useFaceRecognition} from '../../hooks/useFaceRecognition';
 import {requestCameraPermission} from '../../utils/permissions';
@@ -9,9 +9,11 @@ import {mapFaceBoundsToView} from '../../utils/faceBounds';
 const ScanScreen = ({navigation, route}: any) => {
   const {classId} = route.params || {};
   const [hasPermission, setHasPermission] = useState(false);
+  const [isScanning, setIsScanning] = useState(false);
   const [previewSize, setPreviewSize] = useState({width: 1, height: 1});
+  const camera = useRef<Camera>(null);
   const device = useCameraDevice('front');
-  const {frameProcessor, detectedStudents, modelState} =
+  const {frameProcessor, detectedStudents, modelState, recognizePhoto} =
     useFaceRecognition(classId);
 
   useEffect(() => {
@@ -40,8 +42,41 @@ const ScanScreen = ({navigation, route}: any) => {
     );
   }
 
-  const handleCapture = () => {
-    navigation.navigate('ScanReview', {classId, results: detectedStudents});
+  const handleCapture = async () => {
+    if (isScanning) {
+      return;
+    }
+
+    if (!camera.current) {
+      Alert.alert('Camera Not Ready', 'Please wait for the camera preview.');
+      return;
+    }
+
+    if (modelState !== 'loaded') {
+      Alert.alert('Model Loading', 'Face recognition model is not ready yet.');
+      return;
+    }
+
+    setIsScanning(true);
+    console.log('[ScanScreen] Scan button pressed for class:', classId);
+
+    try {
+      const photo = await camera.current.takePhoto({
+        flash: 'off',
+        enableShutterSound: false,
+      });
+      console.log('[ScanScreen] Photo captured:', photo.path);
+      const results = await recognizePhoto(photo.path);
+      console.log('[ScanScreen] Recognition results:', results);
+      navigation.navigate('ScanReview', {classId, results});
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Failed to scan faces.';
+      console.error('[ScanScreen] Scan failed:', error);
+      Alert.alert('Scan Failed', message);
+    } finally {
+      setIsScanning(false);
+    }
   };
 
   return (
@@ -52,10 +87,12 @@ const ScanScreen = ({navigation, route}: any) => {
         setPreviewSize({width, height});
       }}>
       <Camera
+        ref={camera}
         style={StyleSheet.absoluteFill}
         device={device}
         isActive={true}
         pixelFormat="yuv"
+        photo={true}
         frameProcessor={frameProcessor}
       />
 
@@ -105,7 +142,13 @@ const ScanScreen = ({navigation, route}: any) => {
           onPress={() => navigation.goBack()}
         />
 
-        <TouchableOpacity style={styles.captureBtn} onPress={handleCapture}>
+        <TouchableOpacity
+          disabled={isScanning}
+          style={[
+            styles.captureBtn,
+            isScanning ? styles.captureBtnDisabled : null,
+          ]}
+          onPress={handleCapture}>
           <View style={styles.captureInner} />
         </TouchableOpacity>
 
@@ -121,7 +164,9 @@ const ScanScreen = ({navigation, route}: any) => {
       <View style={styles.statusPill}>
         <Text style={styles.statusText}>
           {modelState === 'loaded'
-            ? `${detectedStudents.length} face(s) analyzed`
+            ? isScanning
+              ? 'Analyzing captured photo...'
+              : `${detectedStudents.length} live face(s). Tap to recognize.`
             : modelState === 'error'
             ? 'Embedding model unavailable'
             : 'Loading face embedding model...'}
@@ -197,6 +242,9 @@ const styles = StyleSheet.create({
     borderColor: 'white',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  captureBtnDisabled: {
+    opacity: 0.5,
   },
   captureInner: {
     width: 60,

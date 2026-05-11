@@ -18,6 +18,12 @@ type FaceBounds = {
   height: number;
 };
 
+export type PhotoEmbeddingFallback = {
+  bounds: FaceBounds;
+  frameWidth?: number;
+  frameHeight?: number;
+};
+
 export type PhotoFaceEmbedding = {
   bounds: FaceBounds;
   confidence: number;
@@ -47,6 +53,72 @@ const decodePhoto = async (photoPath: string) => {
   }
 
   return {base64, image};
+};
+
+const clampBounds = (
+  bounds: FaceBounds,
+  imageWidth: number,
+  imageHeight: number,
+): FaceBounds | null => {
+  const x = Math.max(0, Math.min(bounds.x, imageWidth - 1));
+  const y = Math.max(0, Math.min(bounds.y, imageHeight - 1));
+  const width = Math.max(0, Math.min(bounds.width, imageWidth - x));
+  const height = Math.max(0, Math.min(bounds.height, imageHeight - y));
+
+  if (width < 4 || height < 4) {
+    return null;
+  }
+
+  return {x, y, width, height};
+};
+
+const projectFallbackBounds = (
+  fallback: FaceBounds | PhotoEmbeddingFallback,
+  imageWidth: number,
+  imageHeight: number,
+): FaceBounds | null => {
+  const bounds = 'bounds' in fallback ? fallback.bounds : fallback;
+  const frameWidth = 'bounds' in fallback ? fallback.frameWidth : undefined;
+  const frameHeight = 'bounds' in fallback ? fallback.frameHeight : undefined;
+
+  if (
+    frameWidth == null ||
+    frameHeight == null ||
+    frameWidth <= 0 ||
+    frameHeight <= 0
+  ) {
+    return clampBounds(bounds, imageWidth, imageHeight);
+  }
+
+  const imageAspect = imageWidth / imageHeight;
+  const frameAspect = frameWidth / frameHeight;
+  const directMismatch = Math.abs(imageAspect - frameAspect);
+  const rotatedMismatch = Math.abs(imageAspect - 1 / frameAspect);
+  const isRotated = rotatedMismatch + 0.05 < directMismatch;
+
+  const projected = isRotated
+    ? {
+        x: bounds.y * (imageWidth / frameHeight),
+        y: bounds.x * (imageHeight / frameWidth),
+        width: bounds.height * (imageWidth / frameHeight),
+        height: bounds.width * (imageHeight / frameWidth),
+      }
+    : {
+        x: bounds.x * (imageWidth / frameWidth),
+        y: bounds.y * (imageHeight / frameHeight),
+        width: bounds.width * (imageWidth / frameWidth),
+        height: bounds.height * (imageHeight / frameHeight),
+      };
+
+  console.log('[PhotoEmbedding] Projected live fallback bounds:', {
+    liveFrame: `${frameWidth}x${frameHeight}`,
+    image: `${imageWidth}x${imageHeight}`,
+    rotated: isRotated,
+    original: bounds,
+    projected,
+  });
+
+  return clampBounds(projected, imageWidth, imageHeight);
 };
 
 const createEmbeddingFromCrop = (
@@ -110,7 +182,7 @@ const createEmbeddingFromCrop = (
 export const extractFaceEmbeddingsFromPhoto = async (
   photoPath: string,
   model: TfliteModel,
-  fallbackBounds?: FaceBounds | null,
+  fallbackBounds?: FaceBounds | PhotoEmbeddingFallback | null,
 ) => {
   console.log('[PhotoEmbedding] Reading captured photo:', photoPath);
   const {base64, image} = await decodePhoto(photoPath);
@@ -121,7 +193,7 @@ export const extractFaceEmbeddingsFromPhoto = async (
       landmarkMode: 'none',
       contourMode: 'none',
       classificationMode: 'none',
-      minFaceSize: 0.12,
+      minFaceSize: 0.08,
     },
   });
 
@@ -132,14 +204,23 @@ export const extractFaceEmbeddingsFromPhoto = async (
     `${image.width()}x${image.height()}`,
   );
 
+  const fallbackFaceBounds = fallbackBounds
+    ? projectFallbackBounds(fallbackBounds, image.width(), image.height())
+    : null;
   const boundsList =
     faces.length > 0
       ? faces
           .map(face => face.bounds)
           .sort((a, b) => b.width * b.height - a.width * a.height)
-      : fallbackBounds
-      ? [fallbackBounds]
+      : fallbackFaceBounds
+      ? [fallbackFaceBounds]
       : [];
+
+  if (faces.length === 0 && fallbackFaceBounds != null) {
+    console.warn(
+      '[PhotoEmbedding] Static detector found no face; using last live face fallback.',
+    );
+  }
 
   if (boundsList.length === 0) {
     throw new Error('No face found in captured photo.');

@@ -1,11 +1,10 @@
 declare module 'victory-native' {
   import * as React from 'react';
 
-  export const VictoryBar: React.ComponentType<any>;
-  export const VictoryChart: React.ComponentType<any>;
-  export const VictoryTheme: any;
-  export const VictoryAxis: React.ComponentType<any>;
-  export const VictoryLine: React.ComponentType<any>;
+  export const CartesianChart: React.ComponentType<any>;
+  export const Line: React.ComponentType<any>;
+  export const Bar: React.ComponentType<any>;
+  export const Pie: React.ComponentType<any>;
 }
 
 declare module 'react-native-vector-icons/MaterialCommunityIcons' {
