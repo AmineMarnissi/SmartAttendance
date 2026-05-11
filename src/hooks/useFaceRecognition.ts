@@ -29,12 +29,17 @@ export interface DetectedStudent {
     width: number;
     height: number;
   };
+  frameSize?: {
+    width: number;
+    height: number;
+  };
   bestConfidence?: number;
   debugReason?: string;
 }
 
 type LiveFaceEmbedding = {
   bounds: DetectedStudent['bounds'];
+  frameSize: NonNullable<DetectedStudent['frameSize']>;
   embedding: number[];
 };
 
@@ -132,6 +137,7 @@ export const useFaceRecognition = (classId?: number) => {
               : undefined,
           confidence: match?.confidence ?? 0,
           bounds: face.bounds,
+          frameSize: face.frameSize,
           bestConfidence: debug.bestConfidence,
           debugReason: debug.reason,
         };
@@ -181,6 +187,7 @@ export const useFaceRecognition = (classId?: number) => {
 
         liveFaces.push({
           bounds,
+          frameSize: {width: frame.width, height: frame.height},
           embedding: Array.from(liveEmbedding),
         });
       }

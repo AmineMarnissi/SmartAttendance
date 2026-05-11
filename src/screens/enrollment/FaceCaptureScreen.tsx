@@ -1,5 +1,5 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
-import {View, StyleSheet, Text, Alert} from 'react-native';
+import {View, StyleSheet, Text, Alert, LayoutChangeEvent} from 'react-native';
 import {
   Camera,
   useCameraDevice,
@@ -24,13 +24,24 @@ import {
   l2NormalizeEmbedding,
   useFaceEmbedder,
 } from '../../services/faceRecognition/FaceEmbedder';
+import {
+  Bounds,
+  clampBoundsToPreview,
+  mapCameraBoundsToPreview,
+  PreviewSize,
+} from '../../utils/mapCameraBounds';
 
 const FaceCaptureScreen = ({navigation, route}: any) => {
   const {studentData} = route.params;
   const [hasPermission, setHasPermission] = useState(false);
   const [captureCount, setCaptureCount] = useState(0);
   const [isCapturing, setIsCapturing] = useState(false);
-  const [liveFaceBounds, setLiveFaceBounds] = useState<any | null>(null);
+  const [liveFaceBounds, setLiveFaceBounds] = useState<Bounds | null>(null);
+  const [liveFrameSize, setLiveFrameSize] = useState<PreviewSize | null>(null);
+  const [previewSize, setPreviewSize] = useState<PreviewSize>({
+    width: 1,
+    height: 1,
+  });
   const [liveQuality, setLiveQuality] = useState(0);
   const device = useCameraDevice('front');
   const cameraRef = useRef<Camera>(null);
@@ -63,6 +74,7 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
 
   const updateLiveFace = useCallback((payload: any) => {
     setLiveFaceBounds(payload?.bounds ?? null);
+    setLiveFrameSize(payload?.frameSize ?? null);
     setLiveQuality(payload?.quality ?? 0);
     latestQuality.current = payload?.quality ?? 0;
     latestEmbedding.current = payload?.embedding
@@ -124,10 +136,23 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
         bounds,
         quality,
         embedding: Array.from(embedding),
+        frameSize: {width: frame.width, height: frame.height},
       });
     },
     [boxedModel, detectFaces, resize, updateLiveFaceOnJS],
   );
+
+  const previewFaceBounds = liveFaceBounds
+    ? clampBoundsToPreview(
+        mapCameraBoundsToPreview(liveFaceBounds, liveFrameSize, previewSize),
+        previewSize,
+      )
+    : null;
+
+  const handleCameraLayout = (event: LayoutChangeEvent) => {
+    const {width, height} = event.nativeEvent.layout;
+    setPreviewSize({width, height});
+  };
 
   const handleCapture = async () => {
     if (captureCount >= FACE_EMBEDDING_CAPTURE_TARGETS || isCapturing) {
@@ -187,33 +212,26 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
 
       const embeddingLength = capturedEmbeddings.current[0]?.length ?? 0;
       console.log(
-        '[FaceCapture] Averaging',
+        '[FaceCapture] Saving',
         capturedEmbeddings.current.length,
         'embeddings of length',
         embeddingLength,
       );
-      const averageEmbedding = new Float32Array(embeddingLength);
-      for (let i = 0; i < embeddingLength; i++) {
-        let sum = 0;
-        capturedEmbeddings.current.forEach(emb => {
-          sum += emb[i];
-        });
-        averageEmbedding[i] = sum / capturedEmbeddings.current.length;
+
+      for (const capturedEmbedding of capturedEmbeddings.current) {
+        const normalizedEmbedding = l2NormalizeEmbedding(capturedEmbedding);
+        console.log(
+          '[FaceCapture] Saving embedding sample length:',
+          normalizedEmbedding.length,
+          'quality:',
+          latestQuality.current,
+        );
+        await embeddingStorage.save(
+          studentId,
+          normalizedEmbedding,
+          latestQuality.current,
+        );
       }
-
-      const normalizedAverage = l2NormalizeEmbedding(averageEmbedding);
-      console.log(
-        '[FaceCapture] Normalized embedding, length:',
-        normalizedAverage.length,
-        'quality:',
-        latestQuality.current,
-      );
-
-      await embeddingStorage.save(
-        studentId,
-        normalizedAverage,
-        latestQuality.current,
-      );
 
       const savedFaceResult = await db.execute(
         'SELECT COUNT(*) as face_count, MAX(LENGTH(embedding)) as embedding_bytes FROM face_embeddings WHERE student_id = ?;',
@@ -231,8 +249,10 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
         capturedPhotoPath.current,
       );
 
-      if (savedFaceCount === 0) {
-        throw new Error('Face embedding was not stored for this student.');
+      if (savedFaceCount < capturedEmbeddings.current.length) {
+        throw new Error(
+          'Not all face embeddings were stored for this student.',
+        );
       }
 
       Alert.alert('Success', 'Student enrolled successfully', [
@@ -273,7 +293,7 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
         style={styles.progress}
       />
 
-      <View style={styles.cameraContainer}>
+      <View style={styles.cameraContainer} onLayout={handleCameraLayout}>
         <Camera
           ref={cameraRef}
           style={styles.camera}
@@ -284,15 +304,15 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
           frameProcessor={frameProcessor}
         />
 
-        {liveFaceBounds && (
+        {previewFaceBounds && (
           <View
             style={[
               styles.faceBox,
               {
-                left: liveFaceBounds.x,
-                top: liveFaceBounds.y,
-                width: liveFaceBounds.width,
-                height: liveFaceBounds.height,
+                left: previewFaceBounds.x,
+                top: previewFaceBounds.y,
+                width: previewFaceBounds.width,
+                height: previewFaceBounds.height,
               },
             ]}
           />

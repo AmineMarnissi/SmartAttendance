@@ -43,7 +43,7 @@ const AdminDashboardScreen = ({navigation}: any) => {
   const loadData = useCallback(async () => {
     setRefreshing(true);
     try {
-      const [_allStudents, embedResult, rosterResult] = await Promise.all([
+      const [allStudents, embedResult, rosterResult] = await Promise.all([
         studentRepository.getAllActive(),
         db.execute(
           'SELECT COUNT(DISTINCT student_id) as cnt FROM face_embeddings;',
@@ -72,12 +72,9 @@ const AdminDashboardScreen = ({navigation}: any) => {
 
       const withFace = (embedResult.rows[0] as any)?.cnt ?? 0;
       const rosterRows = getRows<StudentRosterRow>(rosterResult);
-      const savedProfiles = rosterRows.filter(
-        row => row.embedding_count > 0 || row.thumbnail != null,
-      );
 
-      setStats({enrolled: savedProfiles.length, withFace});
-      setStudents(savedProfiles);
+      setStats({enrolled: allStudents.length, withFace});
+      setStudents(rosterRows);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       Alert.alert('Could not load students', message);
@@ -136,7 +133,7 @@ const AdminDashboardScreen = ({navigation}: any) => {
 
       <View style={styles.statGrid}>
         <StatCard
-          title="Active Students"
+          title="Roster Students"
           value={stats.enrolled}
           color="#4CAF50"
         />
@@ -163,9 +160,9 @@ const AdminDashboardScreen = ({navigation}: any) => {
         </Card.Content>
       </Card>
 
-      <Text style={styles.sectionTitle}>Saved Face Profiles</Text>
+      <Text style={styles.sectionTitle}>Class Student Roster</Text>
       {students.length === 0 ? (
-        <Text style={styles.emptyText}>No students enrolled yet.</Text>
+        <Text style={styles.emptyText}>No enrolled students yet.</Text>
       ) : (
         students.map(student => {
           const imageUri = getImageUri(student.thumbnail);
@@ -232,7 +229,7 @@ const AdminDashboardScreen = ({navigation}: any) => {
       <List.Section>
         <List.Item
           title="Unknown during scan?"
-          description="Open Attendance > Scan and check the overlay: enrolled count, best score, vector length, and reason."
+          description="Students with 0 face vectors need Face Capture before they can match in live attendance."
           left={props => <List.Icon {...props} icon="help-circle-outline" />}
         />
       </List.Section>

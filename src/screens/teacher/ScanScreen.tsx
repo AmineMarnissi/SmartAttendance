@@ -1,13 +1,28 @@
 import React, {useState, useEffect} from 'react';
-import {View, StyleSheet, Text, TouchableOpacity} from 'react-native';
+import {
+  View,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  LayoutChangeEvent,
+} from 'react-native';
 import {Camera, useCameraDevice} from 'react-native-vision-camera';
 import {useFaceRecognition} from '../../hooks/useFaceRecognition';
 import {requestCameraPermission} from '../../utils/permissions';
 import {Button, IconButton} from 'react-native-paper';
+import {
+  clampBoundsToPreview,
+  mapCameraBoundsToPreview,
+  PreviewSize,
+} from '../../utils/mapCameraBounds';
 
 const ScanScreen = ({navigation, route}: any) => {
   const {classId} = route.params || {};
   const [hasPermission, setHasPermission] = useState(false);
+  const [previewSize, setPreviewSize] = useState<PreviewSize>({
+    width: 1,
+    height: 1,
+  });
   const device = useCameraDevice('front');
   const {
     frameProcessor,
@@ -44,8 +59,17 @@ const ScanScreen = ({navigation, route}: any) => {
     );
   }
 
+  const handlePreviewLayout = (event: LayoutChangeEvent) => {
+    const {width, height} = event.nativeEvent.layout;
+    setPreviewSize({width, height});
+  };
+
   const handleCapture = () => {
-    navigation.navigate('ScanReview', {classId, results: detectedStudents});
+    navigation.navigate('ScanReview', {
+      classId,
+      results: detectedStudents,
+      scannedAt: new Date().toISOString(),
+    });
   };
 
   const bestScore = lastDebug
@@ -54,32 +78,41 @@ const ScanScreen = ({navigation, route}: any) => {
 
   return (
     <View style={styles.container}>
-      <Camera
-        style={StyleSheet.absoluteFill}
-        device={device}
-        isActive={true}
-        pixelFormat="yuv"
-        frameProcessor={frameProcessor}
-      />
+      <View style={StyleSheet.absoluteFill} onLayout={handlePreviewLayout}>
+        <Camera
+          style={StyleSheet.absoluteFill}
+          device={device}
+          isActive={true}
+          pixelFormat="yuv"
+          frameProcessor={frameProcessor}
+        />
+      </View>
 
-      {detectedStudents.map((face, index) => (
-        <View
-          key={index}
-          style={[
-            styles.faceBox,
-            {
-              left: face.bounds.x,
-              top: face.bounds.y,
-              width: face.bounds.width,
-              height: face.bounds.height,
-            },
-          ]}>
-          <Text style={styles.faceLabel}>
-            {face.studentName ||
-              `Unknown ${Math.round((face.bestConfidence ?? 0) * 100)}%`}
-          </Text>
-        </View>
-      ))}
+      {detectedStudents.map((face, index) => {
+        const previewBounds = clampBoundsToPreview(
+          mapCameraBoundsToPreview(face.bounds, face.frameSize, previewSize),
+          previewSize,
+        );
+
+        return (
+          <View
+            key={index}
+            style={[
+              styles.faceBox,
+              {
+                left: previewBounds.x,
+                top: previewBounds.y,
+                width: previewBounds.width,
+                height: previewBounds.height,
+              },
+            ]}>
+            <Text style={styles.faceLabel}>
+              {face.studentName ||
+                `Unknown ${Math.round((face.bestConfidence ?? 0) * 100)}%`}
+            </Text>
+          </View>
+        );
+      })}
 
       <View style={styles.controls}>
         <IconButton
