@@ -84,6 +84,8 @@ export const useFaceRecognition = (classId?: number) => {
   );
   const [studentNames, setStudentNames] = useState<Record<number, string>>({});
   const lastLiveFaceRef = useRef<DetectedStudent | null>(null);
+  const frameCounter = useRef(0);
+  const bboxHistory = useRef<Record<number | string, {x: number, y: number, w: number, h: number}[]>>({});
   const embedder = useFaceEmbedder();
   const faceDetectionOptions = useMemo(
     () => ({
@@ -167,25 +169,59 @@ export const useFaceRecognition = (classId?: number) => {
     frame => {
       'worklet';
 
+      // 1. Limiteur de frames (Throttle)
+      frameCounter.current++;
+      if (frameCounter.current % 3 !== 0) {
+        return;
+      }
+
       runAsync(frame, () => {
         'worklet';
 
         const faces = detectFaces(frame);
-        const results: DetectedStudent[] = faces.map(face => ({
-          studentId: null,
-          confidence: 0,
-          quality: estimateFaceQuality(
+        const results: DetectedStudent[] = faces.map(face => {
+          const quality = estimateFaceQuality(
             face.bounds,
             frame.width,
             frame.height,
             face.yawAngle,
             face.pitchAngle,
-          ),
-          trackingId: face.trackingId,
-          bounds: face.bounds,
-          frameWidth: frame.width,
-          frameHeight: frame.height,
-        }));
+          );
+
+          // 2. Lissage (Smoothing)
+          const faceId = face.trackingId ?? 'unknown';
+          if (!bboxHistory.current[faceId]) {
+            bboxHistory.current[faceId] = [];
+          }
+          const history = bboxHistory.current[faceId];
+          history.push({
+            x: face.bounds.x,
+            y: face.bounds.y,
+            w: face.bounds.width,
+            h: face.bounds.height,
+          });
+          if (history.length > 5) history.shift();
+
+          const avgX = history.reduce((sum, b) => sum + b.x, 0) / history.length;
+          const avgY = history.reduce((sum, b) => sum + b.y, 0) / history.length;
+          const avgW = history.reduce((sum, b) => sum + b.w, 0) / history.length;
+          const avgH = history.reduce((sum, b) => sum + b.h, 0) / history.length;
+
+          return {
+            studentId: null,
+            confidence: 0,
+            quality,
+            trackingId: face.trackingId,
+            bounds: {
+              x: avgX,
+              y: avgY,
+              width: avgW,
+              height: avgH,
+            },
+            frameWidth: frame.width,
+            frameHeight: frame.height,
+          };
+        });
 
         updateResultsOnJS(results);
       });

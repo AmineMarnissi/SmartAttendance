@@ -55,11 +55,26 @@ const decodePhoto = async (photoPath: string) => {
   return {base64, image};
 };
 
+const isValidFaceBounds = (
+  bounds: FaceBounds | null | undefined,
+): bounds is FaceBounds =>
+  bounds != null &&
+  Number.isFinite(bounds.x) &&
+  Number.isFinite(bounds.y) &&
+  Number.isFinite(bounds.width) &&
+  Number.isFinite(bounds.height) &&
+  bounds.width > 0 &&
+  bounds.height > 0;
+
 const clampBounds = (
-  bounds: FaceBounds,
+  bounds: FaceBounds | null | undefined,
   imageWidth: number,
   imageHeight: number,
 ): FaceBounds | null => {
+  if (!isValidFaceBounds(bounds)) {
+    return null;
+  }
+
   const x = Math.max(0, Math.min(bounds.x, imageWidth - 1));
   const y = Math.max(0, Math.min(bounds.y, imageHeight - 1));
   const width = Math.max(0, Math.min(bounds.width, imageWidth - x));
@@ -82,6 +97,7 @@ const projectFallbackBounds = (
   const frameHeight = 'bounds' in fallback ? fallback.frameHeight : undefined;
 
   if (
+    !isValidFaceBounds(bounds) ||
     frameWidth == null ||
     frameHeight == null ||
     frameWidth <= 0 ||
@@ -126,6 +142,10 @@ const createEmbeddingFromCrop = (
   image: NonNullable<ReturnType<typeof Skia.Image.MakeImageFromEncoded>>,
   bounds: FaceBounds,
 ) => {
+  if (!isValidFaceBounds(bounds)) {
+    throw new Error('Invalid face bounds in captured photo.');
+  }
+
   const crop = buildFaceCrop(bounds, image.width(), image.height());
   const surface = Skia.Surface.MakeOffscreen(
     FACE_EMBEDDING_INPUT_SIZE,
@@ -207,18 +227,20 @@ export const extractFaceEmbeddingsFromPhoto = async (
   const fallbackFaceBounds = fallbackBounds
     ? projectFallbackBounds(fallbackBounds, image.width(), image.height())
     : null;
+  const detectedBounds = faces
+    .map(face => face.bounds)
+    .filter(isValidFaceBounds)
+    .sort((a, b) => b.width * b.height - a.width * a.height);
   const boundsList =
-    faces.length > 0
-      ? faces
-          .map(face => face.bounds)
-          .sort((a, b) => b.width * b.height - a.width * a.height)
+    detectedBounds.length > 0
+      ? detectedBounds
       : fallbackFaceBounds
       ? [fallbackFaceBounds]
       : [];
 
-  if (faces.length === 0 && fallbackFaceBounds != null) {
+  if (detectedBounds.length === 0 && fallbackFaceBounds != null) {
     console.warn(
-      '[PhotoEmbedding] Static detector found no face; using last live face fallback.',
+      '[PhotoEmbedding] Static detector found no valid face bounds; using last live face fallback.',
     );
   }
 

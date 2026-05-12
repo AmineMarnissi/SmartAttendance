@@ -13,7 +13,25 @@ export type TeacherTabParamList = {
 export type AdminStackParamList = {
   AdminDashboard: undefined;
   Reports: undefined;
-  ManageStudents: undefined;
+  StudentList: undefined;
+  StudentEnrollment: undefined;
+  FaceCapture: undefined;
+};
+
+export type AttendanceStackParamList = {
+  Home: undefined;
+  Scan: undefined;
+  ScanReview: {
+    sessionId: string;
+    attendanceRecords: any[];
+  };
+};
+
+export type HistoryStackParamList = {
+  HistoryList: undefined;
+  SessionDetail: {
+    sessionId: string;
+  };
 };
 
 export type RootStackParamList = {

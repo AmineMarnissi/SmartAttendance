@@ -11,7 +11,7 @@ import {useAuthStore} from '../../store/useAuthStore';
 import {attendanceRepository} from '../../services/database/attendanceRepository';
 import {classRepository} from '../../services/database/classRepository';
 
-const AttendanceHistoryScreen = () => {
+const AttendanceHistoryScreen = ({navigation}: any) => {
   const theme = useTheme();
   const user = useAuthStore(state => state.user);
   const [sessions, setSessions] = useState<any[]>([]);
@@ -60,16 +60,20 @@ const AttendanceHistoryScreen = () => {
           <Avatar.Icon {...props} icon="calendar-check" size={40} />
         )}
         right={props => <List.Icon {...props} icon="chevron-right" />}
-        onPress={() => {}}
+        onPress={() => navigation.navigate('SessionDetail', {
+          sessionId: item.id,
+          className: item.className,
+          date: item.date
+        })}
       />
     ),
-    [theme.colors.onSurface, theme.colors.onSurfaceVariant],
+    [theme.colors.onSurface, theme.colors.onSurfaceVariant, navigation],
   );
 
   return (
     <View style={[styles.container, {backgroundColor: theme.colors.background}]}>
       <Title style={[styles.title, {color: theme.colors.onSurface}]}>
-        Attendance History
+        Historique de Présence
       </Title>
       <FlatList
         data={sessions}
@@ -80,7 +84,7 @@ const AttendanceHistoryScreen = () => {
         ListEmptyComponent={
           <Paragraph
             style={[styles.empty, {color: theme.colors.onSurfaceVariant}]}>
-            No attendance sessions found.
+            Aucune session de présence trouvée.
           </Paragraph>
         }
       />

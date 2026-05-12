@@ -76,11 +76,11 @@ const ScanReviewScreen = ({navigation, route}: any) => {
         detectedResults,
       );
 
-      Alert.alert('Success', 'Attendance saved successfully', [
+      Alert.alert('Succès', 'La présence a été enregistrée avec succès.', [
         {text: 'OK', onPress: () => navigation.navigate('Home')},
       ]);
     } catch (error) {
-      Alert.alert('Error', 'Failed to save attendance');
+      Alert.alert('Erreur', "Échec de l'enregistrement de la présence.");
       console.error(error);
     } finally {
       setLoading(false);
@@ -90,7 +90,7 @@ const ScanReviewScreen = ({navigation, route}: any) => {
   return (
     <View style={[styles.container, {backgroundColor: theme.colors.background}]}>
       <Title style={[styles.title, {color: theme.colors.onSurface}]}>
-        Review Attendance
+        Vérification de Présence
       </Title>
       <Divider />
 
@@ -101,7 +101,7 @@ const ScanReviewScreen = ({navigation, route}: any) => {
               key={student.id}
               title={`${student.first_name} ${student.last_name}`}
               titleStyle={{color: theme.colors.onSurface}}
-              description={attendance[student.id]?.toUpperCase()}
+              description={attendance[student.id] === 'present' ? 'PRÉSENT' : 'ABSENT'}
               descriptionStyle={{color: theme.colors.onSurfaceVariant}}
               left={props => (
                 <Avatar.Text
@@ -129,7 +129,7 @@ const ScanReviewScreen = ({navigation, route}: any) => {
       <FAB
         style={[styles.fab, {backgroundColor: theme.colors.primary}]}
         icon="check"
-        label="Confirm & Save"
+        label="Confirmer & Enregistrer"
         onPress={handleConfirm}
         loading={loading}
         disabled={loading}

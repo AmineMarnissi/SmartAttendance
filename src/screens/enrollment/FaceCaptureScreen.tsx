@@ -38,6 +38,20 @@ type FaceBounds = {
   height: number;
 };
 
+const hasValidBounds = (bounds: FaceBounds | null | undefined) => {
+  'worklet';
+
+  return (
+    bounds != null &&
+    Number.isFinite(bounds.x) &&
+    Number.isFinite(bounds.y) &&
+    Number.isFinite(bounds.width) &&
+    Number.isFinite(bounds.height) &&
+    bounds.width > 0 &&
+    bounds.height > 0
+  );
+};
+
 const FaceCaptureScreen = ({navigation, route}: any) => {
   const theme = useTheme();
   const {studentData} = route.params;
@@ -113,6 +127,16 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
         }
 
         const primaryFace = faces[0];
+        if (!hasValidBounds(primaryFace.bounds)) {
+          updateLiveFaceOnJS({
+            bounds: null,
+            faceCount: 0,
+            frameWidth: frame.width,
+            frameHeight: frame.height,
+          });
+          return;
+        }
+
         const bounds = {
           x: primaryFace.bounds.x,
           y: primaryFace.bounds.y,
@@ -157,6 +181,9 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
         embedder.model,
         latestFaceBounds.current,
       );
+      if (embeddings[0] == null) {
+        throw new Error('No valid face embedding was extracted.');
+      }
       return {base64, embedding: embeddings[0].embedding};
     },
     [embedder],

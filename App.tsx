@@ -1,7 +1,8 @@
 import React, {useCallback, useEffect, useState} from 'react';
 import {ActivityIndicator, StyleSheet, Text, View, StatusBar} from 'react-native';
 import {Button, PaperProvider} from 'react-native-paper';
-import {theme} from './src/theme/theme';
+import {darkTheme, lightTheme} from './src/theme/theme';
+import {useThemeStore} from './src/store/useThemeStore';
 import {initDatabase} from './src/services/database/db';
 import {seedData} from './src/services/database/seedData';
 import {bootstrapDefaultSession} from './src/services/bootstrap/defaultSession';
@@ -13,6 +14,9 @@ type AppStatus = 'initializing' | 'ready' | 'error';
 function App(): React.JSX.Element {
   const [status, setStatus] = useState<AppStatus>('initializing');
   const [errorMessage, setErrorMessage] = useState('');
+  
+  const isDarkMode = useThemeStore((state) => state.isDarkMode);
+  const currentTheme = isDarkMode ? darkTheme : lightTheme;
 
   const setup = useCallback(async () => {
     setStatus('initializing');
@@ -37,10 +41,10 @@ function App(): React.JSX.Element {
   }, [setup]);
 
   return (
-    <PaperProvider theme={theme}>
+    <PaperProvider theme={currentTheme}>
       <StatusBar
-        barStyle="light-content"
-        backgroundColor={theme.colors.background}
+        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+        backgroundColor={currentTheme.colors.background}
       />
       {status === 'ready' ? (
         <AppNavigator />
@@ -48,7 +52,7 @@ function App(): React.JSX.Element {
         <View style={styles.startupContainer}>
           {status === 'initializing' ? (
             <>
-              <ActivityIndicator size="large" color={theme.colors.primary} />
+              <ActivityIndicator size="large" color={currentTheme.colors.primary} />
               <Text style={styles.startupTitle}>
                 Preparing RegistreIntelligent...
               </Text>

@@ -83,11 +83,20 @@ export const useFaceEmbedder = () => {
 };
 
 export const buildFaceCrop = (
-  bounds: FaceBounds,
+  bounds: FaceBounds | null | undefined,
   frameWidth: number,
   frameHeight: number,
 ) => {
   'worklet';
+
+  if (bounds == null) {
+    return {
+      x: 0,
+      y: 0,
+      width: frameWidth,
+      height: frameHeight,
+    };
+  }
 
   const padding = Math.max(bounds.width, bounds.height) * 0.2;
   const size = Math.max(bounds.width, bounds.height) + padding * 2;
@@ -162,13 +171,17 @@ export const l2NormalizeEmbedding = (embedding: Float32Array) => {
 };
 
 export const estimateFaceQuality = (
-  bounds: FaceBounds,
+  bounds: FaceBounds | null | undefined,
   frameWidth: number,
   frameHeight: number,
   yawAngle = 0,
   pitchAngle = 0,
 ) => {
   'worklet';
+
+  if (bounds == null || frameWidth <= 0 || frameHeight <= 0) {
+    return 0;
+  }
 
   const faceArea = bounds.width * bounds.height;
   const frameArea = Math.max(1, frameWidth * frameHeight);

@@ -11,7 +11,7 @@ export type Size = {
 };
 
 export const mapFaceBoundsToView = (
-  bounds: FaceBounds,
+  bounds: FaceBounds | null | undefined,
   frameSize: Size,
   viewSize: Size,
   mirror = false,
@@ -19,6 +19,7 @@ export const mapFaceBoundsToView = (
   'worklet';
 
   if (
+    bounds == null ||
     frameSize.width <= 0 ||
     frameSize.height <= 0 ||
     viewSize.width <= 0 ||
@@ -56,14 +57,14 @@ export const mapFaceBoundsToView = (
 };
 
 export const isFaceCentered = (
-  bounds: FaceBounds,
+  bounds: FaceBounds | null | undefined,
   frameSize: Size,
   maxOffsetXRatio = 0.18,
   maxOffsetYRatio = 0.2,
 ) => {
   'worklet';
 
-  if (frameSize.width <= 0 || frameSize.height <= 0) {
+  if (bounds == null || frameSize.width <= 0 || frameSize.height <= 0) {
     return false;
   }
 

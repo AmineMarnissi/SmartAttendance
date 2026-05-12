@@ -1,15 +1,23 @@
 import React from 'react';
-import {NavigationContainer} from '@react-navigation/native';
+import {NavigationContainer, getFocusedRouteNameFromRoute} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
-import {theme} from '../theme/theme';
+import {darkTheme, lightTheme} from '../theme/theme';
+import {useThemeStore} from '../store/useThemeStore';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import {TeacherTabParamList} from './types';
+import {
+  TeacherTabParamList,
+  AdminStackParamList,
+  AttendanceStackParamList,
+  HistoryStackParamList,
+  RootStackParamList,
+} from './types';
 
 import HomeScreen from '../screens/teacher/HomeScreen';
 import ScanScreen from '../screens/teacher/ScanScreen';
 import ScanReviewScreen from '../screens/teacher/ScanReviewScreen';
 import AttendanceHistoryScreen from '../screens/teacher/AttendanceHistoryScreen';
+import SessionDetailScreen from '../screens/teacher/SessionDetailScreen';
 import SettingsScreen from '../screens/settings/SettingsScreen';
 import AdminDashboardScreen from '../screens/admin/AdminDashboardScreen';
 import StudentListScreen from '../screens/admin/StudentListScreen';
@@ -18,9 +26,10 @@ import StudentEnrollmentScreen from '../screens/enrollment/StudentEnrollmentScre
 import FaceCaptureScreen from '../screens/enrollment/FaceCaptureScreen';
 
 const TeacherTab = createBottomTabNavigator<TeacherTabParamList>();
-const TeacherStack = createStackNavigator();
-const AdminStack = createStackNavigator();
-const RootStack = createStackNavigator();
+const TeacherStack = createStackNavigator<AttendanceStackParamList>();
+const AdminStack = createStackNavigator<AdminStackParamList>();
+const RootStack = createStackNavigator<RootStackParamList>();
+const HistoryStack = createStackNavigator<HistoryStackParamList>();
 
 const tabIcons: Record<keyof TeacherTabParamList, string> = {
   TeacherHome: 'clipboard-check-outline',
@@ -29,29 +38,44 @@ const tabIcons: Record<keyof TeacherTabParamList, string> = {
   Settings: 'cog-outline',
 };
 
+const HistoryNavigator = () => (
+  <HistoryStack.Navigator>
+    <HistoryStack.Screen
+      name="HistoryList"
+      component={AttendanceHistoryScreen}
+      options={{title: 'Historique de présence'}}
+    />
+    <HistoryStack.Screen
+      name="SessionDetail"
+      component={SessionDetailScreen}
+      options={{title: 'Détails de la session'}}
+    />
+  </HistoryStack.Navigator>
+);
+
 const AdminNavigator = () => (
   <AdminStack.Navigator>
     <AdminStack.Screen
       name="AdminDashboard"
       component={AdminDashboardScreen}
-      options={{title: 'Admin Dashboard'}}
+      options={{title: 'Tableau de bord'}}
     />
     <AdminStack.Screen
       name="StudentList"
       component={StudentListScreen}
-      options={{title: 'Students'}}
+      options={{title: 'Élèves'}}
     />
     <AdminStack.Screen
       name="StudentEnrollment"
       component={StudentEnrollmentScreen}
-      options={{title: 'Enroll Student'}}
+      options={{title: 'Inscrire un élève'}}
     />
     <AdminStack.Screen
       name="FaceCapture"
       component={FaceCaptureScreen}
       options={{headerShown: false}}
     />
-    <AdminStack.Screen name="Reports" component={ReportsScreen} />
+    <AdminStack.Screen name="Reports" component={ReportsScreen} options={{title: 'Rapports'}} />
   </AdminStack.Navigator>
 );
 
@@ -70,7 +94,7 @@ const AttendanceStack = () => (
     <TeacherStack.Screen
       name="ScanReview"
       component={ScanReviewScreen}
-      options={{title: 'Review Attendance'}}
+      options={{title: 'Vérification de Présence'}}
     />
   </TeacherStack.Navigator>
 );
@@ -89,24 +113,40 @@ const MainTabs = () => (
     <TeacherTab.Screen
       name="TeacherHome"
       component={AttendanceStack}
-      options={{title: 'Attendance', headerShown: false}}
+      options={({route}) => {
+        const routeName = getFocusedRouteNameFromRoute(route) ?? 'Home';
+        return {
+          title: 'Présence',
+          headerShown: false,
+          tabBarStyle: routeName === 'Home' ? {display: 'none'} : undefined,
+        };
+      }}
     />
     <TeacherTab.Screen
       name="Classes"
       component={AdminNavigator}
-      options={{title: 'Students', headerShown: false}}
+      options={{title: 'Étudiants', headerShown: false}}
     />
-    <TeacherTab.Screen name="History" component={AttendanceHistoryScreen} />
-    <TeacherTab.Screen name="Settings" component={SettingsScreen} />
+    <TeacherTab.Screen
+      name="History"
+      component={HistoryNavigator}
+      options={{title: 'Historique', headerShown: false}}
+    />
+    <TeacherTab.Screen name="Settings" component={SettingsScreen} options={{title: 'Paramètres'}} />
   </TeacherTab.Navigator>
 );
 
-const AppNavigator = () => (
-  <NavigationContainer theme={theme}>
-    <RootStack.Navigator screenOptions={{headerShown: false}}>
-      <RootStack.Screen name="Main" component={MainTabs} />
-    </RootStack.Navigator>
-  </NavigationContainer>
-);
+const AppNavigator = () => {
+  const isDarkMode = useThemeStore((state) => state.isDarkMode);
+  const currentTheme = isDarkMode ? darkTheme : lightTheme;
+
+  return (
+    <NavigationContainer theme={currentTheme}>
+      <RootStack.Navigator screenOptions={{headerShown: false}}>
+        <RootStack.Screen name="Main" component={MainTabs} />
+      </RootStack.Navigator>
+    </NavigationContainer>
+  );
+};
 
 export default AppNavigator;

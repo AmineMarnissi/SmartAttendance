@@ -1,147 +1,409 @@
-import React, {useState, useEffect} from 'react';
-import {View, StyleSheet, ScrollView, Text} from 'react-native';
-import {Button, List, Avatar, useTheme} from 'react-native-paper';
+import React, {useEffect, useRef} from 'react';
+import {
+  View,
+  StyleSheet,
+  Text,
+  Animated,
+  Dimensions,
+  TouchableOpacity,
+  StatusBar,
+  Alert,
+} from 'react-native';
+import {Surface} from 'react-native-paper';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {classRepository} from '../../services/database/classRepository';
-import {Class} from '../../types/models';
-import {attendanceRepository} from '../../services/database/attendanceRepository';
-import StatCard from '../../components/analytics/StatCard';
-import AttendanceChart from '../../components/analytics/AttendanceChart';
+import {embeddingStorage} from '../../services/faceRecognition/EmbeddingStorage';
+
+const {width} = Dimensions.get('window');
 
 const HomeScreen = ({navigation}: any) => {
-  const theme = useTheme();
-  const [classes, setClasses] = useState<Class[]>([]);
-  const [overallRate, setOverallRate] = useState(0);
-  const [trendData, setTrendData] = useState<{date: string; rate: number}[]>(
-    [],
-  );
+  const [scanClass, setScanClass] = React.useState<{
+    id: number;
+    name: string;
+    embeddingCount: number;
+  } | null>(null);
+
+  // Animations pour le contenu
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
+  const scaleAnim = useRef(new Animated.Value(0.9)).current;
+
+  // Animations pour le fond (Blobs)
+  const blob1Pos = useRef(new Animated.Value(0)).current;
+  const blob2Pos = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    const loadClasses = async () => {
-      // Use getAll so classes appear for any user role (admin or teacher)
-      const allClasses = await classRepository.getAll();
-      console.log(
-        '[HomeScreen] Loaded classes:',
-        allClasses.length,
-        allClasses.map(c => `${c.id}:${c.name}`),
-      );
-      setClasses(allClasses);
+    // Séquence d'entrée du contenu
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 1000,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 1000,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 8,
+        useNativeDriver: true,
+      }),
+    ]).start();
 
-      if (allClasses.length > 0) {
-        const trend = await attendanceRepository.getDailyAttendanceTrend(
-          allClasses[0].id,
-        );
-        setTrendData(trend);
-      }
-    };
-
-    const loadOverallStats = async () => {
-      const allClasses = await classRepository.getAll();
-      let totalPresent = 0;
-      let totalRecords = 0;
-
-      for (const cls of allClasses) {
-        const stats = await attendanceRepository.getClassAttendanceStats(
-          cls.id,
-        );
-        stats.forEach((s: any) => {
-          if (s.status === 'present' || s.status === 'late') {
-            totalPresent += s.count;
-          }
-          totalRecords += s.count;
-        });
-      }
-
-      setOverallRate(
-        totalRecords > 0 ? Math.round((totalPresent / totalRecords) * 100) : 0,
+    // Animation continue des "blobs" de fond pour l'effet vivant
+    const createLoop = (anim: Animated.Value, duration: number) => {
+      return Animated.loop(
+        Animated.sequence([
+          Animated.timing(anim, {
+            toValue: 1,
+            duration,
+            useNativeDriver: true,
+          }),
+          Animated.timing(anim, {
+            toValue: 0,
+            duration,
+            useNativeDriver: true,
+          }),
+        ]),
       );
     };
 
-    loadClasses();
-    loadOverallStats();
-  }, []);
+    createLoop(blob1Pos, 12000).start();
+    createLoop(blob2Pos, 18000).start();
+  }, [blob1Pos, blob2Pos, fadeAnim, scaleAnim, slideAnim]);
+
+  useEffect(() => {
+    const loadScanClass = async () => {
+      try {
+        const classes = await classRepository.getAll();
+
+        if (classes.length === 0) {
+          console.warn('[HomeScreen] No class found for scan.');
+          setScanClass(null);
+          return;
+        }
+
+        const classesWithEmbeddings = await Promise.all(
+          classes.map(async cls => {
+            const embeddings = await embeddingStorage.getAllForClass(cls.id);
+            return {
+              id: cls.id,
+              name: cls.name,
+              embeddingCount: embeddings.length,
+            };
+          }),
+        );
+        const preferredClass =
+          classesWithEmbeddings.find(cls => cls.embeddingCount > 0) ??
+          classesWithEmbeddings[0];
+
+        console.log('[HomeScreen] Selected scan class:', preferredClass);
+        setScanClass(preferredClass);
+      } catch (error) {
+        console.error('[HomeScreen] Failed to load scan class:', error);
+        setScanClass(null);
+      }
+    };
+
+    const unsubscribe = navigation.addListener('focus', loadScanClass);
+    loadScanClass();
+
+    return unsubscribe;
+  }, [navigation]);
+
+  const handleStartScan = () => {
+    if (scanClass == null) {
+      Alert.alert(
+        'No Class Found',
+        'Create a class and enroll at least one student before scanning.',
+      );
+      return;
+    }
+
+    if (scanClass.embeddingCount === 0) {
+      Alert.alert(
+        'No Face Embeddings',
+        `Class "${scanClass.name}" has no enrolled face data. Enroll a student with face capture first.`,
+      );
+      return;
+    }
+
+    console.log('[HomeScreen] Opening scan for class:', scanClass);
+    navigation.navigate('Scan', {classId: scanClass.id});
+  };
+
+  const b1TranslateX = blob1Pos.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-50, 50],
+  });
+  const b1TranslateY = blob1Pos.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 100],
+  });
+
+  const b2TranslateX = blob2Pos.interpolate({
+    inputRange: [0, 1],
+    outputRange: [30, -30],
+  });
+  const b2TranslateY = blob2Pos.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, -80],
+  });
 
   return (
-    <ScrollView
-      style={[styles.container, {backgroundColor: theme.colors.background}]}>
-      <View style={styles.header}>
-        <Text style={[styles.title, {color: theme.colors.onSurface}]}>
-          Attendance Mode
-        </Text>
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+      
+      {/* Fond Animé "Safe" (Sans Skia pour éviter les crashs) */}
+      <View style={styles.backgroundContainer}>
+        <Animated.View 
+          style={[
+            styles.blob, 
+            styles.blob1, 
+            { transform: [{translateX: b1TranslateX}, {translateY: b1TranslateY}] }
+          ]} 
+        />
+        <Animated.View 
+          style={[
+            styles.blob, 
+            styles.blob2, 
+            { transform: [{translateX: b2TranslateX}, {translateY: b2TranslateY}] }
+          ]} 
+        />
+        <View style={styles.overlay} />
       </View>
 
-      <View style={styles.statGrid}>
-        <StatCard
-          title="Overall Rate"
-          value={`${overallRate}%`}
-          color="#4CAF50"
-        />
-        <StatCard
-          title="Total Classes"
-          value={classes.length}
-          color="#2196F3"
-        />
+      <Animated.View
+        style={[
+          styles.content,
+          {
+            opacity: fadeAnim,
+            transform: [{translateY: slideAnim}, {scale: scaleAnim}],
+          },
+        ]}>
+        
+        {/* Logo Container with Glassmorphism */}
+        <View style={styles.logoContainer}>
+          <Surface style={styles.glassLogo} elevation={0}>
+            <MaterialCommunityIcons
+              name="face-recognition"
+              size={70}
+              color="#4facfe"
+            />
+          </Surface>
+        </View>
+
+        {/* Brand Section */}
+        <View style={styles.textContainer}>
+          <Text style={styles.welcomeText}>Système de Présence</Text>
+          <Text style={styles.brandText}>REGISTRE</Text>
+          <Text style={[styles.brandText, {color: '#4facfe'}]}>INTELLIGENT</Text>
+          <View style={styles.separator} />
+          <Text style={styles.tagline}>Sécurisé • Précis • Instantané</Text>
+        </View>
+
+        {/* Primary Action */}
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={handleStartScan}
+          style={styles.mainActionWrapper}>
+          <Surface style={styles.mainActionButton} elevation={5}>
+            <View style={styles.btnContent}>
+              <MaterialCommunityIcons name="camera-iris" size={26} color="#fff" />
+              <Text style={styles.btnText}>COMMENCER LE SCAN</Text>
+            </View>
+          </Surface>
+        </TouchableOpacity>
+
+        {/* Quick Access Grid */}
+        <View style={styles.secondaryActions}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('History')}
+            style={styles.smallBtn}>
+            <Surface style={styles.iconCircle} elevation={1}>
+              <MaterialCommunityIcons
+                name="history"
+                size={24}
+                color="rgba(255,255,255,0.9)"
+              />
+            </Surface>
+            <Text style={styles.smallBtnText}>Historique</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => navigation.navigate('Classes')}
+            style={styles.smallBtn}>
+            <Surface style={styles.iconCircle} elevation={1}>
+              <MaterialCommunityIcons
+                name="account-group"
+                size={24}
+                color="rgba(255,255,255,0.9)"
+              />
+            </Surface>
+            <Text style={styles.smallBtnText}>Étudiants</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => navigation.navigate('Settings')}
+            style={styles.smallBtn}>
+            <Surface style={styles.iconCircle} elevation={1}>
+              <MaterialCommunityIcons
+                name="cog-outline"
+                size={24}
+                color="rgba(255,255,255,0.9)"
+              />
+            </Surface>
+            <Text style={styles.smallBtnText}>Paramètres</Text>
+          </TouchableOpacity>
+        </View>
+      </Animated.View>
+
+      {/* Footer Decoration */}
+      <View style={styles.footer}>
+        <Text style={styles.versionText}>v0.78.3 Prototype</Text>
       </View>
-
-      {trendData.length > 0 && (
-        <AttendanceChart data={trendData} title="Class Attendance Trend" />
-      )}
-
-      <List.Section>
-        <Text style={[styles.sectionTitle, {color: theme.colors.onSurface}]}>
-          Your Classes
-        </Text>
-        {classes.map(cls => (
-          <List.Item
-            key={cls.id}
-            title={cls.name}
-            titleStyle={{color: theme.colors.onSurface}}
-            description={`Grade: ${cls.grade || 'N/A'}`}
-            descriptionStyle={{color: theme.colors.onSurfaceVariant}}
-            left={props => <Avatar.Icon {...props} icon="book" size={40} />}
-            right={() => (
-              <Button
-                mode="contained"
-                onPress={() => navigation.navigate('Scan', {classId: cls.id})}
-                style={styles.scanButton}>
-                Scan
-              </Button>
-            )}
-          />
-        ))}
-      </List.Section>
-    </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 10,
+    backgroundColor: '#0F2027', // Sombre profond
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  backgroundContainer: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#0F2027',
+    overflow: 'hidden',
+  },
+  blob: {
+    position: 'absolute',
+    width: width * 1.2,
+    height: width * 1.2,
+    borderRadius: (width * 1.2) / 2,
+    opacity: 0.3,
+  },
+  blob1: {
+    backgroundColor: '#2C5364',
+    top: -width * 0.4,
+    left: -width * 0.2,
+  },
+  blob2: {
+    backgroundColor: '#203A43',
+    bottom: -width * 0.4,
+    right: -width * 0.2,
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(15, 32, 39, 0.4)',
+  },
+  content: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
-    marginTop: 10,
+    padding: 24,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
+  logoContainer: {
+    marginBottom: 30,
   },
-  statGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
+  glassLogo: {
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
   },
-  sectionTitle: {
-    fontSize: 18,
+  textContainer: {
+    alignItems: 'center',
+    marginBottom: 50,
+  },
+  welcomeText: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.6)',
     fontWeight: '600',
-    marginBottom: 8,
-    marginLeft: 8,
+    letterSpacing: 2,
+    textTransform: 'uppercase',
   },
-  scanButton: {
+  brandText: {
+    fontSize: 40,
+    color: '#fff',
+    fontWeight: '900',
+    lineHeight: 46,
+    textAlign: 'center',
+  },
+  separator: {
+    width: 50,
+    height: 3,
+    backgroundColor: '#4facfe',
+    marginVertical: 20,
+    borderRadius: 2,
+  },
+  tagline: {
+    fontSize: 15,
+    color: 'rgba(255,255,255,0.5)',
+    fontWeight: '400',
+  },
+  mainActionWrapper: {
+    width: '100%',
+    maxWidth: 280,
+  },
+  mainActionButton: {
+    borderRadius: 16,
+    backgroundColor: '#4facfe',
+    overflow: 'hidden',
+  },
+  btnContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    gap: 12,
+  },
+  btnText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '800',
+    letterSpacing: 1,
+  },
+  secondaryActions: {
+    flexDirection: 'row',
+    marginTop: 50,
+    gap: 50,
+  },
+  smallBtn: {
+    alignItems: 'center',
+    gap: 12,
+  },
+  iconCircle: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  smallBtnText: {
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  footer: {
+    position: 'absolute',
+    bottom: 20,
     alignSelf: 'center',
+  },
+  versionText: {
+    color: 'rgba(255,255,255,0.3)',
+    fontSize: 10,
+    fontWeight: '500',
+    letterSpacing: 1,
   },
 });
 
