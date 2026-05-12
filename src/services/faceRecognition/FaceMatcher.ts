@@ -28,6 +28,7 @@ export const FaceMatcher = {
   matchWithDebug: (
     liveEmbedding: Float32Array,
     enrolledEmbeddings: EnrolledEmbedding[],
+    threshold: number = MATCH_THRESHOLD,
   ): {match: FaceMatchResult | null; debug: MatchDebugInfo} => {
     if (!isUsableEmbedding(liveEmbedding)) {
       return {
@@ -35,7 +36,7 @@ export const FaceMatcher = {
         debug: {
           bestStudentId: null,
           bestConfidence: 0,
-          threshold: MATCH_THRESHOLD,
+          threshold,
           liveLength: liveEmbedding.length,
           enrolledCount: enrolledEmbeddings.length,
           reason: 'invalid-live-embedding',
@@ -66,13 +67,20 @@ export const FaceMatcher = {
     const debug: MatchDebugInfo = {
       bestStudentId,
       bestConfidence,
-      threshold: MATCH_THRESHOLD,
+      threshold,
       liveLength: liveEmbedding.length,
       enrolledCount: enrolledEmbeddings.length,
-      reason: comparableCount === 0 ? 'no-comparable-embeddings' : undefined,
+      reason:
+        comparableCount === 0
+          ? 'no-comparable-embeddings'
+          : bestStudentId == null
+          ? 'no-best-student'
+          : bestConfidence < threshold
+          ? 'below-threshold'
+          : undefined,
     };
 
-    if (bestStudentId == null || bestConfidence < MATCH_THRESHOLD) {
+    if (bestStudentId == null || bestConfidence < threshold) {
       return {match: null, debug};
     }
 

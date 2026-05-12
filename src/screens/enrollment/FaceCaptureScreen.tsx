@@ -28,6 +28,7 @@ import {
   Bounds,
   clampBoundsToPreview,
   mapCameraBoundsToPreview,
+  mirrorPreviewBounds,
   PreviewSize,
 } from '../../utils/mapCameraBounds';
 
@@ -144,7 +145,10 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
 
   const previewFaceBounds = liveFaceBounds
     ? clampBoundsToPreview(
-        mapCameraBoundsToPreview(liveFaceBounds, liveFrameSize, previewSize),
+        mirrorPreviewBounds(
+          mapCameraBoundsToPreview(liveFaceBounds, liveFrameSize, previewSize),
+          previewSize,
+        ),
         previewSize,
       )
     : null;

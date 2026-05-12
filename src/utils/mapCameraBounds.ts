@@ -47,3 +47,11 @@ export const clampBoundsToPreview = (
 
   return {x, y, width, height};
 };
+
+export const mirrorPreviewBounds = (
+  bounds: Bounds,
+  previewSize: PreviewSize,
+): Bounds => ({
+  ...bounds,
+  x: Math.max(0, previewSize.width - bounds.x - bounds.width),
+});

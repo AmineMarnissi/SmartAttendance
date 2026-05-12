@@ -37,6 +37,8 @@ export interface DetectedStudent {
   debugReason?: string;
 }
 
+export const LIVE_CAMERA_MATCH_THRESHOLD = 0.68;
+
 type LiveFaceEmbedding = {
   bounds: DetectedStudent['bounds'];
   frameSize: NonNullable<DetectedStudent['frameSize']>;
@@ -116,6 +118,7 @@ export const useFaceRecognition = (classId?: number) => {
         const {match, debug} = FaceMatcher.matchWithDebug(
           liveEmbedding,
           enrolledEmbeddings,
+          LIVE_CAMERA_MATCH_THRESHOLD,
         );
 
         setLastDebug(debug);

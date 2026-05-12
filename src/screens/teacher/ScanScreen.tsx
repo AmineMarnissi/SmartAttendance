@@ -13,6 +13,7 @@ import {Button, IconButton} from 'react-native-paper';
 import {
   clampBoundsToPreview,
   mapCameraBoundsToPreview,
+  mirrorPreviewBounds,
   PreviewSize,
 } from '../../utils/mapCameraBounds';
 
@@ -75,6 +76,13 @@ const ScanScreen = ({navigation, route}: any) => {
   const bestScore = lastDebug
     ? `${Math.round(lastDebug.bestConfidence * 100)}%`
     : 'n/a';
+  const diagnosticLine = lastDebug
+    ? `sid ${lastDebug.bestStudentId ?? 'n/a'} • vec ${
+        lastDebug.liveLength
+      } • th ${Math.round(lastDebug.threshold * 100)}% • ${
+        lastDebug.reason ?? 'match-ok'
+      }`
+    : 'waiting for live embedding';
 
   return (
     <View style={styles.container}>
@@ -90,7 +98,10 @@ const ScanScreen = ({navigation, route}: any) => {
 
       {detectedStudents.map((face, index) => {
         const previewBounds = clampBoundsToPreview(
-          mapCameraBoundsToPreview(face.bounds, face.frameSize, previewSize),
+          mirrorPreviewBounds(
+            mapCameraBoundsToPreview(face.bounds, face.frameSize, previewSize),
+            previewSize,
+          ),
           previewSize,
         );
 
@@ -144,9 +155,7 @@ const ScanScreen = ({navigation, route}: any) => {
             ? 'Embedding model unavailable'
             : 'Loading face embedding model...'}
         </Text>
-        {lastDebug?.reason && (
-          <Text style={styles.debugText}>{lastDebug.reason}</Text>
-        )}
+        <Text style={styles.debugText}>{diagnosticLine}</Text>
       </View>
     </View>
   );
