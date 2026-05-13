@@ -185,6 +185,7 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
           frameWidth: frame.width,
           frameHeight: frame.height,
           quality,
+          ready: validFaces.length === 1 && quality >= 0.35,
         });
       } catch {
         // Ne jamais laisser une exception crasher le thread worklet
