@@ -1,7 +1,6 @@
-import {useEffect, useMemo} from 'react';
+import {useEffect} from 'react';
 import {create} from 'zustand';
 import {loadTensorflowModel, type TfliteModel} from 'react-native-fast-tflite';
-import {NitroModules} from 'react-native-nitro-modules';
 import {resolveFaceEmbeddingModelSource} from './faceEmbeddingModelSource';
 
 export const FACE_EMBEDDING_MODEL = require('../../assets/models/mobilefacenet.tflite');
@@ -58,26 +57,16 @@ const useEmbedderState = create<EmbedderState>((set, get) => ({
 }));
 
 export const useFaceEmbedder = () => {
-  const {state, errorMessage, version, load} = useEmbedderState();
+  const {state, errorMessage, load} = useEmbedderState();
 
   useEffect(() => {
     load();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // version change → nouveau boxedModel quand le modèle devient disponible
-  const boxedModel = useMemo(() => {
-    if (_tfliteModel == null) {
-      return undefined;
-    }
-    return NitroModules.box(_tfliteModel);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [version]);
-
   return {
     state,
     model: _tfliteModel ?? undefined,
-    boxedModel,
     errorMessage,
   };
 };
