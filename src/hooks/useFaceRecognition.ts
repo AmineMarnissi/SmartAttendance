@@ -271,7 +271,6 @@ export const useFaceRecognition = (
   };
 
   const smoothedResultsRef = useRef<DetectedStudent[]>([]);
-  const recognizedFacesMap = useRef<Map<string, {studentId: number, studentName: string, timestamp: number}>>(new Map());
 
   const updateResults = useCallback((matches: DetectedStudent[]) => {
     const previousFaces = smoothedResultsRef.current;
@@ -289,20 +288,7 @@ export const useFaceRecognition = (
       }
 
       usedPreviousIndexes.add(previousIndex);
-      const smoothed = smoothFaceBounds(previousFaces[previousIndex], match);
-
-      if (smoothed.trackingId != null) {
-        const faceId = String(smoothed.trackingId);
-        const recognized = recognizedFacesMap.current.get(faceId);
-        if (recognized && Date.now() - recognized.timestamp < 4000) {
-          smoothed.studentId = recognized.studentId;
-          smoothed.studentName = recognized.studentName;
-        } else if (recognized) {
-          recognizedFacesMap.current.delete(faceId);
-        }
-      }
-
-      return smoothed;
+      return smoothFaceBounds(previousFaces[previousIndex], match);
     });
 
     smoothedResultsRef.current = smoothedMatches;
@@ -343,7 +329,8 @@ export const useFaceRecognition = (
   const [isCameraReady, setIsCameraReady] = useState(false);
 
   useEffect(() => {
-    setIsCameraReady(true);
+    const timer = setTimeout(() => setIsCameraReady(true), 1000);
+    return () => clearTimeout(timer);
   }, []);
 
   const frameProcessor = useFrameProcessor(
@@ -510,37 +497,6 @@ export const useFaceRecognition = (
           confidence: match?.confidence ?? 0,
         });
 
-        if (match?.studentId != null) {
-          // Find which live tracking face this belongs to by comparing bounds center
-          const centerX = face.bounds.x + face.bounds.width / 2;
-          const centerY = face.bounds.y + face.bounds.height / 2;
-
-          let bestTrackingId: string | null = null;
-          let minDistance = Infinity;
-
-          lastLiveFacesRef.current.forEach(liveFace => {
-            const liveCenterX = liveFace.bounds.x + liveFace.bounds.width / 2;
-            const liveCenterY = liveFace.bounds.y + liveFace.bounds.height / 2;
-            // Handle ratio differences by normalizing coordinates if needed, or just basic distance
-            const dx = (centerX / face.frameWidth) - (liveCenterX / liveFace.frameWidth);
-            const dy = (centerY / face.frameHeight) - (liveCenterY / liveFace.frameHeight);
-            const dist = Math.hypot(dx, dy);
-
-            if (dist < 0.3 && dist < minDistance) {
-              minDistance = dist;
-              bestTrackingId = String(liveFace.trackingId);
-            }
-          });
-
-          if (bestTrackingId) {
-            recognizedFacesMap.current.set(bestTrackingId, {
-              studentId: match.studentId,
-              studentName: match.studentName!,
-              timestamp: Date.now()
-            });
-          }
-        }
-
         return {
           studentId: match?.studentId ?? null,
           studentName: match?.studentName,
@@ -552,7 +508,6 @@ export const useFaceRecognition = (
         };
       });
 
-      setDetectedStudents(matches);
       return matches;
     },
     [classId, embedder, enrolledEmbeddings, studentNames],

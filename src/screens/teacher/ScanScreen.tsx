@@ -10,9 +10,7 @@ import {
 import {Camera, useCameraDevice} from 'react-native-vision-camera';
 import {useFaceRecognition} from '../../hooks/useFaceRecognition';
 import {requestCameraPermission} from '../../utils/permissions';
-import {Button, IconButton, Snackbar} from 'react-native-paper';
-import {AttendanceService} from '../../services/attendance/AttendanceService';
-import {useAuthStore} from '../../store/useAuthStore';
+import {Button, IconButton} from 'react-native-paper';
 import {
   adjustFaceOverlayBounds,
   getFaceBoundsProjectionDebug,
@@ -21,11 +19,9 @@ import {
 
 const ScanScreen = ({navigation, route}: any) => {
   const {classId} = route.params || {};
-  const {user} = useAuthStore();
   const windowSize = useWindowDimensions();
   const [hasPermission, setHasPermission] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
   const [cameraPosition, setCameraPosition] = useState<'front' | 'back'>(
     'front',
   );
@@ -99,27 +95,7 @@ const ScanScreen = ({navigation, route}: any) => {
       console.log('[ScanScreen] Photo captured:', photo.path);
       const results = await recognizePhoto(photo.path);
       console.log('[ScanScreen] Recognition results:', results);
-
-      const recognizedStudents = results.filter(r => r.studentId != null);
-
-      if (recognizedStudents.length > 0 && user?.id) {
-        // Enregistrement silencieux de la présence
-        const sessionId = await AttendanceService.startSession(classId, user.id);
-        
-        const detectedResults = recognizedStudents.map(r => ({
-          studentId: r.studentId as number,
-          confidence: r.confidence,
-        }));
-        
-        await AttendanceService.processResults(sessionId, classId, detectedResults);
-        
-        // Affichage du toast
-        setSnackbarMessage(`✅ ${recognizedStudents.length} élève(s) reconnu(s) et marqué(s) présent(s)`);
-      } else {
-        setSnackbarMessage(`❌ Aucun élève reconnu dans le cadre.`);
-      }
-
-      // navigation.navigate('ScanReview', {classId, results}); // On ne navigue plus !
+      navigation.navigate('ScanReview', {classId, results});
     } catch (error) {
       const message =
         error instanceof Error ? error.message : 'Failed to scan faces.';
@@ -310,15 +286,6 @@ const ScanScreen = ({navigation, route}: any) => {
             : 'Loading face embedding model...'}
         </Text>
       </View>
-
-      <Snackbar
-        visible={snackbarMessage.length > 0}
-        onDismiss={() => setSnackbarMessage('')}
-        duration={3000}
-        style={{ backgroundColor: '#333' }}
-      >
-        {snackbarMessage}
-      </Snackbar>
     </View>
   );
 };
