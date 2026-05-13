@@ -11,18 +11,21 @@ describe('FaceCaptureScreen frame processor safety', () => {
     'FaceCaptureScreen.tsx',
   );
 
-  it('does not capture the full face embedder object inside the worklet', () => {
+  it('uses the loaded TFLite model directly in the worklet without Nitro boxing', () => {
     const source = fs.readFileSync(sourcePath, 'utf8');
     const frameProcessorBody =
       source.match(
         /const frameProcessor = useFrameProcessor\([\s\S]*?\n\s{2}\);/,
       )?.[0] ?? '';
 
-    expect(source).toContain('const boxedModel = embedder.boxedModel;');
-    expect(frameProcessorBody).toContain('const tflite = boxedModel?.unbox();');
-    expect(frameProcessorBody).not.toContain('embedder.boxedModel');
+    expect(source).toContain(
+      "const model = embedder.state === 'loaded' ? embedder.model : undefined;",
+    );
+    expect(source).not.toContain('react-native-nitro-modules');
+    expect(source).not.toContain('boxedModel');
+    expect(frameProcessorBody).toContain('const tflite = model;');
     expect(frameProcessorBody).toContain(
-      '[boxedModel, detectFaces, resize, updateLiveFaceOnJS]',
+      '[detectFaces, model, resize, updateLiveFaceOnJS]',
     );
   });
 });

@@ -1,5 +1,6 @@
-import React, {useState, useEffect} from 'react';
+import React, {useCallback, useState} from 'react';
 import {ScrollView, StyleSheet, Text, View} from 'react-native';
+import {useFocusEffect} from '@react-navigation/native';
 import {Avatar, Button, Card, useTheme} from 'react-native-paper';
 import {classRepository} from '../../services/database/classRepository';
 import {Class} from '../../types/models';
@@ -17,34 +18,39 @@ const HomeScreen = ({navigation}: any) => {
     [],
   );
 
-  useEffect(() => {
-    const loadData = async () => {
-      const allClasses = await classRepository.getAll();
-      setClasses(allClasses);
-      if (allClasses.length > 0) {
-        setTrendData(
-          await attendanceRepository.getDailyAttendanceTrend(allClasses[0].id),
-        );
-      }
-      let totalPresent = 0;
-      let totalRecords = 0;
-      for (const cls of allClasses) {
-        const stats = await attendanceRepository.getClassAttendanceStats(
-          cls.id,
-        );
-        stats.forEach((s: any) => {
-          if (s.status === 'present' || s.status === 'late') {
-            totalPresent += s.count;
-          }
-          totalRecords += s.count;
-        });
-      }
-      setOverallRate(
-        totalRecords > 0 ? Math.round((totalPresent / totalRecords) * 100) : 0,
+  const loadData = useCallback(async () => {
+    const allClasses = await classRepository.getAll();
+    setClasses(allClasses);
+    if (allClasses.length > 0) {
+      setTrendData(
+        await attendanceRepository.getDailyAttendanceTrend(allClasses[0].id),
       );
-    };
-    loadData();
+    } else {
+      setTrendData([]);
+    }
+    const summaries = await Promise.all(
+      allClasses.map(cls =>
+        attendanceRepository.getClassAttendanceSummary(cls.id),
+      ),
+    );
+    const presentCount = summaries.reduce(
+      (sum, summary) => sum + summary.presentCount,
+      0,
+    );
+    const recordedCount = summaries.reduce(
+      (sum, summary) => sum + summary.recordedCount,
+      0,
+    );
+    setOverallRate(
+      recordedCount > 0 ? Math.round((presentCount / recordedCount) * 100) : 0,
+    );
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadData();
+    }, [loadData]),
+  );
 
   return (
     <ScrollView
@@ -52,7 +58,7 @@ const HomeScreen = ({navigation}: any) => {
       contentContainerStyle={styles.content}>
       <View style={styles.hero}>
         <Text style={styles.heroKicker}>{t('teacherDashboard')}</Text>
-        <Text style={styles.heroTitle}>Live attendance, made simple.</Text>
+        <Text style={styles.heroTitle}>{t('liveAttendanceSimple')}</Text>
         <View style={styles.heroStats}>
           <View>
             <Text style={styles.heroValue}>{overallRate}%</Text>
@@ -64,11 +70,9 @@ const HomeScreen = ({navigation}: any) => {
           </View>
         </View>
       </View>
-
       {trendData.length > 0 && (
-        <AttendanceChart data={trendData} title="Attendance trend" />
+        <AttendanceChart data={trendData} title={t('attendanceTrend')} />
       )}
-
       <Text style={[styles.sectionTitle, {color: theme.colors.onSurface}]}>
         {t('classes')}
       </Text>
@@ -83,7 +87,7 @@ const HomeScreen = ({navigation}: any) => {
             <View style={styles.classInfo}>
               <Text style={styles.className}>{cls.name}</Text>
               <Text style={styles.classMeta}>
-                {cls.grade ? `${t('grade')} ${cls.grade}` : 'No grade'}
+                {cls.grade ? `${t('grade')} ${cls.grade}` : t('notAssigned')}
               </Text>
             </View>
             <Button

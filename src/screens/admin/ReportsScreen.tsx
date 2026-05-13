@@ -1,12 +1,15 @@
 import React, {useState, useEffect} from 'react';
 import {StyleSheet, ScrollView, Alert, Text} from 'react-native';
-import {List, Button, Card} from 'react-native-paper';
+import {List, Button, Card, useTheme} from 'react-native-paper';
 import {classRepository} from '../../services/database/classRepository';
 import {attendanceRepository} from '../../services/database/attendanceRepository';
 import {CSVExportService} from '../../services/export/CSVExportService';
 import {Class} from '../../types/models';
+import {usePreferencesStore} from '../../store/usePreferencesStore';
 
 const ReportsScreen = () => {
+  const theme = useTheme();
+  const t = usePreferencesStore(state => state.t);
   const [classes, setClasses] = useState<Class[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -47,10 +50,7 @@ const ReportsScreen = () => {
         }`,
       );
     } catch (error) {
-      Alert.alert(
-        'Export Failed',
-        'An error occurred while generating the report.',
-      );
+      Alert.alert(t('exportFailed'), t('reportGenerationFailed'));
       console.error(error);
     } finally {
       setLoading(false);
@@ -58,21 +58,28 @@ const ReportsScreen = () => {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Export Reports</Text>
+    <ScrollView
+      style={[styles.container, {backgroundColor: theme.colors.background}]}>
+      <Text style={[styles.title, {color: theme.colors.onSurface}]}>
+        {t('reports')}
+      </Text>
       <Card style={styles.card}>
         <Card.Content>
-          <Text>Generate and share attendance reports in CSV format.</Text>
+          <Text style={{color: theme.colors.onSurface}}>
+            {t('exportReportsHint')}
+          </Text>
         </Card.Content>
       </Card>
 
       <List.Section>
-        <Text style={styles.sectionTitle}>Select Class for Report</Text>
+        <Text style={[styles.sectionTitle, {color: theme.colors.onSurface}]}>
+          {t('selectClassForReport')}
+        </Text>
         {classes.map(cls => (
           <List.Item
             key={cls.id}
             title={cls.name}
-            description={`Grade: ${cls.grade || 'N/A'}`}
+            description={`${t('grade')}: ${cls.grade || t('notAssigned')}`}
             left={props => <List.Icon {...props} icon="file-export" />}
             right={() => (
               <Button
@@ -80,7 +87,7 @@ const ReportsScreen = () => {
                 onPress={() => exportClassReport(cls.id, cls.name)}
                 loading={loading}
                 disabled={loading}>
-                Export
+                {t('export')}
               </Button>
             )}
           />
@@ -93,7 +100,6 @@ const ReportsScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
   title: {
     padding: 20,

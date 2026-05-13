@@ -13,6 +13,7 @@ import {studentRepository} from '../../services/database/studentRepository';
 import {db, getRows} from '../../services/database/db';
 import {embeddingStorage} from '../../services/faceRecognition/EmbeddingStorage';
 import StatCard from '../../components/analytics/StatCard';
+import {usePreferencesStore} from '../../store/usePreferencesStore';
 
 type StudentRosterRow = {
   id: number;
@@ -36,6 +37,7 @@ const getImageUri = (thumbnail?: string | null) => {
 };
 
 const AdminDashboardScreen = ({navigation}: any) => {
+  const t = usePreferencesStore(state => state.t);
   const [stats, setStats] = useState({enrolled: 0, withFace: 0});
   const [students, setStudents] = useState<StudentRosterRow[]>([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -77,7 +79,7 @@ const AdminDashboardScreen = ({navigation}: any) => {
       setStudents(rosterRows);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      Alert.alert('Could not load students', message);
+      Alert.alert('Error', message);
     } finally {
       setRefreshing(false);
     }
@@ -90,35 +92,31 @@ const AdminDashboardScreen = ({navigation}: any) => {
   }, [loadData, navigation]);
 
   const removeStudent = (student: StudentRosterRow) => {
-    Alert.alert(
-      'Remove student?',
-      `Remove ${student.first_name} ${student.last_name} and their saved face data from this device?`,
-      [
-        {text: 'Cancel', style: 'cancel'},
-        {
-          text: 'Remove',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const removeFaces = embeddingStorage[
-                ('de' + 'leteByStudent') as keyof typeof embeddingStorage
-              ] as (id: number) => Promise<void>;
-              const removeRecord = studentRepository[
-                ('de' + 'lete') as keyof typeof studentRepository
-              ] as (id: number) => Promise<void>;
+    Alert.alert(t('removeStudent'), t('removeStudentConfirm'), [
+      {text: t('cancel'), style: 'cancel'},
+      {
+        text: t('remove'),
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            const removeFaces = embeddingStorage[
+              ('de' + 'leteByStudent') as keyof typeof embeddingStorage
+            ] as (id: number) => Promise<void>;
+            const removeRecord = studentRepository[
+              ('de' + 'lete') as keyof typeof studentRepository
+            ] as (id: number) => Promise<void>;
 
-              await removeFaces(student.id);
-              await removeRecord(student.id);
-              await loadData();
-            } catch (error) {
-              const message =
-                error instanceof Error ? error.message : String(error);
-              Alert.alert('Remove failed', message);
-            }
-          },
+            await removeFaces(student.id);
+            await removeRecord(student.id);
+            await loadData();
+          } catch (error) {
+            const message =
+              error instanceof Error ? error.message : String(error);
+            Alert.alert('Error', message);
+          }
         },
-      ],
-    );
+      },
+    ]);
   };
 
   return (
@@ -128,21 +126,25 @@ const AdminDashboardScreen = ({navigation}: any) => {
         <RefreshControl refreshing={refreshing} onRefresh={loadData} />
       }>
       <View style={styles.header}>
-        <Text style={styles.pageTitle}>Students</Text>
+        <Text style={styles.pageTitle}>{t('students')}</Text>
       </View>
 
       <View style={styles.statGrid}>
         <StatCard
-          title="Roster Students"
+          title={t('rosterStudents')}
           value={stats.enrolled}
           color="#4CAF50"
         />
-        <StatCard title="With Face" value={stats.withFace} color="#FF9800" />
+        <StatCard
+          title={t('withFace')}
+          value={stats.withFace}
+          color="#FF9800"
+        />
       </View>
 
       <Card style={styles.card}>
         <Card.Content>
-          <Text style={styles.sectionTitle}>Actions</Text>
+          <Text style={styles.sectionTitle}>{t('actions')}</Text>
           <View style={styles.actionGrid}>
             <Button
               mode="contained"
@@ -160,9 +162,9 @@ const AdminDashboardScreen = ({navigation}: any) => {
         </Card.Content>
       </Card>
 
-      <Text style={styles.sectionTitle}>Class Student Roster</Text>
+      <Text style={styles.sectionTitle}>{t('classStudentRoster')}</Text>
       {students.length === 0 ? (
-        <Text style={styles.emptyText}>No enrolled students yet.</Text>
+        <Text style={styles.emptyText}>{t('noEnrolledStudents')}</Text>
       ) : (
         students.map(student => {
           const imageUri = getImageUri(student.thumbnail);
@@ -192,24 +194,27 @@ const AdminDashboardScreen = ({navigation}: any) => {
                     {student.first_name} {student.last_name}
                   </Text>
                   <Text style={styles.metaText}>
-                    Code: {student.student_code}
+                    {t('code')}: {student.student_code}
                   </Text>
                   <Text style={styles.metaText}>
-                    Class: {student.class_name ?? 'Not assigned'}
+                    {t('class')}: {student.class_name ?? t('notAssigned')}
                   </Text>
                   <View style={styles.chipRow}>
                     <Chip compact icon={hasEmbedding ? 'check' : 'alert'}>
-                      {student.embedding_count} face vector
-                      {student.embedding_count === 1 ? '' : 's'}
+                      {student.embedding_count}{' '}
+                      {student.embedding_count === 1
+                        ? t('faceVector')
+                        : t('faceVectors')}
                     </Chip>
                     <Chip compact>
                       {vectorLength > 0
                         ? `${vectorLength} floats`
-                        : 'no vector'}
+                        : t('noVector')}
                     </Chip>
                     {student.latest_quality != null && (
                       <Chip compact>
-                        quality {Math.round(student.latest_quality * 100)}%
+                        {t('quality')}{' '}
+                        {Math.round(student.latest_quality * 100)}%
                       </Chip>
                     )}
                   </View>
@@ -228,8 +233,8 @@ const AdminDashboardScreen = ({navigation}: any) => {
 
       <List.Section>
         <List.Item
-          title="Unknown during scan?"
-          description="Students with 0 face vectors need Face Capture before they can match in live attendance."
+          title={t('unknownDuringScan')}
+          description={t('zeroFaceHint')}
           left={props => <List.Icon {...props} icon="help-circle-outline" />}
         />
       </List.Section>

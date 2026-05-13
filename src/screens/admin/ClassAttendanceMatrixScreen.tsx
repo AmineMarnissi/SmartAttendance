@@ -1,5 +1,6 @@
-import React, {useCallback, useEffect, useMemo, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {ScrollView, StyleSheet, Text, View} from 'react-native';
+import {useFocusEffect} from '@react-navigation/native';
 import {Card, Chip, DataTable, useTheme} from 'react-native-paper';
 import {attendanceRepository} from '../../services/database/attendanceRepository';
 import {classRepository} from '../../services/database/classRepository';
@@ -11,8 +12,22 @@ import {
   Student,
 } from '../../types/models';
 import {usePreferencesStore} from '../../store/usePreferencesStore';
+import {brand, shadow} from '../../theme/design';
 
 type RecordMap = Record<number, Record<number, AttendanceRecord['status']>>;
+type MatrixSummary = {
+  sessionCount: number;
+  presentCount: number;
+  recordedCount: number;
+  rate: number;
+};
+
+const emptySummary: MatrixSummary = {
+  sessionCount: 0,
+  presentCount: 0,
+  recordedCount: 0,
+  rate: 0,
+};
 
 const ClassAttendanceMatrixScreen = () => {
   const theme = useTheme();
@@ -22,24 +37,33 @@ const ClassAttendanceMatrixScreen = () => {
   const [students, setStudents] = useState<Student[]>([]);
   const [sessions, setSessions] = useState<AttendanceSession[]>([]);
   const [records, setRecords] = useState<RecordMap>({});
+  const [summary, setSummary] = useState<MatrixSummary>(emptySummary);
 
   const loadClasses = useCallback(async () => {
     const loadedClasses = await classRepository.getAll();
     setClasses(loadedClasses);
-    if (!selectedClassId && loadedClasses.length > 0) {
+    const selectedClassStillExists = loadedClasses.some(
+      cls => cls.id === selectedClassId,
+    );
+    if ((!selectedClassId || !selectedClassStillExists) && loadedClasses[0]) {
       setSelectedClassId(loadedClasses[0].id);
     }
   }, [selectedClassId]);
 
   const loadMatrix = useCallback(async () => {
     if (!selectedClassId) {
+      setStudents([]);
+      setSessions([]);
+      setRecords({});
+      setSummary(emptySummary);
       return;
     }
-    const [loadedStudents, loadedSessions] = await Promise.all([
+    const [loadedStudents, loadedSessions, loadedSummary] = await Promise.all([
       studentRepository.getForClass(selectedClassId),
       attendanceRepository.getSessionsByClass(selectedClassId),
+      attendanceRepository.getClassAttendanceSummary(selectedClassId),
     ]);
-    const recentSessions = loadedSessions.slice(0, 6);
+    const recentSessions = loadedSessions.slice(0, 8);
     const sessionRecords = await Promise.all(
       recentSessions.map(async session => ({
         session,
@@ -58,30 +82,24 @@ const ClassAttendanceMatrixScreen = () => {
     setStudents(loadedStudents);
     setSessions(recentSessions);
     setRecords(nextRecords);
+    setSummary(loadedSummary);
   }, [selectedClassId]);
 
   useEffect(() => {
     loadClasses();
   }, [loadClasses]);
 
+  useFocusEffect(
+    useCallback(() => {
+      loadMatrix();
+    }, [loadMatrix]),
+  );
+
   useEffect(() => {
     loadMatrix();
   }, [loadMatrix]);
 
-  const presentCount = useMemo(() => {
-    let count = 0;
-    Object.values(records).forEach(sessionMap => {
-      Object.values(sessionMap).forEach(status => {
-        if (status === 'present' || status === 'late') {
-          count += 1;
-        }
-      });
-    });
-    return count;
-  }, [records]);
-
-  const totalCells = Math.max(1, sessions.length * students.length);
-  const rate = Math.round((presentCount / totalCells) * 100);
+  const rate = summary.rate;
 
   const statusLabel = (status?: AttendanceRecord['status']) => {
     if (status === 'present' || status === 'late') {
@@ -104,7 +122,6 @@ const ClassAttendanceMatrixScreen = () => {
         {t('attendanceMatrix')}
       </Text>
       <Text style={styles.subtitle}>{t('matrixHint')}</Text>
-
       <View style={styles.chipRow}>
         {classes.map(cls => (
           <Chip
@@ -116,7 +133,6 @@ const ClassAttendanceMatrixScreen = () => {
           </Chip>
         ))}
       </View>
-
       <Card style={styles.card}>
         <Card.Content style={styles.statRow}>
           <View>
@@ -124,8 +140,8 @@ const ClassAttendanceMatrixScreen = () => {
             <Text style={styles.statLabel}>{t('students')}</Text>
           </View>
           <View>
-            <Text style={styles.statValue}>{sessions.length}</Text>
-            <Text style={styles.statLabel}>Sessions</Text>
+            <Text style={styles.statValue}>{summary.sessionCount}</Text>
+            <Text style={styles.statLabel}>{t('sessions')}</Text>
           </View>
           <View>
             <Text style={styles.statValue}>{rate}%</Text>
@@ -133,7 +149,6 @@ const ClassAttendanceMatrixScreen = () => {
           </View>
         </Card.Content>
       </Card>
-
       <ScrollView horizontal>
         <DataTable style={styles.table}>
           <DataTable.Header>
@@ -174,13 +189,18 @@ const styles = StyleSheet.create({
   container: {flex: 1},
   content: {padding: 16, paddingBottom: 32},
   title: {fontSize: 28, fontWeight: '900'},
-  subtitle: {marginTop: 6, marginBottom: 14, color: '#64748B'},
+  subtitle: {marginTop: 6, marginBottom: 14, color: brand.muted},
   chipRow: {flexDirection: 'row', flexWrap: 'wrap', marginBottom: 14},
   chip: {marginRight: 8, marginBottom: 8},
-  card: {marginBottom: 16, borderRadius: 24},
+  card: {marginBottom: 16, borderRadius: 24, ...shadow.card},
   statRow: {flexDirection: 'row', justifyContent: 'space-around'},
-  statValue: {fontSize: 22, fontWeight: '900', textAlign: 'center'},
-  statLabel: {color: '#64748B', marginTop: 4, textAlign: 'center'},
+  statValue: {
+    fontSize: 22,
+    fontWeight: '900',
+    textAlign: 'center',
+    color: brand.ink,
+  },
+  statLabel: {color: brand.muted, marginTop: 4, textAlign: 'center'},
   table: {minWidth: 520},
   nameColumn: {minWidth: 190},
   sessionColumn: {minWidth: 70, justifyContent: 'center'},

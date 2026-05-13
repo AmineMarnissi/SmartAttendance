@@ -5,6 +5,10 @@
   },
   "exclude": [
     "__tests__",
-    "jest.setup.js"
+    "jest.setup.js",
+    "node_modules",
+    "node_modules_broken_*",
+    "android/build",
+    "android/app/build"
   ]
 }

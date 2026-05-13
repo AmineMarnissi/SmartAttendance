@@ -7,6 +7,7 @@ import AppNavigator from './src/navigation/AppNavigator';
 import {usePreferencesStore} from './src/store/usePreferencesStore';
 import {modernDarkTheme, modernLightTheme} from './src/theme/appTheme';
 import SplashScreen from './src/components/ui/SplashScreen';
+import {bootstrapDefaultSession} from './src/services/bootstrap/defaultSession';
 
 type AppStatus = 'initializing' | 'ready' | 'error';
 
@@ -23,6 +24,7 @@ function App(): React.JSX.Element {
     try {
       await initDatabase();
       await seedData();
+      await bootstrapDefaultSession();
       await LocalNotificationService.initialize();
       setStatus('ready');
     } catch (error) {

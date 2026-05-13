@@ -17,6 +17,29 @@ type AttendanceTrendRow = {
   rate: number;
 };
 
+export type ClassAttendanceSummary = {
+  sessionCount: number;
+  presentCount: number;
+  recordedCount: number;
+  rate: number;
+};
+
+const toNumber = (value: unknown): number => {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : 0;
+  }
+
+  if (typeof value === 'string') {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  return 0;
+};
+
+const calculateAttendanceRate = (presentCount: number, totalCount: number) =>
+  totalCount > 0 ? Math.round((presentCount / totalCount) * 100) : 0;
+
 export const attendanceRepository = {
   createSession: async (
     session: Omit<AttendanceSession, 'id' | 'created_at'>,
@@ -46,7 +69,7 @@ export const attendanceRepository = {
 
   getSessionsByClass: async (classId: number): Promise<AttendanceSession[]> => {
     const result = await db.execute(
-      'SELECT * FROM attendance_sessions WHERE class_id = ? ORDER BY date DESC;',
+      'SELECT * FROM attendance_sessions WHERE class_id = ? ORDER BY date DESC, start_time DESC, id DESC;',
       [classId],
     );
     return getRows<AttendanceSession>(result);
@@ -84,7 +107,7 @@ export const attendanceRepository = {
     sessionId: number,
   ): Promise<AttendanceRecord[]> => {
     const result = await db.execute(
-      'SELECT * FROM attendance_records WHERE session_id = ?;',
+      'SELECT * FROM attendance_records WHERE session_id = ? ORDER BY student_id ASC;',
       [sessionId],
     );
     return getRows<AttendanceRecord>(result);
@@ -100,7 +123,7 @@ export const attendanceRepository = {
       JOIN attendance_sessions asess ON ar.session_id = asess.id
       JOIN classes c ON asess.class_id = c.id
       WHERE ar.student_id = ?
-      ORDER BY asess.date DESC;
+      ORDER BY asess.date DESC, asess.start_time DESC;
     `,
       [studentId],
     );
@@ -148,6 +171,45 @@ export const attendanceRepository = {
     return getRows<AttendanceStatRow>(result);
   },
 
+  getClassAttendanceSummary: async (
+    classId: number,
+  ): Promise<ClassAttendanceSummary> => {
+    const result = await db.execute(
+      `
+      SELECT
+        COUNT(DISTINCT asess.id) as session_count,
+        COUNT(CASE WHEN ar.status IN ('present', 'late') THEN 1 END) as present_count,
+        COUNT(ar.id) as total_count
+      FROM attendance_sessions asess
+      LEFT JOIN attendance_records ar ON ar.session_id = asess.id
+      WHERE asess.class_id = ?;
+    `,
+      [classId],
+    );
+    const row = getFirstRow<{
+      session_count: unknown;
+      present_count: unknown;
+      total_count: unknown;
+    }>(result);
+    const sessionCount = toNumber(row?.session_count);
+    const presentCount = toNumber(row?.present_count);
+    const recordedCount = toNumber(row?.total_count);
+
+    return {
+      sessionCount,
+      presentCount,
+      recordedCount,
+      rate: calculateAttendanceRate(presentCount, recordedCount),
+    };
+  },
+
+  getClassAttendanceRate: async (classId: number): Promise<number> => {
+    const summary = await attendanceRepository.getClassAttendanceSummary(
+      classId,
+    );
+    return summary.rate;
+  },
+
   getDailyAttendanceTrend: async (
     classId: number,
     days: number = 7,
@@ -156,9 +218,12 @@ export const attendanceRepository = {
       `
       SELECT 
         asess.date,
-        COUNT(CASE WHEN ar.status IN ('present', 'late') THEN 1 END) * 100.0 / COUNT(*) as rate
+        COALESCE(
+          COUNT(CASE WHEN ar.status IN ('present', 'late') THEN 1 END) * 100.0 / NULLIF(COUNT(ar.id), 0),
+          0
+        ) as rate
       FROM attendance_sessions asess
-      JOIN attendance_records ar ON asess.id = ar.session_id
+      LEFT JOIN attendance_records ar ON asess.id = ar.session_id
       WHERE asess.class_id = ?
       GROUP BY asess.date
       ORDER BY asess.date DESC
@@ -166,7 +231,9 @@ export const attendanceRepository = {
     `,
       [classId, days],
     );
-    return getRows<AttendanceTrendRow>(result).reverse();
+    return getRows<AttendanceTrendRow>(result)
+      .map(row => ({...row, rate: toNumber(row.rate)}))
+      .reverse();
   },
 
   getSchoolWideStats: async (): Promise<AttendanceStatRow[]> => {

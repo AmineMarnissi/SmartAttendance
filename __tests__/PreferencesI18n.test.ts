@@ -6,6 +6,12 @@ describe('preferences and i18n', () => {
     expect(translate('en', 'login')).toBe('Login');
     expect(translate('fr', 'login')).toBe('Connexion');
     expect(translate('fr', 'attendanceMatrix')).toBe('Matrice de présence');
+    expect(translate('fr', 'reports')).toBe('Rapports');
+    expect(translate('fr', 'export')).toBe('Exporter');
+    expect(translate('fr', 'selectClassForReport')).toBe(
+      'Sélectionner une classe pour le rapport',
+    );
+    expect(translate('fr', 'history')).toBe('Historique');
   });
 
   it('stores language and theme preferences', () => {

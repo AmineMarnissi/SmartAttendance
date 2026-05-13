@@ -1,10 +1,11 @@
 import {Platform} from 'react-native';
 import RNFS from 'react-native-fs';
-import type {ModelSource} from 'react-native-fast-tflite';
 
 export const ANDROID_FACE_EMBEDDING_RESOURCE =
   'src_assets_models_mobilefacenet.tflite';
 export const FACE_EMBEDDING_CACHE_FILE = 'mobilefacenet.tflite';
+
+type ModelSource = number | {url: string};
 
 type FaceEmbeddingModelFileSystem = {
   CachesDirectoryPath: string;

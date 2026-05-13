@@ -14,7 +14,6 @@ import {
   buildFaceCrop,
   createEmbeddingInput,
   FACE_EMBEDDING_INPUT_SIZE,
-  getExactArrayBuffer,
   l2NormalizeEmbedding,
   useFaceEmbedder,
 } from '../services/faceRecognition/FaceEmbedder';
@@ -152,7 +151,7 @@ export const useFaceRecognition = (classId?: number) => {
   );
 
   const updateLiveFacesOnJS = useRunOnJS(updateLiveFaces, [updateLiveFaces]);
-  const boxedModel = embedder.boxedModel;
+  const model = embedder.state === 'loaded' ? embedder.model : undefined;
 
   const frameProcessor = useFrameProcessor(
     frame => {
@@ -160,7 +159,7 @@ export const useFaceRecognition = (classId?: number) => {
 
       const faces = detectFaces(frame);
       const liveFaces: LiveFaceEmbedding[] = [];
-      const tflite = boxedModel?.unbox();
+      const tflite = model;
 
       if (tflite == null) {
         updateLiveFacesOnJS([]);
@@ -185,7 +184,7 @@ export const useFaceRecognition = (classId?: number) => {
           dataType: 'float32',
         }) as Float32Array;
         const input = createEmbeddingInput(resizedFace);
-        const output = tflite.runSync([getExactArrayBuffer(input)]);
+        const output = tflite.runSync([input]);
         const liveEmbedding = l2NormalizeEmbedding(new Float32Array(output[0]));
 
         liveFaces.push({
@@ -197,7 +196,7 @@ export const useFaceRecognition = (classId?: number) => {
 
       updateLiveFacesOnJS(liveFaces);
     },
-    [boxedModel, detectFaces, resize, updateLiveFacesOnJS],
+    [detectFaces, model, resize, updateLiveFacesOnJS],
   );
 
   return {

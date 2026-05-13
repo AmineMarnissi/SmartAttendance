@@ -20,7 +20,6 @@ import {
   estimateFaceQuality,
   FACE_EMBEDDING_CAPTURE_TARGETS,
   FACE_EMBEDDING_INPUT_SIZE,
-  getExactArrayBuffer,
   l2NormalizeEmbedding,
   useFaceEmbedder,
 } from '../../services/faceRecognition/FaceEmbedder';
@@ -31,12 +30,15 @@ import {
   mirrorPreviewBounds,
   PreviewSize,
 } from '../../utils/mapCameraBounds';
+import {usePreferencesStore} from '../../store/usePreferencesStore';
 
 const FaceCaptureScreen = ({navigation, route}: any) => {
   const {studentData} = route.params;
+  const t = usePreferencesStore(state => state.t);
   const [hasPermission, setHasPermission] = useState(false);
   const [captureCount, setCaptureCount] = useState(0);
   const [isCapturing, setIsCapturing] = useState(false);
+  const [savedStudent, setSavedStudent] = useState(false);
   const [liveFaceBounds, setLiveFaceBounds] = useState<Bounds | null>(null);
   const [liveFrameSize, setLiveFrameSize] = useState<PreviewSize | null>(null);
   const [previewSize, setPreviewSize] = useState<PreviewSize>({
@@ -52,7 +54,7 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
   const latestQuality = useRef(0);
   const {resize} = useResizePlugin();
   const embedder = useFaceEmbedder();
-  const boxedModel = embedder.boxedModel;
+  const model = embedder.state === 'loaded' ? embedder.model : undefined;
   const {detectFaces} = useFaceDetector(
     React.useMemo(
       () => ({
@@ -87,15 +89,12 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
   const frameProcessor = useFrameProcessor(
     frame => {
       'worklet';
-
       const faces = detectFaces(frame);
-      const tflite = boxedModel?.unbox();
-
+      const tflite = model;
       if (faces.length === 0 || tflite == null) {
         updateLiveFaceOnJS(null);
         return;
       }
-
       let primaryFace = faces[0];
       for (const face of faces) {
         if (
@@ -105,7 +104,6 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
           primaryFace = face;
         }
       }
-
       const bounds = {
         x: primaryFace.bounds.x,
         y: primaryFace.bounds.y,
@@ -123,7 +121,7 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
         dataType: 'float32',
       }) as Float32Array;
       const input = createEmbeddingInput(resizedFace);
-      const output = tflite.runSync([getExactArrayBuffer(input)]);
+      const output = tflite.runSync([input]);
       const embedding = l2NormalizeEmbedding(new Float32Array(output[0]));
       const quality = estimateFaceQuality(
         bounds,
@@ -132,7 +130,6 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
         primaryFace.yawAngle,
         primaryFace.pitchAngle,
       );
-
       updateLiveFaceOnJS({
         bounds,
         quality,
@@ -140,7 +137,7 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
         frameSize: {width: frame.width, height: frame.height},
       });
     },
-    [boxedModel, detectFaces, resize, updateLiveFaceOnJS],
+    [detectFaces, model, resize, updateLiveFaceOnJS],
   );
 
   const previewFaceBounds = liveFaceBounds
@@ -158,157 +155,134 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
     setPreviewSize({width, height});
   };
 
+  const isCaptureButtonDisabled =
+    isCapturing ||
+    (!savedStudent &&
+      (captureCount >= FACE_EMBEDDING_CAPTURE_TARGETS ||
+        embedder.state !== 'loaded' ||
+        !latestEmbedding.current));
+  const captureButtonLabel = savedStudent
+    ? t('done')
+    : `${t('capture')} (${Math.min(
+        captureCount + 1,
+        FACE_EMBEDDING_CAPTURE_TARGETS,
+      )}/${FACE_EMBEDDING_CAPTURE_TARGETS})`;
+
+  const finishEnrollment = () => {
+    const routes = navigation.getState?.()?.routes ?? [];
+    if (routes.some((routeItem: any) => routeItem.name === 'StudentRoster')) {
+      navigation.navigate('StudentRoster');
+    } else if (
+      routes.some((routeItem: any) => routeItem.name === 'AdminDashboard')
+    ) {
+      navigation.navigate('AdminDashboard');
+    } else {
+      navigation.goBack();
+    }
+  };
+
   const handleCapture = async () => {
+    if (savedStudent) {
+      finishEnrollment();
+      return;
+    }
     if (captureCount >= FACE_EMBEDDING_CAPTURE_TARGETS || isCapturing) {
       return;
     }
-
     if (!latestEmbedding.current) {
-      Alert.alert(
-        'No Face',
-        'Place one face clearly inside the camera before capturing.',
-      );
+      Alert.alert(t('noFace'), t('placeFace'));
       return;
     }
-
     setIsCapturing(true);
-
     if (!capturedPhotoPath.current && cameraRef.current) {
       try {
         const photo = await cameraRef.current.takePhoto({});
         capturedPhotoPath.current = photo.path;
-        console.log('[FaceCapture] Saved thumbnail photo path:', photo.path);
       } catch (error) {
         console.warn('[FaceCapture] Could not capture thumbnail photo:', error);
       }
     }
-
-    const embeddingCopy = new Float32Array(latestEmbedding.current);
-    capturedEmbeddings.current.push(embeddingCopy);
-
+    capturedEmbeddings.current.push(new Float32Array(latestEmbedding.current));
     const nextCount = captureCount + 1;
     setCaptureCount(nextCount);
-
     if (nextCount === FACE_EMBEDDING_CAPTURE_TARGETS) {
       await saveStudent();
     }
-
     setIsCapturing(false);
   };
 
   const saveStudent = async () => {
     try {
-      console.log('[FaceCapture] Saving student...', studentData);
       const studentId = await studentRepository.create({
         student_code: studentData.studentCode,
         first_name: studentData.firstName,
         last_name: studentData.lastName,
         thumbnail: capturedPhotoPath.current ?? undefined,
       });
-      console.log('[FaceCapture] Created student with id:', studentId);
       await classRepository.enrollStudent(studentId, studentData.classId);
-      console.log(
-        '[FaceCapture] Enrolled student',
-        studentId,
-        'in class',
-        studentData.classId,
-      );
-
-      const embeddingLength = capturedEmbeddings.current[0]?.length ?? 0;
-      console.log(
-        '[FaceCapture] Saving',
-        capturedEmbeddings.current.length,
-        'embeddings of length',
-        embeddingLength,
-      );
-
       for (const capturedEmbedding of capturedEmbeddings.current) {
-        const normalizedEmbedding = l2NormalizeEmbedding(capturedEmbedding);
-        console.log(
-          '[FaceCapture] Saving embedding sample length:',
-          normalizedEmbedding.length,
-          'quality:',
-          latestQuality.current,
-        );
         await embeddingStorage.save(
           studentId,
-          normalizedEmbedding,
+          l2NormalizeEmbedding(capturedEmbedding),
           latestQuality.current,
         );
       }
-
       const savedFaceResult = await db.execute(
-        'SELECT COUNT(*) as face_count, MAX(LENGTH(embedding)) as embedding_bytes FROM face_embeddings WHERE student_id = ?;',
+        'SELECT COUNT(*) as face_count FROM face_embeddings WHERE student_id = ?;',
         [studentId],
       );
       const savedFaceRow = savedFaceResult.rows[0] as any;
       const savedFaceCount = savedFaceRow?.face_count ?? 0;
-      const savedEmbeddingBytes = savedFaceRow?.embedding_bytes ?? 0;
-      console.log(
-        '[FaceCapture] Embedding saved successfully. Count:',
-        savedFaceCount,
-        'bytes:',
-        savedEmbeddingBytes,
-        'thumbnail:',
-        capturedPhotoPath.current,
-      );
-
       if (savedFaceCount < capturedEmbeddings.current.length) {
         throw new Error(
           'Not all face embeddings were stored for this student.',
         );
       }
-
-      Alert.alert('Success', 'Student enrolled successfully', [
-        {text: 'OK', onPress: () => navigation.navigate('AdminDashboard')},
-      ]);
+      setSavedStudent(true);
+      Alert.alert(t('studentSaved'), t('studentsAndFacesSaved'));
     } catch (error) {
       console.error('[FaceCapture] Failed to save student:', error);
-      Alert.alert('Error', 'Failed to save student data');
+      Alert.alert(t('error'), t('failedSaveStudentData'));
     }
   };
 
   if (!hasPermission) {
     return (
       <View style={styles.center}>
-        <Text>No Camera Permission</Text>
+        <Text>{t('noCameraPermission')}</Text>
       </View>
     );
   }
   if (!device) {
     return (
       <View style={styles.center}>
-        <Text>No Camera Device</Text>
+        <Text>{t('noCameraDevice')}</Text>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <Title style={styles.title}>Face Capture: {studentData.firstName}</Title>
-      <Text style={styles.subtitle}>
-        Capture {FACE_EMBEDDING_CAPTURE_TARGETS} stable face samples. Keep the
-        face centered and change angle slightly.
-      </Text>
-
+      <Title style={styles.title}>
+        {t('faceCapture')}: {studentData.firstName}
+      </Title>
+      <Text style={styles.subtitle}>{t('captureFaceHint')}</Text>
       <ProgressBar
         progress={captureCount / FACE_EMBEDDING_CAPTURE_TARGETS}
         color="#4CAF50"
         style={styles.progress}
       />
-
       <View style={styles.cameraContainer} onLayout={handleCameraLayout}>
         <Camera
           ref={cameraRef}
           style={styles.camera}
           device={device}
-          isActive={true}
+          isActive={!savedStudent}
           photo={true}
           pixelFormat="yuv"
           frameProcessor={frameProcessor}
         />
-
-        {previewFaceBounds && (
+        {previewFaceBounds && !savedStudent && (
           <View
             style={[
               styles.faceBox,
@@ -322,36 +296,28 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
           />
         )}
       </View>
-
       <Text style={styles.qualityText}>
-        {embedder.state === 'loading'
-          ? 'Loading embedding model...'
+        {savedStudent
+          ? t('studentsAndFacesSaved')
+          : embedder.state === 'loading'
+          ? t('loadingEmbeddingModel')
           : embedder.state === 'error'
-          ? 'Embedding model failed to load.'
-          : `Live capture quality: ${Math.round(liveQuality * 100)}%`}
+          ? t('embeddingModelFailed')
+          : `${t('liveCaptureQuality')}: ${Math.round(liveQuality * 100)}%`}
       </Text>
-
       <View style={styles.controls}>
         <IconButton
           icon="close"
           mode="contained"
           onPress={() => navigation.goBack()}
         />
-
         <Button
           mode="contained"
           onPress={handleCapture}
           loading={isCapturing}
-          disabled={
-            isCapturing ||
-            captureCount >= FACE_EMBEDDING_CAPTURE_TARGETS ||
-            embedder.state !== 'loaded' ||
-            !latestEmbedding.current
-          }
+          disabled={isCaptureButtonDisabled}
           contentStyle={styles.captureBtn}>
-          {captureCount < FACE_EMBEDDING_CAPTURE_TARGETS
-            ? `Capture (${captureCount + 1}/${FACE_EMBEDDING_CAPTURE_TARGETS})`
-            : 'Done'}
+          {captureButtonLabel}
         </Button>
       </View>
     </View>
@@ -359,49 +325,25 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    padding: 20,
-  },
-  center: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  title: {
-    textAlign: 'center',
-  },
-  subtitle: {
-    textAlign: 'center',
-    color: '#666',
-    marginBottom: 10,
-  },
-  progress: {
-    height: 10,
-    borderRadius: 5,
-    marginBottom: 20,
-  },
+  container: {flex: 1, backgroundColor: '#fff', padding: 20},
+  center: {flex: 1, justifyContent: 'center', alignItems: 'center'},
+  title: {textAlign: 'center'},
+  subtitle: {textAlign: 'center', color: '#666', marginBottom: 10},
+  progress: {height: 10, borderRadius: 5, marginBottom: 20},
   cameraContainer: {
     flex: 1,
     borderRadius: 20,
     overflow: 'hidden',
     backgroundColor: '#000',
   },
-  camera: {
-    flex: 1,
-  },
+  camera: {flex: 1},
   faceBox: {
     position: 'absolute',
     borderWidth: 2,
     borderColor: '#4CAF50',
     borderRadius: 8,
   },
-  qualityText: {
-    textAlign: 'center',
-    color: '#666',
-    marginTop: 12,
-  },
+  qualityText: {textAlign: 'center', color: '#666', marginTop: 12},
   controls: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -409,10 +351,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
     gap: 20,
   },
-  captureBtn: {
-    paddingHorizontal: 20,
-    height: 50,
-  },
+  captureBtn: {paddingHorizontal: 20, height: 50},
 });
 
 export default FaceCaptureScreen;

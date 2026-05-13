@@ -1,26 +1,16 @@
-import {useEffect, useMemo, useState} from 'react';
-import {loadTensorflowModel, type TfliteModel} from 'react-native-fast-tflite';
-import {NitroModules} from 'react-native-nitro-modules';
+import {useEffect, useState} from 'react';
+import {
+  loadTensorflowModel,
+  type TensorflowModel,
+  type TensorflowPlugin,
+} from 'react-native-fast-tflite';
 import {resolveFaceEmbeddingModelSource} from './faceEmbeddingModelSource';
 
 export const FACE_EMBEDDING_MODEL = require('../../assets/models/mobilefacenet.tflite');
 export const FACE_EMBEDDING_INPUT_SIZE = 112;
 export const FACE_EMBEDDING_CAPTURE_TARGETS = 5;
 
-type FaceEmbedderPlugin =
-  | {
-      model: TfliteModel;
-      state: 'loaded';
-    }
-  | {
-      model: undefined;
-      state: 'loading';
-    }
-  | {
-      model: undefined;
-      error: Error;
-      state: 'error';
-    };
+type FaceEmbedderPlugin = TensorflowPlugin;
 
 type FaceBounds = {
   x: number;
@@ -44,7 +34,9 @@ export const useFaceEmbedder = () => {
         const modelSource = await resolveFaceEmbeddingModelSource({
           bundledModel: FACE_EMBEDDING_MODEL,
         });
-        const model = await loadTensorflowModel(modelSource, []);
+        const model = (await loadTensorflowModel(
+          modelSource,
+        )) as TensorflowModel;
 
         if (isMounted) {
           setPlugin({model, state: 'loaded'});
@@ -67,19 +59,7 @@ export const useFaceEmbedder = () => {
     };
   }, []);
 
-  const model = plugin.state === 'loaded' ? plugin.model : undefined;
-  const boxedModel = useMemo(() => {
-    if (model == null) {
-      return undefined;
-    }
-
-    return NitroModules.box(model);
-  }, [model]);
-
-  return {
-    ...plugin,
-    boxedModel,
-  };
+  return plugin;
 };
 
 export const buildFaceCrop = (

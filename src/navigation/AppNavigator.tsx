@@ -28,46 +28,56 @@ const AttendanceStackNav = createStackNavigator();
 const AdminTab = createBottomTabNavigator();
 const TeacherTab = createBottomTabNavigator();
 
-const AttendanceStack = () => (
-  <AttendanceStackNav.Navigator>
-    <AttendanceStackNav.Screen
-      name="Home"
-      component={HomeScreen}
-      options={{headerShown: false}}
-    />
-    <AttendanceStackNav.Screen
-      name="Scan"
-      component={ScanScreen}
-      options={{headerShown: false}}
-    />
-    <AttendanceStackNav.Screen
-      name="ScanReview"
-      component={ScanReviewScreen}
-      options={{title: 'Review Attendance'}}
-    />
-  </AttendanceStackNav.Navigator>
-);
+const AttendanceStack = () => {
+  const t = usePreferencesStore(state => state.t);
+  return (
+    <AttendanceStackNav.Navigator>
+      <AttendanceStackNav.Screen
+        name="Home"
+        component={HomeScreen}
+        options={{headerShown: false}}
+      />
+      <AttendanceStackNav.Screen
+        name="Scan"
+        component={ScanScreen}
+        options={{headerShown: false}}
+      />
+      <AttendanceStackNav.Screen
+        name="ScanReview"
+        component={ScanReviewScreen}
+        options={{title: t('reviewAttendance')}}
+      />
+    </AttendanceStackNav.Navigator>
+  );
+};
 
-const StudentRosterStack = () => (
-  <StudentStack.Navigator>
-    <StudentStack.Screen
-      name="StudentRoster"
-      component={AdminDashboardScreen}
-      options={{title: 'Students'}}
-    />
-    <StudentStack.Screen
-      name="StudentEnrollment"
-      component={StudentEnrollmentScreen}
-      options={{title: 'Enroll Student'}}
-    />
-    <StudentStack.Screen
-      name="FaceCapture"
-      component={FaceCaptureScreen}
-      options={{headerShown: false}}
-    />
-    <StudentStack.Screen name="Reports" component={ReportsScreen} />
-  </StudentStack.Navigator>
-);
+const StudentRosterStack = () => {
+  const t = usePreferencesStore(state => state.t);
+  return (
+    <StudentStack.Navigator>
+      <StudentStack.Screen
+        name="StudentRoster"
+        component={AdminDashboardScreen}
+        options={{title: t('students')}}
+      />
+      <StudentStack.Screen
+        name="StudentEnrollment"
+        component={StudentEnrollmentScreen}
+        options={{title: t('enrollStudent')}}
+      />
+      <StudentStack.Screen
+        name="FaceCapture"
+        component={FaceCaptureScreen}
+        options={{headerShown: false}}
+      />
+      <StudentStack.Screen
+        name="Reports"
+        component={ReportsScreen}
+        options={{title: t('reports')}}
+      />
+    </StudentStack.Navigator>
+  );
+};
 
 const screenOptions =
   (icons: Record<string, string>) =>
@@ -151,7 +161,11 @@ const TeacherTabs = () => {
         component={ClassAttendanceMatrixScreen}
         options={{title: t('attendanceMatrix')}}
       />
-      <TeacherTab.Screen name="History" component={AttendanceHistoryScreen} />
+      <TeacherTab.Screen
+        name="History"
+        component={AttendanceHistoryScreen}
+        options={{title: t('history')}}
+      />
       <TeacherTab.Screen
         name="Settings"
         component={SettingsScreen}

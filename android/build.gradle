@@ -5,7 +5,7 @@ buildscript {
         compileSdkVersion = 36
         targetSdkVersion = 34
         ndkVersion = "26.1.10909125"
-        kotlinVersion = "2.1.20"
+        kotlinVersion = "1.9.24"
     }
     repositories {
         google()
@@ -20,6 +20,9 @@ buildscript {
 
 subprojects { subproject ->
     configurations.configureEach {
+        resolutionStrategy.force "org.jetbrains.kotlin:kotlin-stdlib:1.9.24"
+        resolutionStrategy.force "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.24"
+        resolutionStrategy.force "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.24"
         resolutionStrategy.force "androidx.camera:camera-core:1.5.0-alpha03"
         resolutionStrategy.force "androidx.camera:camera-camera2:1.5.0-alpha03"
         resolutionStrategy.force "androidx.camera:camera-lifecycle:1.5.0-alpha03"
@@ -37,5 +40,4 @@ subprojects { subproject ->
 }
 
 apply plugin: "com.facebook.react.rootproject"
-
 

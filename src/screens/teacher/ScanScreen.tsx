@@ -16,9 +16,11 @@ import {
   mirrorPreviewBounds,
   PreviewSize,
 } from '../../utils/mapCameraBounds';
+import {usePreferencesStore} from '../../store/usePreferencesStore';
 
 const ScanScreen = ({navigation, route}: any) => {
   const {classId} = route.params || {};
+  const t = usePreferencesStore(state => state.t);
   const [hasPermission, setHasPermission] = useState(false);
   const [previewSize, setPreviewSize] = useState<PreviewSize>({
     width: 1,
@@ -44,9 +46,9 @@ const ScanScreen = ({navigation, route}: any) => {
   if (!hasPermission) {
     return (
       <View style={styles.center}>
-        <Text>No camera permission</Text>
+        <Text>{t('noCameraPermission')}</Text>
         <Button mode="contained" onPress={() => requestCameraPermission()}>
-          Grant Permission
+          {t('grantPermission')}
         </Button>
       </View>
     );
@@ -55,7 +57,7 @@ const ScanScreen = ({navigation, route}: any) => {
   if (!device) {
     return (
       <View style={styles.center}>
-        <Text>No camera device found</Text>
+        <Text>{t('noCameraDevice')}</Text>
       </View>
     );
   }
@@ -82,7 +84,7 @@ const ScanScreen = ({navigation, route}: any) => {
       } • th ${Math.round(lastDebug.threshold * 100)}% • ${
         lastDebug.reason ?? 'match-ok'
       }`
-    : 'waiting for live embedding';
+    : t('waitingForLiveEmbedding');
 
   return (
     <View style={styles.container}>
@@ -150,10 +152,14 @@ const ScanScreen = ({navigation, route}: any) => {
       <View style={styles.statusPill}>
         <Text style={styles.statusText}>
           {modelState === 'loaded'
-            ? `${detectedStudents.length} face(s) • ${enrolledCount} enrolled • best ${bestScore}`
+            ? `${detectedStudents.length} ${t(
+                'facesAnalyzed',
+              )} • ${enrolledCount} ${t('enrolled')} • ${t(
+                'best',
+              )} ${bestScore}`
             : modelState === 'error'
-            ? 'Embedding model unavailable'
-            : 'Loading face embedding model...'}
+            ? t('embeddingModelUnavailable')
+            : t('loadingFaceEmbeddingModel')}
         </Text>
         <Text style={styles.debugText}>{diagnosticLine}</Text>
       </View>

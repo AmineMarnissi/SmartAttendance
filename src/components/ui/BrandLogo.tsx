@@ -15,72 +15,53 @@ const BrandLogo = ({
 }: BrandLogoProps) => {
   const markSize = size;
   const dotSize = Math.max(7, size * 0.13);
+  const dynamicStyles = React.useMemo(
+    () =>
+      StyleSheet.create({
+        mark: {
+          width: markSize,
+          height: markSize,
+          borderRadius: markSize * 0.28,
+          backgroundColor: inverted ? '#FFFFFF' : brand.primary,
+          transform: [{rotate: '-12deg'}],
+        },
+        scanLine: {
+          backgroundColor: inverted ? brand.primary : '#FFFFFF',
+        },
+        dot: {
+          width: dotSize,
+          height: dotSize,
+          borderRadius: dotSize / 2,
+          backgroundColor: inverted ? brand.primary : '#FFFFFF',
+        },
+        diamond: {
+          borderColor: inverted ? brand.primary : '#FFFFFF',
+        },
+        title: {
+          color: inverted ? '#FFFFFF' : brand.ink,
+        },
+        tagline: {
+          color: inverted ? '#FFE5E7' : brand.muted,
+        },
+      }),
+    [dotSize, inverted, markSize],
+  );
 
   return (
     <View style={styles.container}>
-      <View
-        style={[
-          styles.mark,
-          {
-            width: markSize,
-            height: markSize,
-            borderRadius: markSize * 0.28,
-            backgroundColor: inverted ? '#FFFFFF' : brand.primary,
-            transform: [{rotate: '-12deg'}],
-          },
-        ]}>
-        <View
-          style={[
-            styles.scanLine,
-            {backgroundColor: inverted ? brand.primary : '#FFFFFF'},
-          ]}
-        />
+      <View style={[styles.mark, dynamicStyles.mark]}>
+        <View style={[styles.scanLine, dynamicStyles.scanLine]} />
         <View style={styles.dotRow}>
-          <View
-            style={[
-              styles.dot,
-              {
-                width: dotSize,
-                height: dotSize,
-                borderRadius: dotSize / 2,
-                backgroundColor: inverted ? brand.primary : '#FFFFFF',
-              },
-            ]}
-          />
-          <View
-            style={[
-              styles.dot,
-              {
-                width: dotSize,
-                height: dotSize,
-                borderRadius: dotSize / 2,
-                backgroundColor: inverted ? brand.primary : '#FFFFFF',
-              },
-            ]}
-          />
+          <View style={[styles.dot, dynamicStyles.dot]} />
+          <View style={[styles.dot, dynamicStyles.dot]} />
         </View>
-        <View
-          style={[
-            styles.diamond,
-            {borderColor: inverted ? brand.primary : '#FFFFFF'},
-          ]}
-        />
+        <View style={[styles.diamond, dynamicStyles.diamond]} />
       </View>
       {showText && (
         <View style={styles.textWrap}>
-          <Text
-            style={[styles.title, {color: inverted ? '#FFFFFF' : brand.ink}]}>
-            Intelligent
-          </Text>
-          <Text
-            style={[styles.title, {color: inverted ? '#FFFFFF' : brand.ink}]}>
-            Register
-          </Text>
-          <Text
-            style={[
-              styles.tagline,
-              {color: inverted ? '#FFE5E7' : brand.muted},
-            ]}>
+          <Text style={[styles.title, dynamicStyles.title]}>Intelligent</Text>
+          <Text style={[styles.title, dynamicStyles.title]}>Register</Text>
+          <Text style={[styles.tagline, dynamicStyles.tagline]}>
             Smart face attendance
           </Text>
         </View>

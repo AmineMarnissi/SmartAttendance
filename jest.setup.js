@@ -32,14 +32,6 @@ jest.mock('react-native-fast-tflite', () => ({
   }),
 }));
 
-jest.mock('react-native-nitro-modules', () => ({
-  NitroModules: {
-    box: jest.fn(value => ({
-      unbox: () => value,
-    })),
-  },
-}));
-
 jest.mock('react-native-vision-camera-face-detector', () => ({
   useFaceDetector: jest.fn().mockReturnValue({
     detectFaces: jest.fn().mockReturnValue([]),
