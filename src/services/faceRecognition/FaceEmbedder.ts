@@ -21,56 +21,65 @@ const FACE_CROP_HEIGHT_SCALE = 0.92;
 const FACE_CROP_PADDING_SCALE = 1.08;
 const FACE_CROP_CENTER_Y = 0.46;
 
-type FaceEmbedderStore = {
+// Référence module-level : jamais sérialisée, toujours un objet JSI valide
+let _tfliteModel: TfliteModel | null = null;
+
+type EmbedderState = {
   state: 'idle' | 'loading' | 'loaded' | 'error';
-  model: TfliteModel | undefined;
   errorMessage: string | null;
+  version: number; // incrémenté quand le modèle est prêt → déclenche useMemo
   load: () => Promise<void>;
 };
 
-// Singleton : le modèle TFLite n'est chargé qu'une seule fois
-const useFaceEmbedderStore = create<FaceEmbedderStore>((set, get) => ({
+// Zustand pour l'état réactif uniquement (pas le modèle)
+const useEmbedderState = create<EmbedderState>((set, get) => ({
   state: 'idle',
-  model: undefined,
   errorMessage: null,
+  version: 0,
   load: async () => {
-    const {state} = get();
-    if (state === 'loading' || state === 'loaded') {
-      return; // Déjà chargé ou en cours
+    if (get().state === 'loading' || get().state === 'loaded') {
+      return;
     }
     set({state: 'loading', errorMessage: null});
     try {
       const modelSource = await resolveFaceEmbeddingModelSource({
         bundledModel: FACE_EMBEDDING_MODEL,
       });
-      const model = await loadTensorflowModel(modelSource, []);
-      set({state: 'loaded', model, errorMessage: null});
+      _tfliteModel = await loadTensorflowModel(modelSource, []);
+      set({state: 'loaded', errorMessage: null, version: get().version + 1});
       console.log('[FaceEmbedder] Model loaded (singleton)');
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
+      _tfliteModel = null;
+      set({state: 'error', errorMessage: message});
       console.error('[FaceEmbedder] Failed to load model:', message);
-      set({state: 'error', model: undefined, errorMessage: message});
     }
   },
 }));
 
-// Hook React — NitroModules.box() doit être appelé dans le contexte React (useMemo)
 export const useFaceEmbedder = () => {
-  const {state, model, errorMessage, load} = useFaceEmbedderStore();
+  const {state, errorMessage, version, load} = useEmbedderState();
 
   useEffect(() => {
     load();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // version change → nouveau boxedModel quand le modèle devient disponible
   const boxedModel = useMemo(() => {
-    if (model == null) {
+    if (_tfliteModel == null) {
       return undefined;
     }
-    return NitroModules.box(model);
-  }, [model]);
+    return NitroModules.box(_tfliteModel);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [version]);
 
-  return {state, model, boxedModel, errorMessage};
+  return {
+    state,
+    model: _tfliteModel ?? undefined,
+    boxedModel,
+    errorMessage,
+  };
 };
 
 export const buildFaceCrop = (
