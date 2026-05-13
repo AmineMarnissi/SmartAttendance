@@ -282,7 +282,7 @@ const ScanScreen = ({navigation, route}: any) => {
               ? 'Analyzing captured photo...'
               : `${detectedStudents.length} live face(s). ${cameraPosition} camera. Tap to recognize.`
             : modelState === 'error'
-            ? 'Embedding model unavailable'
+            ? `Model error: ${embedder.errorMessage || 'Failed to load'}`
             : 'Loading face embedding model...'}
         </Text>
       </View>

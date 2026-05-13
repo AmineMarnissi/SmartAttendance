@@ -1,7 +1,6 @@
 import {useState, useCallback, useEffect, useMemo, useRef} from 'react';
+import {AppState} from 'react-native';
 import {
-  runAsync,
-  runAtTargetFps,
   type CameraPosition,
   useFrameProcessor,
 } from 'react-native-vision-camera';
@@ -24,7 +23,6 @@ import type {PhotoEmbeddingFallback} from '../services/faceRecognition/photoEmbe
 import {cosineSimilarity} from '../utils/cosineSimilarity';
 
 const MIN_RECOGNITION_QUALITY = 0.2;
-const FACE_SCAN_FPS = 5;
 const MAX_LIVE_BOUNDS_AGE_MS = 5000;
 const BBOX_SMOOTHING_ALPHA = 0.22;
 const BBOX_DEADBAND_RATIO = 0.012;
@@ -215,11 +213,11 @@ export const useFaceRecognition = (
   const embedder = useFaceEmbedder();
   const faceDetectionOptions = useMemo(
     () => ({
-      performanceMode: 'accurate' as const,
+      performanceMode: 'fast' as const,
       landmarkMode: 'none' as const,
       contourMode: 'none' as const,
       classificationMode: 'none' as const,
-      minFaceSize: 0.05,
+      minFaceSize: 0.15,
       trackingEnabled: true,
       cameraFacing: cameraPosition,
     }),
@@ -315,54 +313,108 @@ export const useFaceRecognition = (
     [updateResults],
   );
 
+  const isActive = Worklets.useSharedValue(true);
+  const frameCounter = Worklets.useSharedValue(0);
+  const bboxHistory = Worklets.useSharedValue<
+    Record<string, {x: number; y: number; w: number; h: number}[]>
+  >({});
+
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', state => {
+      isActive.value = state === 'active';
+    });
+    return () => sub.remove();
+  }, [isActive]);
+
+  const [isCameraReady, setIsCameraReady] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsCameraReady(true), 2000);
+    return () => clearTimeout(timer);
+  }, []);
+
   const frameProcessor = useFrameProcessor(
     frame => {
       'worklet';
 
-      runAtTargetFps(FACE_SCAN_FPS, () => {
-        'worklet';
+      if (!isActive.value || !isCameraReady) {
+        return;
+      }
 
-        runAsync(frame, () => {
-          'worklet';
+      frameCounter.value += 1;
+      if (frameCounter.value % 5 !== 0) {
+        return;
+      }
 
-          const faces = detectFaces(frame);
-          const results: DetectedStudent[] = [];
+      // Tout le traitement est synchrone — pas de runAsync
+      try {
+        const faces = detectFaces(frame);
+        const results: DetectedStudent[] = [];
+        const history = bboxHistory.value;
+        const activeIds = new Set<string>();
 
-          for (const face of faces) {
-            if (face.bounds == null) {
-              continue;
-            }
-
-            const bounds = face.bounds;
-            const quality = estimateFaceQuality(
-              bounds,
-              frame.width,
-              frame.height,
-              face.yawAngle,
-              face.pitchAngle,
-            );
-
-            results.push({
-              studentId: null,
-              confidence: 0,
-              quality,
-              trackingId: face.trackingId,
-              bounds: {
-                x: bounds.x,
-                y: bounds.y,
-                width: bounds.width,
-                height: bounds.height,
-              },
-              frameWidth: frame.width,
-              frameHeight: frame.height,
-            });
+        for (let i = 0; i < faces.length; i++) {
+          const face = faces[i];
+          if (face.bounds == null) {
+            continue;
           }
 
-          updateResultsOnJS(results);
-        });
-      });
+          const faceId = String(face.trackingId ?? 'unknown');
+          activeIds.add(faceId);
+
+          if (!history[faceId]) {
+            history[faceId] = [];
+          }
+          const h = history[faceId];
+          h.push({
+            x: face.bounds.x,
+            y: face.bounds.y,
+            w: face.bounds.width,
+            h: face.bounds.height,
+          });
+          if (h.length > 3) {
+            h.shift();
+          }
+
+          const avgX = h.reduce((s, b) => s + b.x, 0) / h.length;
+          const avgY = h.reduce((s, b) => s + b.y, 0) / h.length;
+          const avgW = h.reduce((s, b) => s + b.w, 0) / h.length;
+          const avgH = h.reduce((s, b) => s + b.h, 0) / h.length;
+
+          const quality = estimateFaceQuality(
+            face.bounds,
+            frame.width,
+            frame.height,
+            face.yawAngle,
+            face.pitchAngle,
+          );
+
+          results.push({
+            studentId: null,
+            confidence: 0,
+            quality,
+            trackingId: face.trackingId,
+            bounds: {x: avgX, y: avgY, width: avgW, height: avgH},
+            frameWidth: frame.width,
+            frameHeight: frame.height,
+          });
+        }
+
+        // Nettoyage IDs disparus
+        const keys = Object.keys(history);
+        for (let i = 0; i < keys.length; i++) {
+          if (!activeIds.has(keys[i])) {
+            delete history[keys[i]];
+          }
+        }
+        bboxHistory.value = history;
+
+        updateResultsOnJS(results);
+      } catch {
+        // Ne jamais laisser une exception crasher le thread worklet
+      }
     },
-    [detectFaces, updateResultsOnJS],
+    [detectFaces, updateResultsOnJS, isActive, frameCounter, bboxHistory, isCameraReady],
   );
 
   const recognizePhoto = useCallback(

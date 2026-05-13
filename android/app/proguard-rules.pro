@@ -7,4 +7,16 @@
 # For more details, see
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
-# Add any project specific keep options here:
+# VisionCamera and Worklets JSI rules
+-keep class com.mrousavy.camera.** { *; }
+-keep class com.margelo.worklets.** { *; }
+-keepclassmembers class * { @com.margelo.worklets.annotation.Worklet <methods>; }
+-keep class com.facebook.react.bridge.** { *; }
+-keep class com.facebook.jni.** { *; }
+-keep class com.facebook.jsi.** { *; }
+
+# Reanimated and Native methods
+-keep class com.swmansion.reanimated.** { *; }
+-dontwarn com.swmansion.reanimated.**
+-keep class com.google.mlkit.** { *; }
+-keep class com.github.dudigumberg.vcfd.** { *; }

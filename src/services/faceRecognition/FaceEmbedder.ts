@@ -19,6 +19,7 @@ type FaceEmbedderPlugin =
   | {
       model: undefined;
       error: Error;
+      errorMessage?: string;
       state: 'error';
     };
 
@@ -60,7 +61,7 @@ export const useFaceEmbedder = () => {
         console.error('Failed to load face embedding model:', loadError);
 
         if (isMounted) {
-          setPlugin({model: undefined, state: 'error', error: loadError});
+          setPlugin({model: undefined, state: 'error', error: loadError, errorMessage: loadError.message});
         }
       }
     };

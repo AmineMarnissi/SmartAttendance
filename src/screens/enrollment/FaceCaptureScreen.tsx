@@ -1,9 +1,7 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
-import {View, StyleSheet, Text, Alert, Image} from 'react-native';
+import {View, StyleSheet, Text, Alert, Image, AppState} from 'react-native';
 import {
   Camera,
-  runAsync,
-  runAtTargetFps,
   useCameraDevice,
   useCameraFormat,
   useFrameProcessor,
@@ -29,13 +27,8 @@ import {
   useFaceEmbedder,
 } from '../../services/faceRecognition/FaceEmbedder';
 import {extractFaceEmbeddingsFromPhoto} from '../../services/faceRecognition/photoEmbedding';
-import {isFaceCentered} from '../../utils/faceBounds';
 
-const MIN_CAPTURE_QUALITY = 0.25;
-const FACE_DETECTION_FPS = 4;
 const CAMERA_FPS = 15;
-const MAX_CENTER_OFFSET_X = 0.35;
-const MAX_CENTER_OFFSET_Y = 0.38;
 
 type FaceBounds = {
   x: number;
@@ -123,76 +116,81 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
     () => Worklets.createRunOnJS(updateLiveFace),
     [updateLiveFace],
   );
+  const isActive = Worklets.useSharedValue(true);
+  const frameCounter = Worklets.useSharedValue(0);
+
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', state => {
+      isActive.value = state === 'active';
+    });
+    return () => sub.remove();
+  }, [isActive]);
+
+  const [isCameraReady, setIsCameraReady] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsCameraReady(true), 1500);
+    return () => clearTimeout(timer);
+  }, []);
+
   const frameProcessor = useFrameProcessor(
     frame => {
       'worklet';
 
-      runAtTargetFps(FACE_DETECTION_FPS, () => {
-        'worklet';
+      if (!isActive.value || !isCameraReady) {
+        return;
+      }
 
-        runAsync(frame, () => {
-          'worklet';
+      frameCounter.value += 1;
+      if (frameCounter.value % 5 !== 0) {
+        return;
+      }
 
-          const faces = detectFaces(frame);
+      // Synchrone — pas de runAsync
+      try {
+        const faces = detectFaces(frame) ?? [];
+        const validFaces = [];
 
-          if (faces.length !== 1) {
-            updateLiveFaceOnJS({
-              bounds: faces[0]?.bounds ?? null,
-              faceCount: faces.length,
-              frameWidth: frame.width,
-              frameHeight: frame.height,
-            });
-            return;
+        for (let i = 0; i < faces.length; i += 1) {
+          if (hasValidBounds(faces[i].bounds)) {
+            validFaces.push(faces[i]);
           }
+        }
 
-          const primaryFace = faces[0];
-          if (!hasValidBounds(primaryFace.bounds)) {
-            updateLiveFaceOnJS({
-              bounds: null,
-              faceCount: 0,
-              frameWidth: frame.width,
-              frameHeight: frame.height,
-            });
-            return;
-          }
-
-          const bounds = {
-            x: primaryFace.bounds.x,
-            y: primaryFace.bounds.y,
-            width: primaryFace.bounds.width,
-            height: primaryFace.bounds.height,
-          };
-          const quality = estimateFaceQuality(
-            bounds,
-            frame.width,
-            frame.height,
-            primaryFace.yawAngle,
-            primaryFace.pitchAngle,
-          );
-          const ready =
-            quality >= MIN_CAPTURE_QUALITY &&
-            isFaceCentered(
-              bounds,
-              {
-                width: frame.width,
-                height: frame.height,
-              },
-              MAX_CENTER_OFFSET_X,
-              MAX_CENTER_OFFSET_Y,
-            );
-
+        if (validFaces.length === 0) {
           updateLiveFaceOnJS({
-            bounds,
-            faceCount: 1,
-            quality,
-            ready,
+            bounds: null,
+            faceCount: 0,
             frameWidth: frame.width,
             frameHeight: frame.height,
           });
+          return;
+        }
+
+        const bestFace = validFaces.sort(
+          (a, b) => (b.bounds?.width ?? 0) - (a.bounds?.width ?? 0),
+        )[0];
+
+        const quality = estimateFaceQuality(
+          bestFace.bounds,
+          frame.width,
+          frame.height,
+          bestFace.yawAngle,
+          bestFace.pitchAngle,
+        );
+
+        updateLiveFaceOnJS({
+          bounds: bestFace.bounds,
+          faceCount: validFaces.length,
+          frameWidth: frame.width,
+          frameHeight: frame.height,
+          quality,
         });
-      });
+      } catch {
+        // Ne jamais laisser une exception crasher le thread worklet
+      }
     },
-    [detectFaces, updateLiveFaceOnJS],
+    [detectFaces, updateLiveFaceOnJS, isActive, frameCounter, isCameraReady],
   );
 
   const extractEmbeddingFromPhoto = useCallback(
@@ -228,7 +226,7 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
     if (!isFaceReady || liveFaceCount !== 1) {
       Alert.alert(
         'Face Not Ready',
-        'Keep exactly one face centered and steady before capturing.',
+        'Keep exactly one face visible and steady before capturing.',
       );
       return;
     }
@@ -366,14 +364,14 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
     embedder.state === 'loading'
       ? 'Loading face embedding model...'
       : embedder.state === 'error'
-      ? 'Face embedding model failed to load.'
+      ? `Face embedding model error: ${embedder.errorMessage || 'Unknown error'}`
       : liveFaceCount === 0
       ? 'No face detected.'
       : liveFaceCount > 1
       ? 'Only one face is allowed during enrollment.'
       : isFaceReady
       ? `Ready to capture (${Math.round(liveQuality * 100)}% quality).`
-      : `Center your face and hold still (${Math.round(
+      : `Hold still (${Math.round(
           liveQuality * 100,
         )}% quality).`;
 
@@ -423,7 +421,7 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
               : isFaceReady
               ? 'Ready'
               : liveFaceCount === 1
-              ? 'Center Face'
+              ? 'Face Detected'
               : 'No Face'}
           </Text>
         </View>

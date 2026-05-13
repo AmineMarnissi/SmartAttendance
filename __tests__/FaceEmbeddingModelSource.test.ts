@@ -1,14 +1,14 @@
 import {
+  ANDROID_FACE_EMBEDDING_RESOURCE,
   FACE_EMBEDDING_CACHE_FILE,
   resolveFaceEmbeddingModelSource,
   toFileUrl,
 } from '../src/services/faceRecognition/faceEmbeddingModelSource';
 
 describe('face embedding model source', () => {
-  it('uses the bundled model require result on Android', async () => {
+  it('copies the Android raw resource into cache and returns a file URL', async () => {
     const fs = {
       CachesDirectoryPath: '/data/user/0/com.smartattendance/cache/',
-      exists: jest.fn().mockResolvedValue(false),
       copyFileRes: jest.fn().mockResolvedValue(undefined),
     };
 
@@ -18,15 +18,18 @@ describe('face embedding model source', () => {
       fs,
     });
 
-    expect(fs.exists).not.toHaveBeenCalled();
-    expect(fs.copyFileRes).not.toHaveBeenCalled();
-    expect(source).toBe(42);
+    const expectedPath =
+      '/data/user/0/com.smartattendance/cache/mobilefacenet.tflite';
+    expect(fs.copyFileRes).toHaveBeenCalledWith(
+      ANDROID_FACE_EMBEDDING_RESOURCE,
+      expectedPath,
+    );
+    expect(source).toEqual({url: `file://${expectedPath}`});
   });
 
-  it('does not require an Android cache copy', async () => {
+  it('refreshes the cached Android model file on every load', async () => {
     const fs = {
       CachesDirectoryPath: '/cache',
-      exists: jest.fn().mockResolvedValue(true),
       copyFileRes: jest.fn(),
     };
 
@@ -36,8 +39,10 @@ describe('face embedding model source', () => {
       fs,
     });
 
-    expect(fs.exists).not.toHaveBeenCalled();
-    expect(fs.copyFileRes).not.toHaveBeenCalled();
+    expect(fs.copyFileRes).toHaveBeenCalledWith(
+      ANDROID_FACE_EMBEDDING_RESOURCE,
+      '/cache/mobilefacenet.tflite',
+    );
   });
 
   it('uses the bundled model require result outside Android', async () => {
@@ -51,6 +56,9 @@ describe('face embedding model source', () => {
 
   it('normalizes cache paths and file URLs', () => {
     expect(FACE_EMBEDDING_CACHE_FILE).toBe('mobilefacenet.tflite');
+    expect(ANDROID_FACE_EMBEDDING_RESOURCE).toBe(
+      'src_assets_models_mobilefacenet.tflite',
+    );
     expect(toFileUrl('/cache/mobilefacenet.tflite')).toBe(
       'file:///cache/mobilefacenet.tflite',
     );
