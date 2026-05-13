@@ -5,7 +5,7 @@ import {
   useFrameProcessor,
 } from 'react-native-vision-camera';
 import {useFaceDetector} from 'react-native-vision-camera-face-detector';
-import {Worklets} from 'react-native-worklets-core';
+import {Worklets, useSharedValue} from 'react-native-worklets-core';
 import {
   EnrolledEmbedding,
   MIN_RELAXED_MATCH_MARGIN,
@@ -313,9 +313,9 @@ export const useFaceRecognition = (
     [updateResults],
   );
 
-  const isActive = Worklets.useSharedValue(true);
-  const frameCounter = Worklets.useSharedValue(0);
-  const bboxHistory = Worklets.useSharedValue<
+  const isActive = useSharedValue(true);
+  const frameCounter = useSharedValue(0);
+  const bboxHistory = useSharedValue<
     Record<string, {x: number; y: number; w: number; h: number}[]>
   >({});
 

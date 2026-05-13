@@ -16,7 +16,7 @@ import {
 import {
   useFaceDetector,
 } from 'react-native-vision-camera-face-detector';
-import {Worklets} from 'react-native-worklets-core';
+import {Worklets, useSharedValue} from 'react-native-worklets-core';
 import {studentRepository} from '../../services/database/studentRepository';
 import {embeddingStorage} from '../../services/faceRecognition/EmbeddingStorage';
 import {requestCameraPermission} from '../../utils/permissions';
@@ -116,8 +116,8 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
     () => Worklets.createRunOnJS(updateLiveFace),
     [updateLiveFace],
   );
-  const isActive = Worklets.useSharedValue(true);
-  const frameCounter = Worklets.useSharedValue(0);
+  const isActive = useSharedValue(true);
+  const frameCounter = useSharedValue(0);
 
   useEffect(() => {
     const sub = AppState.addEventListener('change', state => {
