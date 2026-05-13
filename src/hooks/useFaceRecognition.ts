@@ -326,18 +326,20 @@ export const useFaceRecognition = (
     return () => sub.remove();
   }, [isActive]);
 
-  const [isCameraReady, setIsCameraReady] = useState(false);
+  const isCameraReady = useSharedValue(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsCameraReady(true), 1000);
+    const timer = setTimeout(() => {
+      isCameraReady.value = true;
+    }, 1000);
     return () => clearTimeout(timer);
-  }, []);
+  }, [isCameraReady]);
 
   const frameProcessor = useFrameProcessor(
     frame => {
       'worklet';
 
-      if (!isActive.value || !isCameraReady) {
+      if (!isActive.value || !isCameraReady.value) {
         return;
       }
 
