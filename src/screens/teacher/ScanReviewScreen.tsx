@@ -47,6 +47,11 @@ const ScanReviewScreen = ({navigation, route}: any) => {
   };
 
   const handleConfirm = async () => {
+    if (!user) {
+      Alert.alert('Error', 'Please log in again before saving attendance.');
+      return;
+    }
+
     setLoading(true);
     try {
       const sessionId = await AttendanceService.startSession(classId, user.id);

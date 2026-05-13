@@ -1,12 +1,24 @@
 import React, {useCallback, useState} from 'react';
-import {View, StyleSheet, Alert, Text} from 'react-native';
+import {Alert, StyleSheet, Text, View} from 'react-native';
 import {useFocusEffect} from '@react-navigation/native';
-import {TextInput, Button, List, Surface} from 'react-native-paper';
+import {
+  Avatar,
+  Button,
+  Card,
+  Chip,
+  TextInput,
+  useTheme,
+} from 'react-native-paper';
 import {userRepository} from '../../services/database/userRepository';
 import {AuthService} from '../../services/auth/AuthService';
 import {User} from '../../types/models';
+import {usePreferencesStore} from '../../store/usePreferencesStore';
+import BrandLogo from '../../components/ui/BrandLogo';
+import {brand, shadow} from '../../theme/design';
 
 const LoginScreen = ({navigation}: any) => {
+  const theme = useTheme();
+  const t = usePreferencesStore(state => state.t);
   const [users, setUsers] = useState<User[]>([]);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [pin, setPin] = useState('');
@@ -18,14 +30,15 @@ const LoginScreen = ({navigation}: any) => {
     try {
       const allUsers = await userRepository.getAll();
       setUsers(allUsers);
-
       if (selectedUser && !allUsers.some(user => user.id === selectedUser.id)) {
         setSelectedUser(null);
         setPin('');
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      Alert.alert('Could not load users', message);
+      Alert.alert(
+        'Could not load users',
+        error instanceof Error ? error.message : String(error),
+      );
     } finally {
       setLoadingUsers(false);
     }
@@ -50,124 +63,192 @@ const LoginScreen = ({navigation}: any) => {
         Alert.alert('Error', 'Invalid PIN');
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      Alert.alert('Login failed', message);
+      Alert.alert(
+        'Login failed',
+        error instanceof Error ? error.message : String(error),
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  const clearSelectedUser = () => {
-    setSelectedUser(null);
-    setPin('');
-  };
-
   return (
-    <View style={styles.container}>
-      <Surface style={styles.surface}>
-        <Text style={styles.title}>SmartAttendance</Text>
+    <View
+      style={[styles.container, {backgroundColor: theme.colors.background}]}>
+      <View style={styles.coralHeader}>
+        <View style={styles.blobOne} />
+        <View style={styles.blobTwo} />
+        <BrandLogo inverted size={74} />
+      </View>
 
-        {!selectedUser ? (
-          <List.Section>
-            <Text style={styles.sectionTitle}>Select User</Text>
+      <Card style={styles.card}>
+        <Card.Content>
+          <Text style={[styles.cardTitle, {color: theme.colors.onSurface}]}>
+            {' '}
+            {selectedUser ? t('welcomeBack') : t('selectUser')}
+          </Text>
+          <Text style={styles.cardSubtitle}>
+            Admin and teacher profiles are separated for secure classroom
+            management.
+          </Text>
 
-            {loadingUsers ? (
-              <Text style={styles.emptyText}>Loading users…</Text>
-            ) : users.length === 0 ? (
-              <Text style={styles.emptyText}>
-                No users found. Create an admin or teacher account to start.
-              </Text>
-            ) : (
-              users.map(user => (
-                <List.Item
-                  key={user.id}
-                  title={user.name}
-                  description={user.role}
-                  left={props => <List.Icon {...props} icon="account" />}
-                  onPress={() => setSelectedUser(user)}
-                />
-              ))
-            )}
-
-            <Button
-              mode={users.length === 0 ? 'contained' : 'outlined'}
-              onPress={() => navigation.navigate('PinSetup')}
-              style={styles.button}>
-              Create User
-            </Button>
-            <Button onPress={loadUsers} disabled={loadingUsers}>
-              Refresh Users
-            </Button>
-          </List.Section>
-        ) : (
-          <View>
-            <List.Item
-              title={selectedUser.name}
-              description={selectedUser.role}
-              left={props => <List.Icon {...props} icon="account" />}
-              right={props => <List.Icon {...props} icon="close" />}
-              onPress={clearSelectedUser}
-            />
-            <TextInput
-              label="Enter PIN"
-              value={pin}
-              onChangeText={setPin}
-              secureTextEntry
-              keyboardType="numeric"
-              style={styles.input}
-            />
-            <Button
-              mode="contained"
-              onPress={handleLogin}
-              loading={loading}
-              disabled={loading}
-              style={styles.button}>
-              Login
-            </Button>
-            <Button onPress={clearSelectedUser} disabled={loading}>
-              Choose Different User
-            </Button>
-          </View>
-        )}
-      </Surface>
+          {!selectedUser ? (
+            <>
+              {loadingUsers ? (
+                <Text style={styles.emptyText}>Loading users…</Text>
+              ) : (
+                users.map(user => (
+                  <Card
+                    key={user.id}
+                    mode="outlined"
+                    style={styles.userCard}
+                    onPress={() => setSelectedUser(user)}>
+                    <Card.Content style={styles.userRow}>
+                      <Avatar.Icon
+                        icon={
+                          user.role === 'admin' ? 'shield-star' : 'account-tie'
+                        }
+                        size={46}
+                        style={styles.avatar}
+                      />
+                      <View style={styles.userText}>
+                        <Text style={styles.userName}>{user.name}</Text>
+                        <Chip compact style={styles.roleChip}>
+                          {user.role === 'admin' ? t('admin') : t('teacher')}
+                        </Chip>
+                      </View>
+                    </Card.Content>
+                  </Card>
+                ))
+              )}
+              <Button
+                mode="contained"
+                onPress={() => navigation.navigate('PinSetup')}
+                style={styles.primaryButton}
+                contentStyle={styles.buttonContent}>
+                {t('createUser')}
+              </Button>
+            </>
+          ) : (
+            <>
+              <Card mode="outlined" style={styles.selectedCard}>
+                <Card.Content style={styles.userRow}>
+                  <Avatar.Icon
+                    icon={
+                      selectedUser.role === 'admin'
+                        ? 'shield-star'
+                        : 'account-tie'
+                    }
+                    size={46}
+                    style={styles.avatar}
+                  />
+                  <View style={styles.userText}>
+                    <Text style={styles.userName}>{selectedUser.name}</Text>
+                    <Chip compact style={styles.roleChip}>
+                      {selectedUser.role === 'admin'
+                        ? t('admin')
+                        : t('teacher')}
+                    </Chip>
+                  </View>
+                </Card.Content>
+              </Card>
+              <TextInput
+                label={t('pin')}
+                value={pin}
+                onChangeText={setPin}
+                secureTextEntry
+                keyboardType="numeric"
+                style={styles.input}
+                mode="outlined"
+              />
+              <Button
+                mode="contained"
+                onPress={handleLogin}
+                loading={loading}
+                disabled={loading}
+                style={styles.primaryButton}
+                contentStyle={styles.buttonContent}>
+                {t('login')}
+              </Button>
+              <Button
+                onPress={() => {
+                  setSelectedUser(null);
+                  setPin('');
+                }}
+                disabled={loading}
+                textColor={brand.primary}>
+                {t('selectUser')}
+              </Button>
+            </>
+          )}
+        </Card.Content>
+      </Card>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  container: {flex: 1},
+  coralHeader: {
+    height: 310,
+    backgroundColor: brand.primary,
+    alignItems: 'center',
     justifyContent: 'center',
-    padding: 20,
-    backgroundColor: '#f5f5f5',
+    borderBottomLeftRadius: 46,
+    borderBottomRightRadius: 46,
+    overflow: 'hidden',
   },
-  surface: {
-    padding: 20,
-    elevation: 4,
-    borderRadius: 10,
+  blobOne: {
+    position: 'absolute',
+    width: 190,
+    height: 190,
+    borderRadius: 95,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    top: -40,
+    right: -30,
   },
-  title: {
-    textAlign: 'center',
-    marginBottom: 20,
-    fontSize: 28,
-    fontWeight: '700',
+  blobTwo: {
+    position: 'absolute',
+    width: 230,
+    height: 230,
+    borderRadius: 115,
+    backgroundColor: 'rgba(255,255,255,0.10)',
+    bottom: -80,
+    left: -60,
   },
-  input: {
-    marginBottom: 20,
+  card: {
+    marginHorizontal: 20,
+    marginTop: -38,
+    borderRadius: 32,
+    ...shadow.card,
   },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  emptyText: {
-    color: '#666',
+  cardTitle: {fontSize: 24, fontWeight: '900', letterSpacing: -0.5},
+  cardSubtitle: {
+    color: brand.muted,
+    marginTop: 6,
     marginBottom: 16,
-    textAlign: 'center',
+    lineHeight: 19,
   },
-  button: {
-    marginTop: 10,
+  userCard: {marginBottom: 10, borderRadius: 22, backgroundColor: '#FFF7F7'},
+  selectedCard: {
+    marginBottom: 14,
+    borderRadius: 22,
+    backgroundColor: '#FFF7F7',
   },
+  userRow: {flexDirection: 'row', alignItems: 'center'},
+  avatar: {backgroundColor: brand.primarySoft},
+  userText: {marginLeft: 12, flex: 1},
+  userName: {
+    fontSize: 16,
+    fontWeight: '900',
+    marginBottom: 6,
+    color: brand.ink,
+  },
+  roleChip: {alignSelf: 'flex-start', backgroundColor: '#FFE2E4'},
+  emptyText: {textAlign: 'center', color: brand.muted, marginVertical: 20},
+  input: {marginBottom: 12},
+  primaryButton: {marginTop: 8, borderRadius: 18},
+  buttonContent: {height: 52},
 });
 
 export default LoginScreen;

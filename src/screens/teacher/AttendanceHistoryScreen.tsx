@@ -11,6 +11,12 @@ const AttendanceHistoryScreen = () => {
   const [loading, setLoading] = useState(true);
 
   const loadHistory = useCallback(async () => {
+    if (!user) {
+      setSessions([]);
+      setLoading(false);
+      return;
+    }
+
     try {
       const classes = await classRepository.getByTeacher(user.id);
       let allSessions: any[] = [];
@@ -34,7 +40,7 @@ const AttendanceHistoryScreen = () => {
     } finally {
       setLoading(false);
     }
-  }, [user.id]);
+  }, [user]);
 
   useEffect(() => {
     loadHistory();

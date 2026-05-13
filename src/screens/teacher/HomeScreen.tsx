@@ -1,13 +1,16 @@
 import React, {useState, useEffect} from 'react';
-import {View, StyleSheet, ScrollView, Text} from 'react-native';
-import {Button, List, Avatar} from 'react-native-paper';
+import {ScrollView, StyleSheet, Text, View} from 'react-native';
+import {Avatar, Button, Card, useTheme} from 'react-native-paper';
 import {classRepository} from '../../services/database/classRepository';
 import {Class} from '../../types/models';
 import {attendanceRepository} from '../../services/database/attendanceRepository';
-import StatCard from '../../components/analytics/StatCard';
 import AttendanceChart from '../../components/analytics/AttendanceChart';
+import {usePreferencesStore} from '../../store/usePreferencesStore';
+import {brand, shadow} from '../../theme/design';
 
 const HomeScreen = ({navigation}: any) => {
+  const theme = useTheme();
+  const t = usePreferencesStore(state => state.t);
   const [classes, setClasses] = useState<Class[]>([]);
   const [overallRate, setOverallRate] = useState(0);
   const [trendData, setTrendData] = useState<{date: string; rate: number}[]>(
@@ -15,29 +18,16 @@ const HomeScreen = ({navigation}: any) => {
   );
 
   useEffect(() => {
-    const loadClasses = async () => {
-      // Use getAll so classes appear for any user role (admin or teacher)
+    const loadData = async () => {
       const allClasses = await classRepository.getAll();
-      console.log(
-        '[HomeScreen] Loaded classes:',
-        allClasses.length,
-        allClasses.map(c => `${c.id}:${c.name}`),
-      );
       setClasses(allClasses);
-
       if (allClasses.length > 0) {
-        const trend = await attendanceRepository.getDailyAttendanceTrend(
-          allClasses[0].id,
+        setTrendData(
+          await attendanceRepository.getDailyAttendanceTrend(allClasses[0].id),
         );
-        setTrendData(trend);
       }
-    };
-
-    const loadOverallStats = async () => {
-      const allClasses = await classRepository.getAll();
       let totalPresent = 0;
       let totalRecords = 0;
-
       for (const cls of allClasses) {
         const stats = await attendanceRepository.getClassAttendanceStats(
           cls.id,
@@ -49,94 +39,103 @@ const HomeScreen = ({navigation}: any) => {
           totalRecords += s.count;
         });
       }
-
       setOverallRate(
         totalRecords > 0 ? Math.round((totalPresent / totalRecords) * 100) : 0,
       );
     };
-
-    loadClasses();
-    loadOverallStats();
+    loadData();
   }, []);
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Attendance Mode</Text>
-      </View>
-
-      <View style={styles.statGrid}>
-        <StatCard
-          title="Overall Rate"
-          value={`${overallRate}%`}
-          color="#4CAF50"
-        />
-        <StatCard
-          title="Total Classes"
-          value={classes.length}
-          color="#2196F3"
-        />
+    <ScrollView
+      style={[styles.container, {backgroundColor: theme.colors.background}]}
+      contentContainerStyle={styles.content}>
+      <View style={styles.hero}>
+        <Text style={styles.heroKicker}>{t('teacherDashboard')}</Text>
+        <Text style={styles.heroTitle}>Live attendance, made simple.</Text>
+        <View style={styles.heroStats}>
+          <View>
+            <Text style={styles.heroValue}>{overallRate}%</Text>
+            <Text style={styles.heroLabel}>{t('attendanceRate')}</Text>
+          </View>
+          <View>
+            <Text style={styles.heroValue}>{classes.length}</Text>
+            <Text style={styles.heroLabel}>{t('classes')}</Text>
+          </View>
+        </View>
       </View>
 
       {trendData.length > 0 && (
-        <AttendanceChart data={trendData} title="Class Attendance Trend" />
+        <AttendanceChart data={trendData} title="Attendance trend" />
       )}
 
-      <List.Section>
-        <Text style={styles.sectionTitle}>Your Classes</Text>
-        {classes.map(cls => (
-          <List.Item
-            key={cls.id}
-            title={cls.name}
-            description={`Grade: ${cls.grade || 'N/A'}`}
-            left={props => <Avatar.Icon {...props} icon="book" size={40} />}
-            right={() => (
-              <Button
-                mode="contained"
-                onPress={() => navigation.navigate('Scan', {classId: cls.id})}
-                style={styles.scanButton}>
-                Scan
-              </Button>
-            )}
-          />
-        ))}
-      </List.Section>
+      <Text style={[styles.sectionTitle, {color: theme.colors.onSurface}]}>
+        {t('classes')}
+      </Text>
+      {classes.map(cls => (
+        <Card key={cls.id} style={styles.classCard}>
+          <Card.Content style={styles.classRow}>
+            <Avatar.Icon
+              icon="google-classroom"
+              size={52}
+              style={styles.classIcon}
+            />
+            <View style={styles.classInfo}>
+              <Text style={styles.className}>{cls.name}</Text>
+              <Text style={styles.classMeta}>
+                {cls.grade ? `${t('grade')} ${cls.grade}` : 'No grade'}
+              </Text>
+            </View>
+            <Button
+              mode="contained"
+              onPress={() => navigation.navigate('Scan', {classId: cls.id})}
+              style={styles.scanButton}>
+              {t('scan')}
+            </Button>
+          </Card.Content>
+        </Card>
+      ))}
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 10,
-    backgroundColor: '#fff',
+  container: {flex: 1},
+  content: {padding: 16, paddingBottom: 32},
+  hero: {
+    backgroundColor: brand.primary,
+    borderRadius: 34,
+    padding: 24,
+    marginBottom: 18,
+    ...shadow.card,
   },
-  header: {
+  heroKicker: {color: '#FFE5E7', fontWeight: '900'},
+  heroTitle: {
+    color: '#FFFFFF',
+    fontSize: 31,
+    lineHeight: 35,
+    fontWeight: '900',
+    marginTop: 8,
+    letterSpacing: -0.8,
+  },
+  heroStats: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
+    backgroundColor: 'rgba(255,255,255,0.16)',
+    borderRadius: 24,
+    marginTop: 22,
+    padding: 16,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-  },
-  statGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  card: {
-    marginBottom: 20,
-  },
-  scanButton: {
-    alignSelf: 'center',
-  },
+  heroValue: {color: '#FFFFFF', fontSize: 26, fontWeight: '900'},
+  heroLabel: {color: '#FFE5E7', fontWeight: '700'},
+  sectionTitle: {fontSize: 22, fontWeight: '900', marginVertical: 12},
+  classCard: {marginBottom: 12, borderRadius: 26, ...shadow.card},
+  classRow: {flexDirection: 'row', alignItems: 'center'},
+  classIcon: {backgroundColor: brand.primarySoft},
+  classInfo: {flex: 1, marginLeft: 14},
+  className: {fontWeight: '900', fontSize: 17, color: brand.ink},
+  classMeta: {color: brand.muted, marginTop: 4},
+  scanButton: {borderRadius: 16},
 });
 
 export default HomeScreen;
