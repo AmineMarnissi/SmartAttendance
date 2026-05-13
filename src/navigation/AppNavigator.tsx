@@ -43,6 +43,7 @@ const tabIcons: Record<keyof TeacherTabParamList, string> = {
   Classes: 'account-group-outline',
   History: 'history',
   Settings: 'cog-outline',
+  QuickScan: 'camera-outline',
 };
 
 const commonHeaderOptions = {

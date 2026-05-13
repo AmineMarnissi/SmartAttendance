@@ -475,7 +475,7 @@ export const useFaceRecognition = (
 
       const {embeddings} = await extractFaceEmbeddingsFromPhoto(
         photoPath,
-        embedder.model,
+        embedder.model!,
         fallbackFaces,
       );
 

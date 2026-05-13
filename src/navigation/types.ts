@@ -15,6 +15,7 @@ export type TeacherTabParamList = {
   Classes: undefined;
   History: undefined;
   Settings: undefined;
+  QuickScan: undefined;
 };
 
 export type AdminStackParamList = {

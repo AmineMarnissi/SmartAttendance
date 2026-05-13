@@ -1,0 +1,15 @@
+src/hooks/useFaceRecognition.ts(478,9): error TS2345: Argument of type 'TfliteModel | undefined' is not assignable to parameter of type 'TfliteModel'.
+  Type 'undefined' is not assignable to type 'TfliteModel'.
+src/navigation/AppNavigator.tsx(262,9): error TS2322: Type '"QuickScan"' is not assignable to type 'keyof TeacherTabParamList'.
+src/screens/enrollment/FaceCaptureScreen.tsx(205,9): error TS2345: Argument of type 'TfliteModel | undefined' is not assignable to parameter of type 'TfliteModel'.
+  Type 'undefined' is not assignable to type 'TfliteModel'.
+src/screens/settings/ClassManagementScreen.tsx(156,14): error TS2786: 'Text' cannot be used as a JSX component.
+  Its return type 'ReactNode' is not a valid JSX element.
+    Type 'undefined' is not assignable to type 'Element | null'.
+src/screens/settings/ClassManagementScreen.tsx(194,20): error TS2786: 'Text' cannot be used as a JSX component.
+  Its return type 'ReactNode' is not a valid JSX element.
+src/screens/settings/SettingsScreen.tsx(16,24): error TS2304: Cannot find name 'useCallback'.
+src/screens/settings/TeacherManagementScreen.tsx(112,14): error TS2786: 'Text' cannot be used as a JSX component.
+  Its return type 'ReactNode' is not a valid JSX element.
+src/screens/teacher/ScanScreen.tsx(14,33): error TS2307: Cannot find module '../../services/attendance/attendanceService' or its corresponding type declarations.
+src/screens/teacher/ScanScreen.tsx(309,31): error TS2304: Cannot find name 'embedder'.

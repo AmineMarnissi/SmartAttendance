@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import {StyleSheet, ScrollView, Alert} from 'react-native';
 import {useTheme, List, Divider, Switch, IconButton} from 'react-native-paper';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';

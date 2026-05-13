@@ -202,7 +202,7 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
 
       const {base64, embeddings} = await extractFaceEmbeddingsFromPhoto(
         photoPath,
-        embedder.model,
+        embedder.model!,
         latestFaceBounds.current
           ? {
               bounds: latestFaceBounds.current,

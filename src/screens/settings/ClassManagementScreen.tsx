@@ -1,5 +1,5 @@
 import React, {useEffect, useState, useCallback} from 'react';
-import {StyleSheet, View, FlatList, Alert} from 'react-native';
+import {StyleSheet, View, FlatList, Alert, Text} from 'react-native';
 import {
   useTheme,
   List,
@@ -9,7 +9,6 @@ import {
   TextInput,
   Button,
   IconButton,
-  Text,
 } from 'react-native-paper';
 import {classRepository} from '../../services/database/classRepository';
 import {userRepository} from '../../services/database/userRepository';

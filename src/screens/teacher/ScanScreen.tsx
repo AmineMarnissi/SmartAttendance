@@ -11,7 +11,7 @@ import {Camera, useCameraDevice} from 'react-native-vision-camera';
 import {useFaceRecognition} from '../../hooks/useFaceRecognition';
 import {requestCameraPermission} from '../../utils/permissions';
 import {Button, IconButton, Snackbar} from 'react-native-paper';
-import {AttendanceService} from '../../services/attendance/attendanceService';
+import {AttendanceService} from '../../services/attendance/AttendanceService';
 import {useAuthStore} from '../../store/useAuthStore';
 import {
   adjustFaceOverlayBounds,
@@ -306,7 +306,7 @@ const ScanScreen = ({navigation, route}: any) => {
               ? 'Analyzing captured photo...'
               : `${detectedStudents.length} live face(s). ${cameraPosition} camera. Tap to recognize.`
             : modelState === 'error'
-            ? `Model error: ${embedder.errorMessage || 'Failed to load'}`
+            ? `Model error: Failed to load`
             : 'Loading face embedding model...'}
         </Text>
       </View>
