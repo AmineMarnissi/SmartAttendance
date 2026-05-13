@@ -46,7 +46,10 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
     height: 1,
   });
   const [liveQuality, setLiveQuality] = useState(0);
-  const device = useCameraDevice('front');
+  const [cameraPosition, setCameraPosition] = useState<'front' | 'back'>(
+    'front',
+  );
+  const device = useCameraDevice(cameraPosition);
   const cameraRef = useRef<Camera>(null);
   const capturedEmbeddings = useRef<Float32Array[]>([]);
   const capturedPhotoPath = useRef<string | null>(null);
@@ -62,9 +65,9 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
         contourMode: 'all' as const,
         classificationMode: 'all' as const,
         minFaceSize: 0.15,
-        cameraFacing: 'front' as const,
+        cameraFacing: cameraPosition,
       }),
-      [],
+      [cameraPosition],
     ),
   );
 
@@ -84,6 +87,15 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
       ? new Float32Array(payload.embedding)
       : null;
   }, []);
+
+  const toggleCameraPosition = useCallback(() => {
+    if (savedStudent || isCapturing) {
+      return;
+    }
+
+    updateLiveFace(null);
+    setCameraPosition(position => (position === 'front' ? 'back' : 'front'));
+  }, [isCapturing, savedStudent, updateLiveFace]);
 
   const updateLiveFaceOnJS = useRunOnJS(updateLiveFace, [updateLiveFace]);
   const frameProcessor = useFrameProcessor(
@@ -140,12 +152,14 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
     [detectFaces, model, resize, updateLiveFaceOnJS],
   );
 
-  const previewFaceBounds = liveFaceBounds
+  const mappedFaceBounds = liveFaceBounds
+    ? mapCameraBoundsToPreview(liveFaceBounds, liveFrameSize, previewSize)
+    : null;
+  const previewFaceBounds = mappedFaceBounds
     ? clampBoundsToPreview(
-        mirrorPreviewBounds(
-          mapCameraBoundsToPreview(liveFaceBounds, liveFrameSize, previewSize),
-          previewSize,
-        ),
+        cameraPosition === 'front'
+          ? mirrorPreviewBounds(mappedFaceBounds, previewSize)
+          : mappedFaceBounds,
         previewSize,
       )
     : null;
@@ -310,6 +324,13 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
           icon="close"
           mode="contained"
           onPress={() => navigation.goBack()}
+        />
+        <IconButton
+          icon="camera-flip"
+          mode="contained"
+          onPress={toggleCameraPosition}
+          disabled={savedStudent || isCapturing}
+          accessibilityLabel={t('flipCamera')}
         />
         <Button
           mode="contained"

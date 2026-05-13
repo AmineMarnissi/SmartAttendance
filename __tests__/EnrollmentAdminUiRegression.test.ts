@@ -34,4 +34,23 @@ describe('enrollment and admin UI regressions', () => {
       '{color: theme.colors.onSurface},\n                        ]}',
     );
   });
+
+  it('lets face enrollment switch between front and back cameras', () => {
+    const source = readSource(
+      'src',
+      'screens',
+      'enrollment',
+      'FaceCaptureScreen.tsx',
+    );
+
+    expect(source).toContain(
+      "const [cameraPosition, setCameraPosition] = useState<'front' | 'back'>",
+    );
+    expect(source).toContain('useCameraDevice(cameraPosition)');
+    expect(source).toContain('cameraFacing: cameraPosition');
+    expect(source).toContain('toggleCameraPosition');
+    expect(source).toContain('icon="camera-flip"');
+    expect(source).toContain("accessibilityLabel={t('flipCamera')}");
+    expect(source).toContain("cameraPosition === 'front'");
+  });
 });
