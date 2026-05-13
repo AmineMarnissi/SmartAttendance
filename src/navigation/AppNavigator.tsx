@@ -141,7 +141,7 @@ const TeacherTabs = () => {
     <TeacherTab.Navigator
       screenOptions={screenOptions({
         Attendance: 'clipboard-check-outline',
-        Students: 'account-school-outline',
+        Students: 'school-outline',
         Matrix: 'table-account',
         History: 'history',
         Settings: 'cog-outline',

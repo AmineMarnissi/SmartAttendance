@@ -1,5 +1,5 @@
 import React, {useCallback, useState} from 'react';
-import {Alert, StyleSheet, Text, View} from 'react-native';
+import {Alert, Keyboard, StyleSheet, Text, View} from 'react-native';
 import {useFocusEffect} from '@react-navigation/native';
 import {
   Avatar,
@@ -51,6 +51,12 @@ const LoginScreen = ({navigation}: any) => {
   );
 
   const handleLogin = async () => {
+    if (loading) {
+      return;
+    }
+
+    Keyboard.dismiss();
+
     if (!selectedUser || !pin) {
       Alert.alert('Error', 'Please select a user and enter PIN');
       return;
@@ -158,6 +164,8 @@ const LoginScreen = ({navigation}: any) => {
                 onChangeText={setPin}
                 secureTextEntry
                 keyboardType="numeric"
+                returnKeyType="done"
+                onSubmitEditing={handleLogin}
                 style={styles.input}
                 mode="outlined"
               />
