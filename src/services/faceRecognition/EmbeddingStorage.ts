@@ -4,14 +4,14 @@ import {FaceEmbedding} from '../../types/models';
 type FaceEmbeddingRow = {
   id: number;
   student_id: number;
-  embedding: Uint8Array;
+  embedding: Uint8Array | ArrayBuffer | Record<string, number> | null;
   quality?: number;
   created_at: string;
 };
 
 type ClassEmbeddingRow = {
   student_id: number;
-  embedding: Uint8Array | ArrayBuffer;
+  embedding: Uint8Array | ArrayBuffer | Record<string, number> | null;
 };
 
 export const embeddingStorage = {

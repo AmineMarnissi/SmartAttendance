@@ -35,7 +35,7 @@ export const lightTheme = {
   colors: {
     ...MD3LightTheme.colors,
     ...LightTheme.colors,
-    primary: '#0056b3', 
+    primary: '#00D1FF', 
     secondary: '#009688', 
     tertiary: '#673ab7', 
     background: '#F5F5F5', 

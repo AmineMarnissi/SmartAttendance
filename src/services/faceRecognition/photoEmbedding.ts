@@ -151,6 +151,37 @@ const createCenteredFallbackBounds = (
   };
 };
 
+const getBoundsOverlapRatio = (a: FaceBounds, b: FaceBounds) => {
+  const left = Math.max(a.x, b.x);
+  const top = Math.max(a.y, b.y);
+  const right = Math.min(a.x + a.width, b.x + b.width);
+  const bottom = Math.min(a.y + a.height, b.y + b.height);
+  const intersection =
+    Math.max(0, right - left) * Math.max(0, bottom - top);
+  const smallerArea = Math.min(a.width * a.height, b.width * b.height);
+
+  return smallerArea > 0 ? intersection / smallerArea : 0;
+};
+
+const mergeBounds = (
+  detectedBounds: FaceBounds[],
+  fallbackFaceBounds: FaceBounds[],
+) => {
+  const merged = [...detectedBounds];
+
+  for (const fallback of fallbackFaceBounds) {
+    const overlapsDetected = merged.some(
+      existing => getBoundsOverlapRatio(existing, fallback) > 0.45,
+    );
+
+    if (!overlapsDetected) {
+      merged.push(fallback);
+    }
+  }
+
+  return merged;
+};
+
 const createEmbeddingFromCrop = (
   model: TfliteModel,
   image: NonNullable<ReturnType<typeof Skia.Image.MakeImageFromEncoded>>,
@@ -161,6 +192,15 @@ const createEmbeddingFromCrop = (
   }
 
   const crop = buildFaceCrop(bounds, image.width(), image.height());
+  console.log('[PhotoEmbedding] Creating embedding crop:', {
+    image: `${image.width()}x${image.height()}`,
+    bounds,
+    crop,
+    boundsAreaRatio:
+      (bounds.width * bounds.height) / Math.max(1, image.width() * image.height()),
+    cropAreaRatio:
+      (crop.width * crop.height) / Math.max(1, image.width() * image.height()),
+  });
   const surface = Skia.Surface.MakeOffscreen(
     FACE_EMBEDDING_INPUT_SIZE,
     FACE_EMBEDDING_INPUT_SIZE,
@@ -224,16 +264,26 @@ export const extractFaceEmbeddingsFromPhoto = async (
 ) => {
   console.log('[PhotoEmbedding] Reading captured photo:', photoPath);
   const {base64, image} = await decodePhoto(photoPath);
-  const faces = await detectFacesInImage({
-    image: `file://${photoPath}`,
-    options: {
-      performanceMode: 'accurate',
-      landmarkMode: 'none',
-      contourMode: 'none',
-      classificationMode: 'none',
-      minFaceSize: 0.08,
-    },
-  });
+  let faces: Awaited<ReturnType<typeof detectFacesInImage>> = [];
+
+  try {
+    faces =
+      (await detectFacesInImage({
+        image: `file://${photoPath}`,
+        options: {
+          performanceMode: 'accurate',
+          landmarkMode: 'none',
+          contourMode: 'none',
+          classificationMode: 'none',
+          minFaceSize: 0.04,
+        },
+      })) ?? [];
+  } catch (error) {
+    console.warn(
+      '[PhotoEmbedding] Static face detector failed; using live fallback bounds.',
+      error,
+    );
+  }
 
   console.log(
     '[PhotoEmbedding] Static detector found faces:',
@@ -256,13 +306,19 @@ export const extractFaceEmbeddingsFromPhoto = async (
     .filter(isValidFaceBounds)
     .sort((a, b) => b.width * b.height - a.width * a.height);
   const boundsList =
-    fallbackFaceBounds.length > detectedBounds.length
+    detectedBounds.length > 0
+      ? mergeBounds(detectedBounds, fallbackFaceBounds)
+      : fallbackFaceBounds.length > 0
       ? fallbackFaceBounds
-      : detectedBounds.length > 0
-      ? detectedBounds
       : [createCenteredFallbackBounds(image.width(), image.height())];
 
-  if (fallbackFaceBounds.length > detectedBounds.length) {
+  if (fallbackFaceBounds.length > 0 && detectedBounds.length > 0) {
+    console.log('[PhotoEmbedding] Using static photo bounds first:', {
+      staticFaces: detectedBounds.length,
+      liveFallbacks: fallbackFaceBounds.length,
+      mergedFaces: boundsList.length,
+    });
+  } else if (fallbackFaceBounds.length > detectedBounds.length) {
     console.warn(
       '[PhotoEmbedding] Static detector found fewer valid face bounds than live; using live face fallbacks.',
       {

@@ -1,36 +1,60 @@
 import React, {useState, useEffect, useRef} from 'react';
-import {Alert, View, StyleSheet, Text, TouchableOpacity} from 'react-native';
+import {
+  Alert,
+  View,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  useWindowDimensions,
+} from 'react-native';
 import {Camera, useCameraDevice} from 'react-native-vision-camera';
 import {useFaceRecognition} from '../../hooks/useFaceRecognition';
 import {requestCameraPermission} from '../../utils/permissions';
 import {Button, IconButton} from 'react-native-paper';
-import {mapFaceBoundsToView} from '../../utils/faceBounds';
+import {
+  adjustFaceOverlayBounds,
+  getFaceBoundsProjectionDebug,
+  mapFaceBoundsToView,
+} from '../../utils/faceBounds';
 
 const ScanScreen = ({navigation, route}: any) => {
   const {classId} = route.params || {};
+  const windowSize = useWindowDimensions();
   const [hasPermission, setHasPermission] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [cameraPosition, setCameraPosition] = useState<'front' | 'back'>(
     'front',
   );
-  const [previewSize, setPreviewSize] = useState({width: 1, height: 1});
+  const [previewSize, setPreviewSize] = useState({
+    width: windowSize.width,
+    height: windowSize.height,
+  });
   const camera = useRef<Camera>(null);
+  const lastBboxLogAt = useRef(0);
   const device = useCameraDevice(cameraPosition);
   const {frameProcessor, detectedStudents, modelState, recognizePhoto} =
-    useFaceRecognition(classId);
+    useFaceRecognition(classId, cameraPosition);
+
+  const requestPermission = async () => {
+    const granted = await requestCameraPermission();
+    setHasPermission(granted);
+  };
 
   useEffect(() => {
-    (async () => {
-      const granted = await requestCameraPermission();
-      setHasPermission(granted);
-    })();
+    requestPermission();
   }, []);
+
+  useEffect(() => {
+    if (windowSize.width > 10 && windowSize.height > 10) {
+      setPreviewSize({width: windowSize.width, height: windowSize.height});
+    }
+  }, [windowSize.width, windowSize.height]);
 
   if (!hasPermission) {
     return (
       <View style={styles.center}>
         <Text>No camera permission</Text>
-        <Button mode="contained" onPress={() => requestCameraPermission()}>
+        <Button mode="contained" onPress={requestPermission}>
           Grant Permission
         </Button>
       </View>
@@ -99,7 +123,10 @@ const ScanScreen = ({navigation, route}: any) => {
       style={styles.container}
       onLayout={event => {
         const {width, height} = event.nativeEvent.layout;
-        setPreviewSize({width, height});
+        if (width > 10 && height > 10) {
+          setPreviewSize({width, height});
+          console.log('[ScanBBox] preview layout:', {width, height});
+        }
       }}>
       <Camera
         ref={camera}
@@ -119,31 +146,102 @@ const ScanScreen = ({navigation, route}: any) => {
           previewSize,
           cameraPosition === 'front',
         );
+        const visualBounds = adjustFaceOverlayBounds(
+          projectedBounds,
+          previewSize,
+        );
+        const now = Date.now();
+        if (index === 0 && now - lastBboxLogAt.current > 1200) {
+          lastBboxLogAt.current = now;
+          const debugCandidates = getFaceBoundsProjectionDebug(
+            face.bounds,
+            {width: face.frameWidth, height: face.frameHeight},
+            previewSize,
+            cameraPosition === 'front',
+          );
+          console.log('[ScanBBox] projection debug:', {
+            cameraPosition,
+            previewSize,
+            rawFrame: `${face.frameWidth}x${face.frameHeight}`,
+            rawBounds: face.bounds,
+            rawAreaRatio:
+              (face.bounds.width * face.bounds.height) /
+              Math.max(1, face.frameWidth * face.frameHeight),
+            projected: projectedBounds,
+            visual: visualBounds,
+            projectedAreaRatio:
+              (projectedBounds.width * projectedBounds.height) /
+              Math.max(1, previewSize.width * previewSize.height),
+            visualAreaRatio:
+              (visualBounds.width * visualBounds.height) /
+              Math.max(1, previewSize.width * previewSize.height),
+            candidates: debugCandidates,
+          });
+        }
+
         const isRecognized = face.studentId != null;
+        const accentColor = isRecognized ? '#00E676' : '#FFB300';
+        const label = face.studentName
+          ? face.studentName
+          : face.quality < 0.32
+          ? 'Align face'
+          : 'Face detected';
+        const qualityLabel = `${Math.round(face.quality * 100)}%`;
 
         return (
           <View
             key={index}
             style={[
-              styles.faceBox,
-              isRecognized ? styles.faceBoxRecognized : styles.faceBoxPending,
+              styles.faceOverlay,
               {
-                left: projectedBounds.left,
-                top: projectedBounds.top,
-                width: projectedBounds.width,
-                height: projectedBounds.height,
+                left: visualBounds.left,
+                top: visualBounds.top,
+                width: visualBounds.width,
+                height: visualBounds.height,
               },
             ]}>
-            <Text
+            <View
               style={[
-                styles.faceLabel,
-                isRecognized
-                  ? styles.faceLabelRecognized
-                  : styles.faceLabelPending,
+                styles.corner,
+                styles.cornerTopLeft,
+                {borderColor: accentColor},
+              ]}
+            />
+            <View
+              style={[
+                styles.corner,
+                styles.cornerTopRight,
+                {borderColor: accentColor},
+              ]}
+            />
+            <View
+              style={[
+                styles.corner,
+                styles.cornerBottomLeft,
+                {borderColor: accentColor},
+              ]}
+            />
+            <View
+              style={[
+                styles.corner,
+                styles.cornerBottomRight,
+                {borderColor: accentColor},
+              ]}
+            />
+            <View style={[styles.scanLine, {backgroundColor: accentColor}]} />
+            <View
+              style={[
+                styles.faceLabelContainer,
+                {borderColor: accentColor},
               ]}>
-              {face.studentName ||
-                (face.quality < 0.32 ? 'Align Face' : 'Scanning...')}
-            </Text>
+              <View
+                style={[styles.statusDot, {backgroundColor: accentColor}]}
+              />
+              <Text style={styles.faceLabel} numberOfLines={1}>
+                {label}
+              </Text>
+              <Text style={styles.qualityBadge}>{qualityLabel}</Text>
+            </View>
           </View>
         );
       })}
@@ -203,30 +301,84 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
   },
-  faceBox: {
+  faceOverlay: {
     position: 'absolute',
-    borderWidth: 2,
+    borderRadius: 18,
+    backgroundColor: 'rgba(0,0,0,0.04)',
+  },
+  corner: {
+    position: 'absolute',
+    width: 26,
+    height: 26,
+    borderWidth: 3,
+  },
+  cornerTopLeft: {
+    top: 0,
+    left: 0,
+    borderRightWidth: 0,
+    borderBottomWidth: 0,
+    borderTopLeftRadius: 16,
+  },
+  cornerTopRight: {
+    top: 0,
+    right: 0,
+    borderLeftWidth: 0,
+    borderBottomWidth: 0,
+    borderTopRightRadius: 16,
+  },
+  cornerBottomLeft: {
+    bottom: 0,
+    left: 0,
+    borderRightWidth: 0,
+    borderTopWidth: 0,
+    borderBottomLeftRadius: 16,
+  },
+  cornerBottomRight: {
+    bottom: 0,
+    right: 0,
+    borderLeftWidth: 0,
+    borderTopWidth: 0,
+    borderBottomRightRadius: 16,
+  },
+  scanLine: {
+    position: 'absolute',
+    left: 12,
+    right: 12,
+    top: '52%',
+    height: 2,
+    opacity: 0.65,
+    borderRadius: 2,
+  },
+  faceLabelContainer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: -34,
+    minHeight: 28,
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(5,10,18,0.78)',
+  },
+  statusDot: {
+    width: 7,
+    height: 7,
     borderRadius: 4,
-  },
-  faceBoxRecognized: {
-    borderColor: '#4CAF50',
-  },
-  faceBoxPending: {
-    borderColor: '#FFB300',
+    marginRight: 6,
   },
   faceLabel: {
-    color: 'white',
-    fontSize: 12,
-    paddingHorizontal: 4,
-    position: 'absolute',
-    top: -20,
-    left: -2,
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '700',
+    flex: 1,
   },
-  faceLabelRecognized: {
-    backgroundColor: '#4CAF50',
-  },
-  faceLabelPending: {
-    backgroundColor: '#FFB300',
+  qualityBadge: {
+    color: '#DDE7F0',
+    fontSize: 10,
+    fontWeight: '700',
+    marginLeft: 6,
   },
   controls: {
     position: 'absolute',

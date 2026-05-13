@@ -56,7 +56,7 @@ describe('RegistreIntelligent first-run scenario', () => {
   it('saves present and absent records for a class attendance scan', async () => {
     (classRepository.getById as jest.Mock).mockResolvedValue({
       id: 5,
-      name: 'Math 10-A',
+      name: '3-Eco 4',
       created_at: '2026-05-10T00:00:00.000Z',
     });
     (studentRepository.getForClass as jest.Mock).mockResolvedValue([

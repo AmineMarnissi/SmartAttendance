@@ -105,6 +105,11 @@ android {
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
     }
+
+    // prevent compression of tflite files
+    aaptOptions {
+        noCompress "tflite"
+    }
 }
 
 dependencies {

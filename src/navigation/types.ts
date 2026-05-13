@@ -3,6 +3,13 @@ export type AuthStackParamList = {
   PinSetup: undefined;
 };
 
+export type SettingsStackParamList = {
+  SettingsHome: undefined;
+  ClassManagement: undefined;
+  TeacherManagement: undefined;
+  SchoolSettings: undefined;
+};
+
 export type TeacherTabParamList = {
   TeacherHome: undefined;
   Classes: undefined;

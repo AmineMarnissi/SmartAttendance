@@ -10,14 +10,17 @@ import {
   Alert,
   Image,
 } from 'react-native';
-import {Surface} from 'react-native-paper';
+import {useTheme, Surface} from 'react-native-paper';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import {useThemeStore} from '../../store/useThemeStore';
 import {classRepository} from '../../services/database/classRepository';
 import {embeddingStorage} from '../../services/faceRecognition/EmbeddingStorage';
 
 const {width} = Dimensions.get('window');
 
 const HomeScreen = ({navigation}: any) => {
+  const theme = useTheme();
+  const isDarkMode = useThemeStore(state => state.isDarkMode);
   const [scanClass, setScanClass] = React.useState<{
     id: number;
     name: string;
@@ -154,26 +157,36 @@ const HomeScreen = ({navigation}: any) => {
   });
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+    <View style={[styles.container, {backgroundColor: theme.colors.background}]}>
+      <StatusBar 
+        barStyle={isDarkMode ? "light-content" : "dark-content"} 
+        translucent 
+        backgroundColor="transparent" 
+      />
       
       {/* Fond Animé "Safe" (Sans Skia pour éviter les crashs) */}
-      <View style={styles.backgroundContainer}>
+      <View style={[styles.backgroundContainer, {backgroundColor: theme.colors.background}]}>
         <Animated.View 
           style={[
             styles.blob, 
             styles.blob1, 
-            { transform: [{translateX: b1TranslateX}, {translateY: b1TranslateY}] }
+            { 
+              backgroundColor: isDarkMode ? '#2C5364' : '#00D1FF33', // 20% opacity primary blue
+              transform: [{translateX: b1TranslateX}, {translateY: b1TranslateY}] 
+            }
           ]} 
         />
         <Animated.View 
           style={[
             styles.blob, 
             styles.blob2, 
-            { transform: [{translateX: b2TranslateX}, {translateY: b2TranslateY}] }
+            { 
+              backgroundColor: isDarkMode ? '#203A43' : '#00D1FF22', // 13% opacity primary blue
+              transform: [{translateX: b2TranslateX}, {translateY: b2TranslateY}] 
+            }
           ]} 
         />
-        <View style={styles.overlay} />
+        <View style={[styles.overlay, {backgroundColor: isDarkMode ? 'rgba(15, 32, 39, 0.4)' : 'rgba(255, 255, 255, 0.4)'}]} />
       </View>
 
       <Animated.View
@@ -187,7 +200,7 @@ const HomeScreen = ({navigation}: any) => {
         
         {/* Logo Container with Glassmorphism */}
         <View style={styles.logoContainer}>
-          <Surface style={styles.glassLogo} elevation={0}>
+          <Surface style={[styles.glassLogo, {backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.03)'}]} elevation={0}>
             <Image 
               source={require('../../../logo.png')} 
               style={{width: 80, height: 80}} 
@@ -198,12 +211,12 @@ const HomeScreen = ({navigation}: any) => {
 
         {/* Brand Section */}
         <View style={styles.textContainer}>
-          <Text style={styles.welcomeText}>Système de Présence</Text>
+          <Text style={[styles.welcomeText, {color: isDarkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)'}]}>Système de Présence</Text>
 
-          <Text style={styles.brandText}>REGISTRE</Text>
+          <Text style={[styles.brandText, {color: theme.colors.onSurface}]}>REGISTRE</Text>
           <Text style={[styles.brandText, {color: '#4facfe'}]}>INTELLIGENT</Text>
           <View style={styles.separator} />
-          <Text style={styles.tagline}>Sécurisé • Précis • Instantané</Text>
+          <Text style={[styles.tagline, {color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)'}]}>Sécurisé • Précis • Instantané</Text>
         </View>
 
         {/* Primary Action */}
@@ -224,47 +237,47 @@ const HomeScreen = ({navigation}: any) => {
           <TouchableOpacity
             onPress={() => navigation.navigate('History')}
             style={styles.smallBtn}>
-            <Surface style={styles.iconCircle} elevation={1}>
+            <Surface style={[styles.iconCircle, {backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.05)'}]} elevation={1}>
               <MaterialCommunityIcons
                 name="history"
                 size={24}
-                color="rgba(255,255,255,0.9)"
+                color={isDarkMode ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.7)"}
               />
             </Surface>
-            <Text style={styles.smallBtnText}>Historique</Text>
+            <Text style={[styles.smallBtnText, {color: theme.colors.onSurfaceVariant}]}>Historique</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             onPress={() => navigation.navigate('Classes')}
             style={styles.smallBtn}>
-            <Surface style={styles.iconCircle} elevation={1}>
+            <Surface style={[styles.iconCircle, {backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.05)'}]} elevation={1}>
               <MaterialCommunityIcons
                 name="account-group"
                 size={24}
-                color="rgba(255,255,255,0.9)"
+                color={isDarkMode ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.7)"}
               />
             </Surface>
-            <Text style={styles.smallBtnText}>Étudiants</Text>
+            <Text style={[styles.smallBtnText, {color: theme.colors.onSurfaceVariant}]}>Étudiants</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             onPress={() => navigation.navigate('Settings')}
             style={styles.smallBtn}>
-            <Surface style={styles.iconCircle} elevation={1}>
+            <Surface style={[styles.iconCircle, {backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.05)'}]} elevation={1}>
               <MaterialCommunityIcons
                 name="cog-outline"
                 size={24}
-                color="rgba(255,255,255,0.9)"
+                color={isDarkMode ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.7)"}
               />
             </Surface>
-            <Text style={styles.smallBtnText}>Paramètres</Text>
+            <Text style={[styles.smallBtnText, {color: theme.colors.onSurfaceVariant}]}>Paramètres</Text>
           </TouchableOpacity>
         </View>
       </Animated.View>
 
       {/* Footer Decoration */}
       <View style={styles.footer}>
-        <Text style={styles.versionText}>v0.78.3 Prototype</Text>
+        <Text style={[styles.versionText, {color: isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'}]}>v0.78.3 Prototype</Text>
       </View>
     </View>
   );

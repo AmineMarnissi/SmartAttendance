@@ -77,7 +77,13 @@ const ScanReviewScreen = ({navigation, route}: any) => {
       );
 
       Alert.alert('Succès', 'La présence a été enregistrée avec succès.', [
-        {text: 'OK', onPress: () => navigation.navigate('Home')},
+        {
+          text: 'OK',
+          onPress: () =>
+            navigation.navigate('Classes', {
+              screen: 'Reports',
+            }),
+        },
       ]);
     } catch (error) {
       Alert.alert('Erreur', "Échec de l'enregistrement de la présence.");

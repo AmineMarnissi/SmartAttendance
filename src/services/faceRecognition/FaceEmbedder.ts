@@ -5,7 +5,7 @@ import {resolveFaceEmbeddingModelSource} from './faceEmbeddingModelSource';
 
 export const FACE_EMBEDDING_MODEL = require('../../assets/models/mobilefacenet.tflite');
 export const FACE_EMBEDDING_INPUT_SIZE = 112;
-export const FACE_EMBEDDING_CAPTURE_TARGETS = 5;
+export const FACE_EMBEDDING_CAPTURE_TARGETS = 3;
 
 type FaceEmbedderPlugin =
   | {
@@ -28,6 +28,11 @@ type FaceBounds = {
   width: number;
   height: number;
 };
+
+const FACE_CROP_WIDTH_SCALE = 0.82;
+const FACE_CROP_HEIGHT_SCALE = 0.92;
+const FACE_CROP_PADDING_SCALE = 1.08;
+const FACE_CROP_CENTER_Y = 0.46;
 
 export const useFaceEmbedder = () => {
   const [plugin, setPlugin] = useState<FaceEmbedderPlugin>({
@@ -98,10 +103,11 @@ export const buildFaceCrop = (
     };
   }
 
-  const padding = Math.max(bounds.width, bounds.height) * 0.2;
-  const size = Math.max(bounds.width, bounds.height) + padding * 2;
   const centerX = bounds.x + bounds.width / 2;
-  const centerY = bounds.y + bounds.height / 2;
+  const centerY = bounds.y + bounds.height * FACE_CROP_CENTER_Y;
+  const tightWidth = bounds.width * FACE_CROP_WIDTH_SCALE;
+  const tightHeight = bounds.height * FACE_CROP_HEIGHT_SCALE;
+  const size = Math.max(tightWidth, tightHeight) * FACE_CROP_PADDING_SCALE;
 
   let x = centerX - size / 2;
   let y = centerY - size / 2;

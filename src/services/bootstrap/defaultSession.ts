@@ -4,9 +4,9 @@ import {userRepository} from '../database/userRepository';
 import {useAuthStore} from '../../store/useAuthStore';
 import {User} from '../../types/models';
 
-const DEFAULT_TEACHER_NAME = 'John Doe';
+const DEFAULT_TEACHER_NAME = 'Habiba Haj Sassi';
 const DEFAULT_TEACHER_PIN = '0000';
-const DEFAULT_CLASS_NAME = 'Math 10-A';
+const DEFAULT_CLASS_NAME = '3-Eco 4';
 
 const createDefaultTeacher = async (): Promise<User> => {
   const salt = await bcrypt.genSalt(10);

@@ -1,12 +1,11 @@
 import {
-  ANDROID_FACE_EMBEDDING_RESOURCE,
   FACE_EMBEDDING_CACHE_FILE,
   resolveFaceEmbeddingModelSource,
   toFileUrl,
 } from '../src/services/faceRecognition/faceEmbeddingModelSource';
 
 describe('face embedding model source', () => {
-  it('copies the Android raw resource into cache and returns a file URL', async () => {
+  it('uses the bundled model require result on Android', async () => {
     const fs = {
       CachesDirectoryPath: '/data/user/0/com.smartattendance/cache/',
       exists: jest.fn().mockResolvedValue(false),
@@ -19,17 +18,12 @@ describe('face embedding model source', () => {
       fs,
     });
 
-    const expectedPath =
-      '/data/user/0/com.smartattendance/cache/mobilefacenet.tflite';
-    expect(fs.exists).toHaveBeenCalledWith(expectedPath);
-    expect(fs.copyFileRes).toHaveBeenCalledWith(
-      ANDROID_FACE_EMBEDDING_RESOURCE,
-      expectedPath,
-    );
-    expect(source).toEqual({url: `file://${expectedPath}`});
+    expect(fs.exists).not.toHaveBeenCalled();
+    expect(fs.copyFileRes).not.toHaveBeenCalled();
+    expect(source).toBe(42);
   });
 
-  it('reuses the cached Android model file when it already exists', async () => {
+  it('does not require an Android cache copy', async () => {
     const fs = {
       CachesDirectoryPath: '/cache',
       exists: jest.fn().mockResolvedValue(true),
@@ -42,6 +36,7 @@ describe('face embedding model source', () => {
       fs,
     });
 
+    expect(fs.exists).not.toHaveBeenCalled();
     expect(fs.copyFileRes).not.toHaveBeenCalled();
   });
 

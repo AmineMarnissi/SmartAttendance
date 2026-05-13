@@ -1,6 +1,8 @@
 import {cosineSimilarity} from '../../utils/cosineSimilarity';
 
-export const MATCH_THRESHOLD = 0.4;
+export const MATCH_THRESHOLD = 0.35;
+export const RELAXED_MATCH_THRESHOLD = 0.28;
+export const MIN_RELAXED_MATCH_MARGIN = 0.03;
 
 export interface EnrolledEmbedding {
   studentId: number;

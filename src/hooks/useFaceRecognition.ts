@@ -1,13 +1,17 @@
 import {useState, useCallback, useEffect, useMemo, useRef} from 'react';
 import {
   runAsync,
+  runAtTargetFps,
+  type CameraPosition,
   useFrameProcessor,
 } from 'react-native-vision-camera';
 import {useFaceDetector} from 'react-native-vision-camera-face-detector';
 import {Worklets} from 'react-native-worklets-core';
 import {
   EnrolledEmbedding,
+  MIN_RELAXED_MATCH_MARGIN,
   MATCH_THRESHOLD,
+  RELAXED_MATCH_THRESHOLD,
 } from '../services/faceRecognition/FaceMatcher';
 import {embeddingStorage} from '../services/faceRecognition/EmbeddingStorage';
 import {studentRepository} from '../services/database/studentRepository';
@@ -20,6 +24,11 @@ import type {PhotoEmbeddingFallback} from '../services/faceRecognition/photoEmbe
 import {cosineSimilarity} from '../utils/cosineSimilarity';
 
 const MIN_RECOGNITION_QUALITY = 0.2;
+const FACE_SCAN_FPS = 5;
+const MAX_LIVE_BOUNDS_AGE_MS = 5000;
+const BBOX_SMOOTHING_ALPHA = 0.22;
+const BBOX_DEADBAND_RATIO = 0.012;
+const BBOX_MAX_MATCH_DISTANCE_RATIO = 0.18;
 
 export interface DetectedStudent {
   studentId: number | null;
@@ -37,15 +46,92 @@ export interface DetectedStudent {
   frameHeight: number;
 }
 
+const getFaceCenter = (face: DetectedStudent) => ({
+  x: face.bounds.x + face.bounds.width / 2,
+  y: face.bounds.y + face.bounds.height / 2,
+});
+
+const getFaceDistanceRatio = (a: DetectedStudent, b: DetectedStudent) => {
+  const centerA = getFaceCenter(a);
+  const centerB = getFaceCenter(b);
+  const frameDiagonal = Math.max(
+    1,
+    Math.hypot(a.frameWidth, a.frameHeight),
+  );
+
+  return Math.hypot(centerA.x - centerB.x, centerA.y - centerB.y) / frameDiagonal;
+};
+
+const smoothValue = (previous: number, next: number, deadband: number) => {
+  const delta = next - previous;
+
+  if (Math.abs(delta) <= deadband) {
+    return previous;
+  }
+
+  return previous + delta * BBOX_SMOOTHING_ALPHA;
+};
+
+const smoothFaceBounds = (
+  previous: DetectedStudent,
+  next: DetectedStudent,
+): DetectedStudent => {
+  const deadband = Math.max(next.frameWidth, next.frameHeight) * BBOX_DEADBAND_RATIO;
+
+  return {
+    ...next,
+    bounds: {
+      x: smoothValue(previous.bounds.x, next.bounds.x, deadband),
+      y: smoothValue(previous.bounds.y, next.bounds.y, deadband),
+      width: smoothValue(previous.bounds.width, next.bounds.width, deadband),
+      height: smoothValue(previous.bounds.height, next.bounds.height, deadband),
+    },
+  };
+};
+
+const findPreviousFace = (
+  match: DetectedStudent,
+  previousFaces: DetectedStudent[],
+  usedPreviousIndexes: Set<number>,
+) => {
+  if (match.trackingId != null) {
+    const trackingIndex = previousFaces.findIndex(
+      (previous, index) =>
+        !usedPreviousIndexes.has(index) &&
+        previous.trackingId === match.trackingId,
+    );
+
+    if (trackingIndex >= 0) {
+      return trackingIndex;
+    }
+  }
+
+  let bestIndex = -1;
+  let bestDistance = BBOX_MAX_MATCH_DISTANCE_RATIO;
+
+  previousFaces.forEach((previous, index) => {
+    if (usedPreviousIndexes.has(index)) {
+      return;
+    }
+
+    const distance = getFaceDistanceRatio(previous, match);
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      bestIndex = index;
+    }
+  });
+
+  return bestIndex;
+};
+
 const matchEmbedding = (
   liveEmbedding: Float32Array,
   enrolledEmbeddings: EnrolledEmbedding[],
   studentNames: Record<number, string>,
   excludedStudentIds: Set<number> = new Set(),
 ) => {
-  let bestStudentId: number | null = null;
-  let bestConfidence = 0;
-  let secondConfidence = 0;
+  const scoresByStudent = new Map<number, number[]>();
+  const topCandidates: Array<{studentId: number; confidence: number}> = [];
 
   for (const enrolled of enrolledEmbeddings) {
     if (excludedStudentIds.has(enrolled.studentId)) {
@@ -53,23 +139,55 @@ const matchEmbedding = (
     }
 
     const similarity = cosineSimilarity(liveEmbedding, enrolled.embedding);
-    if (similarity > bestConfidence) {
+    const scores = scoresByStudent.get(enrolled.studentId) ?? [];
+    scores.push(similarity);
+    scoresByStudent.set(enrolled.studentId, scores);
+  }
+
+  let bestStudentId: number | null = null;
+  let bestConfidence = 0;
+  let secondConfidence = 0;
+
+  for (const [studentId, scores] of scoresByStudent) {
+    const sortedScores = scores.slice().sort((a, b) => b - a);
+    const strongestScores = sortedScores.slice(0, 2);
+    const studentConfidence =
+      strongestScores.reduce((sum, score) => sum + score, 0) /
+      strongestScores.length;
+
+    topCandidates.push({
+      studentId,
+      confidence: studentConfidence,
+    });
+
+    if (studentConfidence > bestConfidence) {
       secondConfidence = bestConfidence;
-      bestConfidence = similarity;
-      bestStudentId = enrolled.studentId;
-    } else if (similarity > secondConfidence) {
-      secondConfidence = similarity;
+      bestConfidence = studentConfidence;
+      bestStudentId = studentId;
+    } else if (studentConfidence > secondConfidence) {
+      secondConfidence = studentConfidence;
     }
   }
 
-  console.log('[ScanRecognition] best match:', {
-    studentId: bestStudentId,
-    confidence: bestConfidence,
-    secondConfidence,
-    threshold: MATCH_THRESHOLD,
-  });
+  if (bestStudentId != null) {
+    console.log(`[Matching] Best match for face: ${studentNames[bestStudentId]} (ID: ${bestStudentId})`);
+    console.log(`[Matching]   - Confidence: ${bestConfidence.toFixed(4)}`);
+    console.log(`[Matching]   - Second Best: ${secondConfidence.toFixed(4)}`);
+    console.log(`[Matching]   - Margin: ${(bestConfidence - secondConfidence).toFixed(4)}`);
+    console.log(`[Matching]   - Required Threshold: ${MATCH_THRESHOLD}`);
+  } else {
+    console.log('[Matching] No candidate students found with embeddings.');
+  }
 
-  if (bestStudentId == null || bestConfidence < MATCH_THRESHOLD) {
+  const isStrictMatch = bestConfidence >= MATCH_THRESHOLD;
+  const isRelaxedMatch =
+    bestConfidence >= RELAXED_MATCH_THRESHOLD &&
+    bestConfidence - secondConfidence >= MIN_RELAXED_MATCH_MARGIN;
+
+  if (bestStudentId == null || (!isStrictMatch && !isRelaxedMatch)) {
+    if (bestStudentId != null) {
+      console.warn(`[Matching] Match REJECTED for ${studentNames[bestStudentId]} (Score too low or margin too small)`);
+    }
     return null;
   }
 
@@ -80,7 +198,10 @@ const matchEmbedding = (
   };
 };
 
-export const useFaceRecognition = (classId?: number) => {
+export const useFaceRecognition = (
+  classId?: number,
+  cameraPosition: CameraPosition = 'front',
+) => {
   const [enrolledEmbeddings, setEnrolledEmbeddings] = useState<
     EnrolledEmbedding[]
   >([]);
@@ -90,20 +211,19 @@ export const useFaceRecognition = (classId?: number) => {
   const [studentNames, setStudentNames] = useState<Record<number, string>>({});
   const lastLiveFaceRef = useRef<DetectedStudent | null>(null);
   const lastLiveFacesRef = useRef<DetectedStudent[]>([]);
-  const frameCounter = useRef(0);
-  const bboxHistory = useRef<Record<number | string, {x: number, y: number, w: number, h: number}[]>>({});
+  const lastLiveFacesTimestamp = useRef(0);
   const embedder = useFaceEmbedder();
   const faceDetectionOptions = useMemo(
     () => ({
-      performanceMode: 'fast' as const,
+      performanceMode: 'accurate' as const,
       landmarkMode: 'none' as const,
       contourMode: 'none' as const,
       classificationMode: 'none' as const,
-      minFaceSize: 0.18,
+      minFaceSize: 0.05,
       trackingEnabled: true,
-      cameraFacing: 'front' as const,
+      cameraFacing: cameraPosition,
     }),
-    [],
+    [cameraPosition],
   );
   const {detectFaces, stopListeners} = useFaceDetector(faceDetectionOptions);
 
@@ -152,9 +272,31 @@ export const useFaceRecognition = (classId?: number) => {
     );
   };
 
+  const smoothedResultsRef = useRef<DetectedStudent[]>([]);
+
   const updateResults = useCallback((matches: DetectedStudent[]) => {
+    const previousFaces = smoothedResultsRef.current;
+    const usedPreviousIndexes = new Set<number>();
+
+    const smoothedMatches = matches.map(match => {
+      const previousIndex = findPreviousFace(
+        match,
+        previousFaces,
+        usedPreviousIndexes,
+      );
+
+      if (previousIndex < 0) {
+        return match;
+      }
+
+      usedPreviousIndexes.add(previousIndex);
+      return smoothFaceBounds(previousFaces[previousIndex], match);
+    });
+
+    smoothedResultsRef.current = smoothedMatches;
+
     const bestLiveFace =
-      matches
+      smoothedMatches
         .slice()
         .sort(
           (a, b) =>
@@ -163,8 +305,9 @@ export const useFaceRecognition = (classId?: number) => {
         )[0] ?? null;
 
     lastLiveFaceRef.current = bestLiveFace;
-    lastLiveFacesRef.current = matches;
-    setDetectedStudents(matches);
+    lastLiveFacesRef.current = smoothedMatches;
+    lastLiveFacesTimestamp.current = Date.now();
+    setDetectedStudents(smoothedMatches);
   }, []);
 
   const updateResultsOnJS = useMemo(
@@ -176,20 +319,18 @@ export const useFaceRecognition = (classId?: number) => {
     frame => {
       'worklet';
 
-      // 1. Limiteur de frames (Throttle)
-      frameCounter.current++;
-      if (frameCounter.current % 3 !== 0) {
-        return;
-      }
-
-      runAsync(frame, () => {
+      runAtTargetFps(FACE_SCAN_FPS, () => {
         'worklet';
 
-        const faces = detectFaces(frame);
-        const results: DetectedStudent[] = faces
-          .map(face => {
+        runAsync(frame, () => {
+          'worklet';
+
+          const faces = detectFaces(frame);
+          const results: DetectedStudent[] = [];
+
+          for (const face of faces) {
             if (face.bounds == null) {
-              return null;
+              continue;
             }
 
             const bounds = face.bounds;
@@ -201,49 +342,24 @@ export const useFaceRecognition = (classId?: number) => {
               face.pitchAngle,
             );
 
-            // 2. Lissage (Smoothing)
-            const faceId = face.trackingId ?? 'unknown';
-            if (!bboxHistory.current[faceId]) {
-              bboxHistory.current[faceId] = [];
-            }
-            const history = bboxHistory.current[faceId];
-            history.push({
-              x: bounds.x,
-              y: bounds.y,
-              w: bounds.width,
-              h: bounds.height,
-            });
-            if (history.length > 5) {
-              history.shift();
-            }
-
-            const avgX =
-              history.reduce((sum, b) => sum + b.x, 0) / history.length;
-            const avgY =
-              history.reduce((sum, b) => sum + b.y, 0) / history.length;
-            const avgW =
-              history.reduce((sum, b) => sum + b.w, 0) / history.length;
-            const avgH =
-              history.reduce((sum, b) => sum + b.h, 0) / history.length;
-
-            return {
+            results.push({
               studentId: null,
               confidence: 0,
               quality,
               trackingId: face.trackingId,
               bounds: {
-                x: avgX,
-                y: avgY,
-                width: avgW,
-                height: avgH,
+                x: bounds.x,
+                y: bounds.y,
+                width: bounds.width,
+                height: bounds.height,
               },
               frameWidth: frame.width,
               frameHeight: frame.height,
-            };
-          })
-          .filter((result): result is DetectedStudent => result != null);
+            });
+          }
 
-        updateResultsOnJS(results);
+          updateResultsOnJS(results);
+        });
       });
     },
     [detectFaces, updateResultsOnJS],
@@ -266,14 +382,16 @@ export const useFaceRecognition = (classId?: number) => {
         throw new Error('No enrolled face embeddings found for this class.');
       }
 
+      const liveBoundsAge = Date.now() - lastLiveFacesTimestamp.current;
+      const liveBoundsAreFresh = liveBoundsAge <= MAX_LIVE_BOUNDS_AGE_MS;
       const fallbackFaces: PhotoEmbeddingFallback[] =
-        lastLiveFacesRef.current.length > 0
+        liveBoundsAreFresh && lastLiveFacesRef.current.length > 0
           ? lastLiveFacesRef.current.map(face => ({
               bounds: face.bounds,
               frameWidth: face.frameWidth,
               frameHeight: face.frameHeight,
             }))
-          : lastLiveFaceRef.current
+          : liveBoundsAreFresh && lastLiveFaceRef.current
           ? [
               {
                 bounds: lastLiveFaceRef.current.bounds,
@@ -283,7 +401,12 @@ export const useFaceRecognition = (classId?: number) => {
             ]
           : [];
 
-      console.log('[ScanRecognition] Live face fallbacks:', fallbackFaces);
+      console.log('[ScanRecognition] Live face fallbacks:', {
+        count: fallbackFaces.length,
+        ageMs: liveBoundsAge,
+        fresh: liveBoundsAreFresh,
+        faces: fallbackFaces,
+      });
 
       const {embeddings} = await extractFaceEmbeddingsFromPhoto(
         photoPath,
@@ -293,8 +416,14 @@ export const useFaceRecognition = (classId?: number) => {
 
       console.log('[ScanRecognition] Faces extracted from photo:', embeddings.length);
 
+      const sortedEmbeddings = embeddings.slice().sort((a, b) => {
+        const areaA = a.bounds.width * a.bounds.height;
+        const areaB = b.bounds.width * b.bounds.height;
+        return areaB - areaA;
+      });
+
       const usedStudentIds = new Set<number>();
-      const matches = embeddings.map((face, index) => {
+      const matches = sortedEmbeddings.map((face, index) => {
         const match =
           face.quality >= MIN_RECOGNITION_QUALITY
             ? matchEmbedding(

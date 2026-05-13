@@ -1,19 +1,16 @@
 import React, {useEffect, useState, useCallback} from 'react';
-import {View, StyleSheet, FlatList} from 'react-native';
+import {View, StyleSheet, FlatList, Text} from 'react-native';
 import {
-  Title,
   List,
-  Text,
   ActivityIndicator,
   useTheme,
-  Divider,
 } from 'react-native-paper';
 import {attendanceRepository} from '../../services/database/attendanceRepository';
 import {studentRepository} from '../../services/database/studentRepository';
 import StudentThumbnail from '../../components/StudentThumbnail';
 
 const SessionDetailScreen = ({route}: any) => {
-  const {sessionId, className, date} = route.params;
+  const {sessionId} = route.params;
   const theme = useTheme();
   const [records, setRecords] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,13 +59,6 @@ const SessionDetailScreen = ({route}: any) => {
 
   return (
     <View style={[styles.container, {backgroundColor: theme.colors.background}]}>
-      <View style={styles.header}>
-        <Title>{className}</Title>
-        <Text style={{color: theme.colors.onSurfaceVariant}}>{date}</Text>
-      </View>
-      
-      <Divider />
-
       {loading ? (
         <ActivityIndicator style={styles.loader} />
       ) : (

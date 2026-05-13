@@ -1,5 +1,7 @@
 import React from 'react';
 import {NavigationContainer, getFocusedRouteNameFromRoute} from '@react-navigation/native';
+import {View, TouchableOpacity, Alert} from 'react-native';
+import {classRepository} from '../services/database/classRepository';
 import {createStackNavigator} from '@react-navigation/stack';
 import {darkTheme, lightTheme} from '../theme/theme';
 import {useThemeStore} from '../store/useThemeStore';
@@ -11,6 +13,7 @@ import {
   AttendanceStackParamList,
   HistoryStackParamList,
   RootStackParamList,
+  SettingsStackParamList,
 } from './types';
 
 import HomeScreen from '../screens/teacher/HomeScreen';
@@ -24,12 +27,16 @@ import StudentListScreen from '../screens/admin/StudentListScreen';
 import ReportsScreen from '../screens/admin/ReportsScreen';
 import StudentEnrollmentScreen from '../screens/enrollment/StudentEnrollmentScreen';
 import FaceCaptureScreen from '../screens/enrollment/FaceCaptureScreen';
+import ClassManagementScreen from '../screens/settings/ClassManagementScreen';
+import TeacherManagementScreen from '../screens/settings/TeacherManagementScreen';
+import SchoolSettingsScreen from '../screens/settings/SchoolSettingsScreen';
 
 const TeacherTab = createBottomTabNavigator<TeacherTabParamList>();
 const TeacherStack = createStackNavigator<AttendanceStackParamList>();
 const AdminStack = createStackNavigator<AdminStackParamList>();
 const RootStack = createStackNavigator<RootStackParamList>();
 const HistoryStack = createStackNavigator<HistoryStackParamList>();
+const SettingsStack = createStackNavigator<SettingsStackParamList>();
 
 const tabIcons: Record<keyof TeacherTabParamList, string> = {
   TeacherHome: 'clipboard-check-outline',
@@ -38,8 +45,23 @@ const tabIcons: Record<keyof TeacherTabParamList, string> = {
   Settings: 'cog-outline',
 };
 
+const commonHeaderOptions = {
+  headerStyle: {
+    backgroundColor: '#0F2027',
+    elevation: 0,
+    shadowOpacity: 0,
+  },
+  headerTintColor: '#fff',
+  headerTitleStyle: {
+    fontWeight: '800' as const,
+    fontSize: 18,
+    letterSpacing: 0.5,
+  },
+  headerTitleAlign: 'center' as const,
+};
+
 const HistoryNavigator = () => (
-  <HistoryStack.Navigator>
+  <HistoryStack.Navigator screenOptions={commonHeaderOptions}>
     <HistoryStack.Screen
       name="HistoryList"
       component={AttendanceHistoryScreen}
@@ -54,7 +76,7 @@ const HistoryNavigator = () => (
 );
 
 const AdminNavigator = () => (
-  <AdminStack.Navigator>
+  <AdminStack.Navigator screenOptions={commonHeaderOptions}>
     <AdminStack.Screen
       name="AdminDashboard"
       component={AdminDashboardScreen}
@@ -79,8 +101,33 @@ const AdminNavigator = () => (
   </AdminStack.Navigator>
 );
 
+const SettingsNavigator = () => (
+  <SettingsStack.Navigator screenOptions={commonHeaderOptions}>
+    <SettingsStack.Screen
+      name="SettingsHome"
+      component={SettingsScreen}
+      options={{title: 'Paramètres'}}
+    />
+    <SettingsStack.Screen
+      name="ClassManagement"
+      component={ClassManagementScreen}
+      options={{title: 'Gestion des Classes'}}
+    />
+    <SettingsStack.Screen
+      name="TeacherManagement"
+      component={TeacherManagementScreen}
+      options={{title: 'Gestion des Enseignants'}}
+    />
+    <SettingsStack.Screen
+      name="SchoolSettings"
+      component={SchoolSettingsScreen}
+      options={{title: 'Paramètres de l\'école'}}
+    />
+  </SettingsStack.Navigator>
+);
+
 const AttendanceStack = () => (
-  <TeacherStack.Navigator>
+  <TeacherStack.Navigator screenOptions={commonHeaderOptions}>
     <TeacherStack.Screen
       name="Home"
       component={HomeScreen}
@@ -98,8 +145,6 @@ const AttendanceStack = () => (
     />
   </TeacherStack.Navigator>
 );
-
-import { View } from 'react-native';
 
 const MainTabs = () => {
   const isDarkMode = useThemeStore((state) => state.isDarkMode);
@@ -212,6 +257,59 @@ const MainTabs = () => {
           ),
         })}
       />
+
+      <TeacherTab.Screen
+        name="QuickScan"
+        component={View} // Placeholder
+        options={({navigation}) => ({
+          tabBarButton: (props) => (
+            <TouchableOpacity
+              {...props}
+              activeOpacity={0.8}
+              onPress={async () => {
+                try {
+                  const classes = await classRepository.getAll();
+                  if (classes.length > 0) {
+                    // Try to find a class with students, otherwise take the first one
+                    navigation.navigate('TeacherHome', {
+                      screen: 'Scan',
+                      params: { classId: classes[0].id }
+                    });
+                  } else {
+                    Alert.alert('Info', 'Veuillez d\'abord créer une classe.');
+                  }
+                } catch (error) {
+                  console.error('QuickScan failed:', error);
+                }
+              }}
+              style={{
+                top: -20,
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}>
+              <View
+                style={{
+                  width: 65,
+                  height: 65,
+                  borderRadius: 35,
+                  backgroundColor: currentTheme.colors.primary,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  elevation: 8,
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 5,
+                  borderWidth: 4,
+                  borderColor: currentTheme.colors.surface,
+                }}>
+                <MaterialCommunityIcons name="camera-iris" color="#fff" size={32} />
+              </View>
+            </TouchableOpacity>
+          ),
+        })}
+      />
+
       <TeacherTab.Screen
         name="History"
         component={HistoryNavigator}
@@ -239,9 +337,15 @@ const MainTabs = () => {
       />
       <TeacherTab.Screen 
         name="Settings" 
-        component={SettingsScreen} 
-        options={{
+        component={SettingsNavigator} 
+        options={({route}) => ({
           title: 'Paramètres',
+          headerShown: false,
+          tabBarStyle: getTabBarStyle(route, 'SettingsHome', [
+            'ClassManagement',
+            'TeacherManagement',
+            'SchoolSettings',
+          ]),
           tabBarIcon: ({focused, color}) => (
             <View
               style={{
@@ -259,7 +363,7 @@ const MainTabs = () => {
               />
             </View>
           ),
-        }} 
+        })} 
       />
     </TeacherTab.Navigator>
   );

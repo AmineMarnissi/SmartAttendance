@@ -1,31 +1,49 @@
-import React, {useEffect, useState} from 'react';
+import React, {useState} from 'react';
 import {View, StyleSheet, ScrollView, Text} from 'react-native';
 import {Card, Button, useTheme, Searchbar, List, Avatar, ProgressBar} from 'react-native-paper';
-import {useAuthStore} from '../../store/useAuthStore';
 import {studentRepository} from '../../services/database/studentRepository';
 import {db, getRows} from '../../services/database/db';
 import StatCard from '../../components/analytics/StatCard';
 
+import {useFocusEffect} from '@react-navigation/native';
+
 const AdminDashboardScreen = ({navigation}: any) => {
   const theme = useTheme();
-  useAuthStore(state => state.user);
   const [stats, setStats] = useState({enrolled: 0, withFace: 0, attendance: 0});
   const [searchQuery, setSearchQuery] = useState('');
   const [missingPhotos, setMissingPhotos] = useState<any[]>([]);
 
-  useEffect(() => {
-    loadStats();
-    loadMissingPhotos();
-  }, []);
+  useFocusEffect(
+    React.useCallback(() => {
+      loadStats();
+      loadMissingPhotos();
+    }, [])
+  );
 
   const loadStats = async () => {
     try {
       const allStudents = await studentRepository.getAllActive();
+      
+      // Face IA stats
       const embedResult = await db.execute(
         'SELECT COUNT(DISTINCT student_id) as cnt FROM face_embeddings;',
       );
       const withFace = (embedResult.rows[0] as any)?.cnt ?? 0;
-      const attendanceRate = 85; 
+
+      // Real-time Daily Attendance Rate
+      const today = new Date().toISOString().split('T')[0];
+      const attendanceResult = await db.execute(`
+        SELECT 
+          COUNT(*) as total,
+          SUM(CASE WHEN status = 'present' THEN 1 ELSE 0 END) as present
+        FROM attendance_records 
+        WHERE session_id IN (SELECT id FROM attendance_sessions WHERE date = ?);
+      `, [today]);
+      
+      const row = attendanceResult.rows[0] as any;
+      const total = row?.total ?? 0;
+      const present = row?.present ?? 0;
+      const attendanceRate = total > 0 ? Math.round((present / total) * 100) : 0;
 
       setStats({
         enrolled: allStudents.length,
@@ -62,12 +80,6 @@ const AdminDashboardScreen = ({navigation}: any) => {
         style={styles.searchbar}
         onIconPress={() => navigation.navigate('StudentList')}
       />
-
-      <View style={styles.header}>
-        <Text style={[styles.pageTitle, {color: theme.colors.onSurface}]}>
-          Tableau de Bord
-        </Text>
-      </View>
 
       <View style={styles.statGrid}>
         <StatCard
@@ -110,7 +122,7 @@ const AdminDashboardScreen = ({navigation}: any) => {
                   key={i}
                   title={`${s.first_name}`}
                   titleStyle={{fontSize: 11}}
-                  left={props => <Avatar.Text {...props} label={s.first_name[0]} size={20} />}
+                  left={_props => <Avatar.Text {..._props} label={s.first_name[0]} size={20} />}
                   onPress={() => navigation.navigate('FaceCapture', { 
                     studentData: { 
                       firstName: s.first_name, 
@@ -170,16 +182,6 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     elevation: 2,
     borderRadius: 12,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  pageTitle: {
-    fontSize: 22,
-    fontWeight: '700',
   },
   statGrid: {
     flexDirection: 'row',

@@ -1,31 +1,58 @@
 import React from 'react';
-import {StyleSheet, View, ScrollView, Alert} from 'react-native';
-import {useTheme, List, Divider, Button, Title, Switch} from 'react-native-paper';
+import {StyleSheet, ScrollView, Alert} from 'react-native';
+import {useTheme, List, Divider, Switch, IconButton} from 'react-native-paper';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useAuthStore} from '../../store/useAuthStore';
 import {useThemeStore} from '../../store/useThemeStore';
 
-const SettingsScreen = () => {
+const SettingsScreen = ({navigation}: any) => {
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
+  const Subheader = List.Subheader as React.ComponentType<any>;
   const logout = useAuthStore(state => state.logout);
   const user = useAuthStore(state => state.user);
   const {isDarkMode, toggleTheme} = useThemeStore();
 
-  const handleLogout = () => {
-    Alert.alert('Déconnexion', 'Êtes-vous sûr de vouloir vous déconnecter ?', [
-      {text: 'Annuler', style: 'cancel'},
-      {text: 'Déconnexion', onPress: logout, style: 'destructive'},
-    ]);
-  };
+  const handleLogout = useCallback(() => {
+    Alert.alert(
+      'Déconnexion',
+      'Voulez-vous vraiment vous déconnecter ?',
+      [
+        {text: 'Annuler', style: 'cancel'},
+        {
+          text: 'Déconnexion',
+          style: 'destructive',
+          onPress: async () => {
+            await logout();
+          },
+        },
+      ],
+    );
+  }, [logout]);
+
+  React.useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <IconButton
+          icon="logout"
+          iconColor={theme.colors.error}
+          size={24}
+          onPress={handleLogout}
+          style={styles.headerLogoutBtn}
+        />
+      ),
+    });
+  }, [navigation, theme, handleLogout]);
 
   return (
     <ScrollView
-      style={[styles.container, {backgroundColor: theme.colors.background}]}>
-      <View style={styles.header}>
-        <Title style={{color: theme.colors.onSurface}}>Paramètres</Title>
-      </View>
-
+      style={[styles.container, {backgroundColor: theme.colors.background}]}
+      contentContainerStyle={[
+        styles.scrollContent,
+        {paddingBottom: insets.bottom + 100},
+      ]}>
       <List.Section>
-        <List.Subheader>Compte</List.Subheader>
+        <Subheader>Compte</Subheader>
         <List.Item
           title={user?.name || 'Utilisateur'}
           description={user?.role === 'admin' ? 'Administrateur' : 'Enseignant'}
@@ -40,28 +67,28 @@ const SettingsScreen = () => {
 
       <Divider />
       <List.Section>
-        <List.Subheader>Gestion</List.Subheader>
+        <Subheader>Gestion</Subheader>
         <List.Item
           title="Gérer les Classes"
           left={props => <List.Icon {...props} icon="google-classroom" />}
-          onPress={() => {}}
+          onPress={() => navigation.navigate('ClassManagement')}
         />
         <List.Item
           title="Gérer les Enseignants"
           left={props => <List.Icon {...props} icon="account-group" />}
-          onPress={() => {}}
+          onPress={() => navigation.navigate('TeacherManagement')}
         />
         <List.Item
           title="Paramètres de l'école"
           left={props => <List.Icon {...props} icon="school" />}
-          onPress={() => {}}
+          onPress={() => navigation.navigate('SchoolSettings')}
         />
       </List.Section>
 
       <Divider />
 
       <List.Section>
-        <List.Subheader>Application</List.Subheader>
+        <Subheader>Application</Subheader>
         <List.Item
           title="Mode Sombre"
           description={isDarkMode ? "Activé" : "Désactivé"}
@@ -79,17 +106,6 @@ const SettingsScreen = () => {
           ])}
         />
       </List.Section>
-
-      <View style={styles.logoutContainer}>
-        <Button
-          mode="contained"
-          onPress={handleLogout}
-          buttonColor={theme.colors.error}
-          icon="logout"
-          style={styles.logoutBtn}>
-          Déconnexion
-        </Button>
-      </View>
     </ScrollView>
   );
 };
@@ -98,16 +114,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  scrollContent: {
+    // Dynamically handled in the component
+  },
   header: {
     padding: 20,
     alignItems: 'center',
   },
-  logoutContainer: {
-    padding: 20,
-    marginTop: 20,
-  },
-  logoutBtn: {
-    borderRadius: 8,
+  headerLogoutBtn: {
+    marginRight: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
 });
 

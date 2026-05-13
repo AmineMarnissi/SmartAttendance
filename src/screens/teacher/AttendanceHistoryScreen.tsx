@@ -1,7 +1,6 @@
 import React, {useState, useEffect, useCallback} from 'react';
 import {View, StyleSheet, FlatList} from 'react-native';
 import {
-  Title,
   List,
   Avatar,
   Paragraph,
@@ -72,9 +71,6 @@ const AttendanceHistoryScreen = ({navigation}: any) => {
 
   return (
     <View style={[styles.container, {backgroundColor: theme.colors.background}]}>
-      <Title style={[styles.title, {color: theme.colors.onSurface}]}>
-        Historique de Présence
-      </Title>
       <FlatList
         data={sessions}
         renderItem={renderSession}

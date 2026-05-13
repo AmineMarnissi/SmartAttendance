@@ -3,32 +3,18 @@
  */
 
 import 'react-native-get-random-values';
+import './src/polyfills/crypto.js'; // Ensure crypto is available early
 import {AppRegistry} from 'react-native';
 import App from './App';
 import {name as appName} from './app.json';
 
-const originalConsoleError = console.error;
-
-console.error = (...args) => {
-  originalConsoleError(
-    ...args.map(arg => {
-      if (
-        arg instanceof Error ||
-        (arg != null && typeof arg === 'object' && 'message' in arg)
-      ) {
-        try {
-          const name = typeof arg.name === 'string' ? arg.name : 'Error';
-          const message =
-            typeof arg.message === 'string' ? arg.message : String(arg);
-          return `${name}: ${message}`;
-        } catch {
-          return 'Error: <unreadable error object>';
-        }
-      }
-
-      return arg;
-    }),
-  );
+// Simple error logging for release
+const register = () => {
+  try {
+    AppRegistry.registerComponent(appName, () => App);
+  } catch (e) {
+    console.error('CRITICAL: App registration failed', e);
+  }
 };
 
-AppRegistry.registerComponent(appName, () => App);
+register();

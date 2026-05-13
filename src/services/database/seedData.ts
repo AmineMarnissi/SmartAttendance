@@ -24,15 +24,15 @@ export const seedData = async () => {
     // Create Teacher
     const teacherPin = await bcrypt.hash('5678', salt);
     const teacherId = await userRepository.create({
-      name: 'John Doe',
+      name: 'Habiba Haj Sassi',
       role: 'teacher',
       pin_hash: teacherPin,
     });
 
     // Create Class
     const classId = await classRepository.create({
-      name: 'Math 10-A',
-      grade: '10',
+      name: '3-Eco 4',
+      grade: '3-Eco',
       teacher_id: teacherId,
       schedule: JSON.stringify([
         {day: 'Monday', start_time: '08:00', end_time: '09:30'},

@@ -77,12 +77,22 @@ const ReportsScreen = () => {
         return;
       }
 
-      await CSVExportService.exportAttendanceExcel(
+      const filePath = await CSVExportService.exportAttendancePdf(
         reportData,
-        `Rapport_Presence_${className.replace(/\s/g, '_')}_${
+        `Rapport_Presence_${className.replace(/[^a-zA-Z0-9_-]/g, '_')}_${
           new Date().toISOString().split('T')[0]
         }`,
+        `Rapport de présence - ${cls?.name ?? className}`,
+        {
+          Professeur: teacher?.name ?? 'N/A',
+          Classe: cls?.name ?? className,
+          Niveau: cls?.grade ?? 'N/A',
+          'Sessions incluses': sessions.length,
+          'Étudiants': students.length,
+          'Généré le': generatedAt,
+        },
       );
+      Alert.alert('PDF téléchargé', `Rapport enregistré dans :\n${filePath}`);
     } catch (error) {
       Alert.alert(
         "Échec de l'exportation",
@@ -108,7 +118,7 @@ const ReportsScreen = () => {
         ]}>
         <Card.Content>
           <Text style={{color: theme.colors.onSurfaceVariant}}>
-            Générez et partagez des rapports de présence au format Excel.
+            Générez et partagez des rapports de présence au format PDF.
           </Text>
         </Card.Content>
       </Card>
@@ -131,7 +141,7 @@ const ReportsScreen = () => {
                 onPress={() => exportClassReport(cls.id, cls.name)}
                 loading={loading}
                 disabled={loading}>
-                Exporter
+                PDF
               </Button>
             )}
           />
