@@ -1,26 +1,26 @@
-import {useState, useCallback, useEffect, useMemo, useRef} from 'react';
-import {AppState} from 'react-native';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import { AppState } from 'react-native';
 import {
   type CameraPosition,
   useFrameProcessor,
 } from 'react-native-vision-camera';
-import {useFaceDetector} from 'react-native-vision-camera-face-detector';
-import {Worklets, useSharedValue} from 'react-native-worklets-core';
+import { useFaceDetector } from 'react-native-vision-camera-face-detector';
+import { Worklets, useSharedValue } from 'react-native-worklets-core';
 import {
   EnrolledEmbedding,
   MIN_RELAXED_MATCH_MARGIN,
   MATCH_THRESHOLD,
   RELAXED_MATCH_THRESHOLD,
 } from '../services/faceRecognition/FaceMatcher';
-import {embeddingStorage} from '../services/faceRecognition/EmbeddingStorage';
-import {studentRepository} from '../services/database/studentRepository';
+import { embeddingStorage } from '../services/faceRecognition/EmbeddingStorage';
+import { studentRepository } from '../services/database/studentRepository';
 import {
   estimateFaceQuality,
   useFaceEmbedder,
 } from '../services/faceRecognition/FaceEmbedder';
-import {extractFaceEmbeddingsFromPhoto} from '../services/faceRecognition/photoEmbedding';
-import type {PhotoEmbeddingFallback} from '../services/faceRecognition/photoEmbedding';
-import {cosineSimilarity} from '../utils/cosineSimilarity';
+import { extractFaceEmbeddingsFromPhoto } from '../services/faceRecognition/photoEmbedding';
+import type { PhotoEmbeddingFallback } from '../services/faceRecognition/photoEmbedding';
+import { cosineSimilarity } from '../utils/cosineSimilarity';
 
 const MIN_RECOGNITION_QUALITY = 0.2;
 const MAX_LIVE_BOUNDS_AGE_MS = 5000;
@@ -129,7 +129,7 @@ const matchEmbedding = (
   excludedStudentIds: Set<number> = new Set(),
 ) => {
   const scoresByStudent = new Map<number, number[]>();
-  const topCandidates: Array<{studentId: number; confidence: number}> = [];
+  const topCandidates: Array<{ studentId: number; confidence: number }> = [];
 
   for (const enrolled of enrolledEmbeddings) {
     if (excludedStudentIds.has(enrolled.studentId)) {
@@ -223,7 +223,7 @@ export const useFaceRecognition = (
     }),
     [cameraPosition],
   );
-  const {detectFaces, stopListeners} = useFaceDetector(faceDetectionOptions);
+  const { detectFaces, stopListeners } = useFaceDetector(faceDetectionOptions);
 
   useEffect(() => {
     const numericClassId = classId ? Number(classId) : null;
@@ -316,7 +316,7 @@ export const useFaceRecognition = (
   const isActive = useSharedValue(true);
   const frameCounter = useSharedValue(0);
   const bboxHistory = useSharedValue<
-    Record<string, {x: number; y: number; w: number; h: number}[]>
+    Record<string, { x: number; y: number; w: number; h: number }[]>
   >({});
 
   useEffect(() => {
@@ -326,27 +326,21 @@ export const useFaceRecognition = (
     return () => sub.remove();
   }, [isActive]);
 
-  const isCameraReady = useSharedValue(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      isCameraReady.value = true;
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, [isCameraReady]);
-
   const frameProcessor = useFrameProcessor(
     frame => {
       'worklet';
 
-      if (!isActive.value || !isCameraReady.value) {
+      frameCounter.value += 1;
+
+      if (!isActive.value) {
         return;
       }
 
-      frameCounter.value += 1;
       if (frameCounter.value % 5 !== 0) {
         return;
       }
+
+      console.log('[FaceRecognition] Processing frame:', frameCounter.value);
 
       // Tout le traitement est synchrone — pas de runAsync
       try {
@@ -396,7 +390,7 @@ export const useFaceRecognition = (
             confidence: 0,
             quality,
             trackingId: face.trackingId,
-            bounds: {x: avgX, y: avgY, width: avgW, height: avgH},
+            bounds: { x: avgX, y: avgY, width: avgW, height: avgH },
             frameWidth: frame.width,
             frameHeight: frame.height,
           });
@@ -412,8 +406,8 @@ export const useFaceRecognition = (
         bboxHistory.value = history;
 
         updateResultsOnJS(results);
-      } catch {
-        // Ne jamais laisser une exception crasher le thread worklet
+      } catch (e: any) {
+        console.log('[FaceRecognition] Worklet crash:', e.message || e);
       }
     },
     [detectFaces, updateResultsOnJS, isActive, frameCounter, bboxHistory, isCameraReady],
@@ -441,19 +435,19 @@ export const useFaceRecognition = (
       const fallbackFaces: PhotoEmbeddingFallback[] =
         liveBoundsAreFresh && lastLiveFacesRef.current.length > 0
           ? lastLiveFacesRef.current.map(face => ({
-              bounds: face.bounds,
-              frameWidth: face.frameWidth,
-              frameHeight: face.frameHeight,
-            }))
+            bounds: face.bounds,
+            frameWidth: face.frameWidth,
+            frameHeight: face.frameHeight,
+          }))
           : liveBoundsAreFresh && lastLiveFaceRef.current
-          ? [
+            ? [
               {
                 bounds: lastLiveFaceRef.current.bounds,
                 frameWidth: lastLiveFaceRef.current.frameWidth,
                 frameHeight: lastLiveFaceRef.current.frameHeight,
               },
             ]
-          : [];
+            : [];
 
       console.log('[ScanRecognition] Live face fallbacks:', {
         count: fallbackFaces.length,
@@ -462,7 +456,7 @@ export const useFaceRecognition = (
         faces: fallbackFaces,
       });
 
-      const {embeddings} = await extractFaceEmbeddingsFromPhoto(
+      const { embeddings } = await extractFaceEmbeddingsFromPhoto(
         photoPath,
         embedder.model!,
         fallbackFaces,
@@ -481,11 +475,11 @@ export const useFaceRecognition = (
         const match =
           face.quality >= MIN_RECOGNITION_QUALITY
             ? matchEmbedding(
-                face.embedding,
-                enrolledEmbeddings,
-                studentNames,
-                usedStudentIds,
-              )
+              face.embedding,
+              enrolledEmbeddings,
+              studentNames,
+              usedStudentIds,
+            )
             : null;
         if (match?.studentId != null) {
           usedStudentIds.add(match.studentId);
