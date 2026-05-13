@@ -10,9 +10,12 @@ const ScanScreen = ({navigation, route}: any) => {
   const {classId} = route.params || {};
   const [hasPermission, setHasPermission] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
+  const [cameraPosition, setCameraPosition] = useState<'front' | 'back'>(
+    'front',
+  );
   const [previewSize, setPreviewSize] = useState({width: 1, height: 1});
   const camera = useRef<Camera>(null);
-  const device = useCameraDevice('front');
+  const device = useCameraDevice(cameraPosition);
   const {frameProcessor, detectedStudents, modelState, recognizePhoto} =
     useFaceRecognition(classId);
 
@@ -79,6 +82,18 @@ const ScanScreen = ({navigation, route}: any) => {
     }
   };
 
+  const toggleCamera = () => {
+    if (isScanning) {
+      return;
+    }
+
+    setCameraPosition(current => {
+      const next = current === 'front' ? 'back' : 'front';
+      console.log('[ScanScreen] Switching camera:', current, '->', next);
+      return next;
+    });
+  };
+
   return (
     <View
       style={styles.container}
@@ -102,7 +117,7 @@ const ScanScreen = ({navigation, route}: any) => {
           face.bounds,
           {width: face.frameWidth, height: face.frameHeight},
           previewSize,
-          true,
+          cameraPosition === 'front',
         );
         const isRecognized = face.studentId != null;
 
@@ -157,7 +172,8 @@ const ScanScreen = ({navigation, route}: any) => {
           mode="contained"
           containerColor="rgba(0,0,0,0.5)"
           iconColor="white"
-          onPress={() => {}} // Toggle camera device
+          disabled={isScanning}
+          onPress={toggleCamera}
         />
       </View>
 
@@ -166,7 +182,7 @@ const ScanScreen = ({navigation, route}: any) => {
           {modelState === 'loaded'
             ? isScanning
               ? 'Analyzing captured photo...'
-              : `${detectedStudents.length} live face(s). Tap to recognize.`
+              : `${detectedStudents.length} live face(s). ${cameraPosition} camera. Tap to recognize.`
             : modelState === 'error'
             ? 'Embedding model unavailable'
             : 'Loading face embedding model...'}

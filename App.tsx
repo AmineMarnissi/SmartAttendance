@@ -54,21 +54,21 @@ function App(): React.JSX.Element {
             <>
               <ActivityIndicator size="large" color={currentTheme.colors.primary} />
               <Text style={styles.startupTitle}>
-                Preparing RegistreIntelligent...
+                Préparation de RegistreIntelligent...
               </Text>
               <Text style={styles.startupText}>
-                Opening attendance mode without login.
+                Ouverture du mode présence sans connexion.
               </Text>
             </>
           ) : (
             <>
-              <Text style={styles.errorTitle}>Startup failed</Text>
+              <Text style={styles.errorTitle}>Échec du démarrage</Text>
               <Text style={styles.errorText}>{errorMessage}</Text>
               <Button
                 mode="contained"
                 onPress={setup}
                 style={styles.retryButton}>
-                Retry
+                Réessayer
               </Button>
             </>
           )}

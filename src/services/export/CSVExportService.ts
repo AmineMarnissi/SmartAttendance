@@ -1,14 +1,6 @@
 import RNFS from 'react-native-fs';
 import {Share} from 'react-native';
 
-const ATTENDANCE_EXPORT_COLUMNS = [
-  'date',
-  'student_id',
-  'status',
-  'arrival_time',
-  'method',
-];
-
 const escapeCsvValue = (value: unknown): string => {
   if (value == null) {
     return '';
@@ -19,10 +11,21 @@ const escapeCsvValue = (value: unknown): string => {
   return /[",\r\n]/.test(escaped) ? `"${escaped}"` : escaped;
 };
 
+const escapeHtmlValue = (value: unknown): string => {
+  if (value == null) {
+    return '';
+  }
+
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+};
+
 export const CSVExportService = {
   exportAttendance: async (data: any[], fileName: string): Promise<void> => {
-    const columns =
-      data.length > 0 ? Object.keys(data[0]) : ATTENDANCE_EXPORT_COLUMNS;
+    const columns = data.length > 0 ? Object.keys(data[0]) : [];
     const headers = columns.join(',');
     const rows = data
       .map(obj => columns.map(column => escapeCsvValue(obj[column])).join(','))
@@ -39,6 +42,53 @@ export const CSVExportService = {
       });
     } catch (error) {
       console.error('Failed to export CSV:', error);
+      throw error;
+    }
+  },
+
+  exportAttendanceExcel: async (
+    data: Record<string, unknown>[],
+    fileName: string,
+  ): Promise<void> => {
+    const columns = data.length > 0 ? Object.keys(data[0]) : [];
+    const headerCells = columns
+      .map(column => `<th>${escapeHtmlValue(column)}</th>`)
+      .join('');
+    const rows = data
+      .map(
+        row =>
+          `<tr>${columns
+            .map(column => `<td>${escapeHtmlValue(row[column])}</td>`)
+            .join('')}</tr>`,
+      )
+      .join('');
+    const html = `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <style>
+    table { border-collapse: collapse; font-family: Arial, sans-serif; }
+    th { background: #1f4e79; color: #fff; font-weight: bold; }
+    th, td { border: 1px solid #9e9e9e; padding: 6px 8px; }
+  </style>
+</head>
+<body>
+  <table>
+    <thead><tr>${headerCells}</tr></thead>
+    <tbody>${rows}</tbody>
+  </table>
+</body>
+</html>`;
+    const path = `${RNFS.DocumentDirectoryPath}/${fileName}.xls`;
+
+    try {
+      await RNFS.writeFile(path, html, 'utf8');
+      await Share.share({
+        url: `file://${path}`,
+        title: 'Export Attendance Excel',
+      });
+    } catch (error) {
+      console.error('Failed to export Excel:', error);
       throw error;
     }
   },

@@ -52,7 +52,7 @@ const AttendanceHistoryScreen = ({navigation}: any) => {
       <List.Item
         title={item.className}
         titleStyle={{color: theme.colors.onSurface}}
-        description={`Date: ${item.date} | Started: ${new Date(
+        description={`Date : ${item.date} | Début : ${new Date(
           item.start_time,
         ).toLocaleTimeString()}`}
         descriptionStyle={{color: theme.colors.onSurfaceVariant}}

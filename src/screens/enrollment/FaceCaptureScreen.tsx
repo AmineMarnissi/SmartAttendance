@@ -66,6 +66,7 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
   const device = useCameraDevice('front');
   const latestQuality = useRef(0);
   const latestFaceBounds = useRef<FaceBounds | null>(null);
+  const latestFrameSize = useRef<{width: number; height: number} | null>(null);
   const capturedPhotoRef = useRef<string | null>(null);
   const hasSavedRef = useRef(false);
   const capturedEmbeddings = useRef<
@@ -101,6 +102,10 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
     setLiveQuality(payload?.quality ?? 0);
     latestQuality.current = payload?.quality ?? 0;
     latestFaceBounds.current = payload?.bounds ?? null;
+    latestFrameSize.current =
+      payload?.frameWidth > 0 && payload?.frameHeight > 0
+        ? {width: payload.frameWidth, height: payload.frameHeight}
+        : null;
   }, []);
 
   const updateLiveFaceOnJS = React.useMemo(
@@ -179,7 +184,13 @@ const FaceCaptureScreen = ({navigation, route}: any) => {
       const {base64, embeddings} = await extractFaceEmbeddingsFromPhoto(
         photoPath,
         embedder.model,
-        latestFaceBounds.current,
+        latestFaceBounds.current
+          ? {
+              bounds: latestFaceBounds.current,
+              frameWidth: latestFrameSize.current?.width,
+              frameHeight: latestFrameSize.current?.height,
+            }
+          : null,
       );
       if (embeddings[0] == null) {
         throw new Error('No valid face embedding was extracted.');

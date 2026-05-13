@@ -99,42 +99,171 @@ const AttendanceStack = () => (
   </TeacherStack.Navigator>
 );
 
-const MainTabs = () => (
-  <TeacherTab.Navigator
-    screenOptions={({route}) => ({
-      tabBarIcon: ({color, size}) => (
-        <MaterialCommunityIcons
-          name={tabIcons[route.name]}
-          color={color}
-          size={size}
-        />
-      ),
-    })}>
-    <TeacherTab.Screen
-      name="TeacherHome"
-      component={AttendanceStack}
-      options={({route}) => {
-        const routeName = getFocusedRouteNameFromRoute(route) ?? 'Home';
-        return {
+import { View } from 'react-native';
+
+const MainTabs = () => {
+  const isDarkMode = useThemeStore((state) => state.isDarkMode);
+  const currentTheme = isDarkMode ? darkTheme : lightTheme;
+
+  const getTabBarStyle = (route: any, defaultRoute: string, hiddenRoutes: string[] = []) => {
+    const routeName = getFocusedRouteNameFromRoute(route) ?? defaultRoute;
+    const baseStyle = {
+      position: 'absolute' as const,
+      bottom: 20,
+      left: 20,
+      right: 20,
+      elevation: 5,
+      backgroundColor: currentTheme.colors.surface,
+      borderRadius: 35,
+      height: 60,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 10 },
+      shadowOpacity: 0.25,
+      shadowRadius: 10,
+      borderTopWidth: 0,
+      paddingBottom: 0,
+    };
+    
+    if (hiddenRoutes.includes(routeName)) {
+      return { ...baseStyle, display: 'none' as const };
+    }
+    return baseStyle;
+  };
+
+  return (
+    <TeacherTab.Navigator
+      screenOptions={{
+        tabBarShowLabel: false,
+        tabBarActiveTintColor: '#FFFFFF',
+        tabBarInactiveTintColor: isDarkMode ? '#666666' : '#A0A0A0',
+        tabBarStyle: {
+          position: 'absolute',
+          bottom: 20,
+          left: 20,
+          right: 20,
+          elevation: 5,
+          backgroundColor: currentTheme.colors.surface,
+          borderRadius: 35,
+          height: 60,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 10 },
+          shadowOpacity: 0.25,
+          shadowRadius: 10,
+          borderTopWidth: 0,
+          paddingBottom: 0,
+        },
+      }}>
+      <TeacherTab.Screen
+        name="TeacherHome"
+        component={AttendanceStack}
+        options={({route}) => ({
           title: 'Présence',
           headerShown: false,
-          tabBarStyle: routeName === 'Home' ? {display: 'none'} : undefined,
-        };
-      }}
-    />
-    <TeacherTab.Screen
-      name="Classes"
-      component={AdminNavigator}
-      options={{title: 'Étudiants', headerShown: false}}
-    />
-    <TeacherTab.Screen
-      name="History"
-      component={HistoryNavigator}
-      options={{title: 'Historique', headerShown: false}}
-    />
-    <TeacherTab.Screen name="Settings" component={SettingsScreen} options={{title: 'Paramètres'}} />
-  </TeacherTab.Navigator>
-);
+          tabBarStyle: getTabBarStyle(route, 'Home', [
+            'Home',
+            'Scan',
+            'ScanReview',
+          ]),
+          tabBarIcon: ({focused, color}) => (
+            <View
+              style={{
+                backgroundColor: focused ? currentTheme.colors.primary : 'transparent',
+                borderRadius: 22,
+                width: 44,
+                height: 44,
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}>
+              <MaterialCommunityIcons
+                name={tabIcons.TeacherHome}
+                color={color}
+                size={24}
+              />
+            </View>
+          ),
+        })}
+      />
+      <TeacherTab.Screen
+        name="Classes"
+        component={AdminNavigator}
+        options={({route}) => ({
+          title: 'Étudiants',
+          headerShown: false,
+          tabBarStyle: getTabBarStyle(route, 'AdminDashboard', [
+            'StudentEnrollment',
+            'FaceCapture',
+          ]),
+          tabBarIcon: ({focused, color}) => (
+            <View
+              style={{
+                backgroundColor: focused ? currentTheme.colors.primary : 'transparent',
+                borderRadius: 22,
+                width: 44,
+                height: 44,
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}>
+              <MaterialCommunityIcons
+                name={tabIcons.Classes}
+                color={color}
+                size={24}
+              />
+            </View>
+          ),
+        })}
+      />
+      <TeacherTab.Screen
+        name="History"
+        component={HistoryNavigator}
+        options={{
+          title: 'Historique',
+          headerShown: false,
+          tabBarIcon: ({focused, color}) => (
+            <View
+              style={{
+                backgroundColor: focused ? currentTheme.colors.primary : 'transparent',
+                borderRadius: 22,
+                width: 44,
+                height: 44,
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}>
+              <MaterialCommunityIcons
+                name={tabIcons.History}
+                color={color}
+                size={24}
+              />
+            </View>
+          ),
+        }}
+      />
+      <TeacherTab.Screen 
+        name="Settings" 
+        component={SettingsScreen} 
+        options={{
+          title: 'Paramètres',
+          tabBarIcon: ({focused, color}) => (
+            <View
+              style={{
+                backgroundColor: focused ? currentTheme.colors.primary : 'transparent',
+                borderRadius: 22,
+                width: 44,
+                height: 44,
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}>
+              <MaterialCommunityIcons
+                name={tabIcons.Settings}
+                color={color}
+                size={24}
+              />
+            </View>
+          ),
+        }} 
+      />
+    </TeacherTab.Navigator>
+  );
+};
 
 const AppNavigator = () => {
   const isDarkMode = useThemeStore((state) => state.isDarkMode);

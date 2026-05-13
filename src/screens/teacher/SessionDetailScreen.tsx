@@ -43,7 +43,7 @@ const SessionDetailScreen = ({route}: any) => {
   const renderRecord = ({item}: {item: any}) => (
     <List.Item
       title={`${item.student?.first_name} ${item.student?.last_name}`}
-      description={`Status: ${item.status.toUpperCase()} | Time: ${item.arrival_time ? new Date(item.arrival_time).toLocaleTimeString() : 'N/A'}`}
+      description={`Statut : ${item.status === 'present' ? 'PRÉSENT' : 'ABSENT'} | Heure : ${item.arrival_time ? new Date(item.arrival_time).toLocaleTimeString() : 'N/A'}`}
       left={() => (
         <View style={styles.avatarContainer}>
           <StudentThumbnail thumbnail={item.student?.thumbnail} size={40} />
@@ -54,7 +54,7 @@ const SessionDetailScreen = ({route}: any) => {
           styles.statusText,
           {color: item.status === 'present' ? '#4CAF50' : '#F44336'}
         ]}>
-          {item.status === 'present' ? 'PRESENT' : 'ABSENT'}
+          {item.status === 'present' ? 'PRÉSENT' : 'ABSENT'}
         </Text>
       )}
     />
@@ -77,7 +77,7 @@ const SessionDetailScreen = ({route}: any) => {
           renderItem={renderRecord}
           keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={styles.list}
-          ListEmptyComponent={<Text style={styles.empty}>No records found for this session.</Text>}
+          ListEmptyComponent={<Text style={styles.empty}>Aucun enregistrement trouvé pour cette session.</Text>}
         />
       )}
     </View>

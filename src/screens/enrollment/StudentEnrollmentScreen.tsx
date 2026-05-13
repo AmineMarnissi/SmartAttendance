@@ -34,19 +34,19 @@ const StudentEnrollmentScreen = ({navigation}: any) => {
 
   const handleNext = async () => {
     if (!firstName || !lastName || !studentCode) {
-      Alert.alert('Error', 'Please fill in all required fields');
+      Alert.alert('Erreur', 'Veuillez remplir tous les champs obligatoires');
       return;
     }
 
     if (!selectedClassId) {
-      Alert.alert('Error', 'Please select a class for this student');
+      Alert.alert('Erreur', 'Veuillez sélectionner une classe pour cet élève');
       return;
     }
 
     // Check if code exists
     const existing = await studentRepository.getByCode(studentCode);
     if (existing) {
-      Alert.alert('Error', 'Student code already exists');
+      Alert.alert('Erreur', 'Le code étudiant existe déjà');
       return;
     }
 
@@ -72,7 +72,7 @@ const StudentEnrollmentScreen = ({navigation}: any) => {
           {backgroundColor: theme.colors.elevation.level2},
         ]}>
         <Title style={[styles.title, {color: theme.colors.onSurface}]}>
-          New Student Enrollment
+          Inscription d'un nouvel élève
         </Title>
 
         <View style={styles.avatarContainer}>
@@ -80,19 +80,19 @@ const StudentEnrollmentScreen = ({navigation}: any) => {
         </View>
 
         <TextInput
-          label="First Name *"
+          label="Prénom *"
           value={firstName}
           onChangeText={setFirstName}
           style={styles.input}
         />
         <TextInput
-          label="Last Name *"
+          label="Nom *"
           value={lastName}
           onChangeText={setLastName}
           style={styles.input}
         />
         <TextInput
-          label="Student Code *"
+          label="Code étudiant *"
           value={studentCode}
           onChangeText={setStudentCode}
           style={styles.input}
@@ -100,12 +100,12 @@ const StudentEnrollmentScreen = ({navigation}: any) => {
 
         <View style={styles.classSelector}>
           <Text style={[styles.classLabel, {color: theme.colors.onSurface}]}>
-            Assign To Class *
+            Assigner à une classe *
           </Text>
           {classes.length === 0 ? (
             <Text
               style={[styles.classHint, {color: theme.colors.onSurfaceVariant}]}>
-              Create a class first before enrolling students.
+              Créez d'abord une classe avant d'inscrire des élèves.
             </Text>
           ) : (
             <RadioButton.Group
@@ -129,7 +129,7 @@ const StudentEnrollmentScreen = ({navigation}: any) => {
           onPress={handleNext}
           style={styles.button}
           disabled={classes.length === 0}>
-          Next: Capture Face
+          Suivant : Capturer le visage
         </Button>
       </Surface>
     </ScrollView>

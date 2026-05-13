@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   StatusBar,
   Alert,
+  Image,
 } from 'react-native';
 import {Surface} from 'react-native-paper';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -187,10 +188,10 @@ const HomeScreen = ({navigation}: any) => {
         {/* Logo Container with Glassmorphism */}
         <View style={styles.logoContainer}>
           <Surface style={styles.glassLogo} elevation={0}>
-            <MaterialCommunityIcons
-              name="face-recognition"
-              size={70}
-              color="#4facfe"
+            <Image 
+              source={require('../../../logo.png')} 
+              style={{width: 80, height: 80}} 
+              resizeMode="contain" 
             />
           </Surface>
         </View>
@@ -198,6 +199,7 @@ const HomeScreen = ({navigation}: any) => {
         {/* Brand Section */}
         <View style={styles.textContainer}>
           <Text style={styles.welcomeText}>Système de Présence</Text>
+
           <Text style={styles.brandText}>REGISTRE</Text>
           <Text style={[styles.brandText, {color: '#4facfe'}]}>INTELLIGENT</Text>
           <View style={styles.separator} />

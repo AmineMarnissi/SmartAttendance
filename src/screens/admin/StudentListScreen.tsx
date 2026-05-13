@@ -3,7 +3,7 @@ import {View, StyleSheet, FlatList, Text} from 'react-native';
 import {
   List,
   Searchbar,
-  FAB,
+  Button,
   ActivityIndicator,
   useTheme,
 } from 'react-native-paper';
@@ -72,12 +72,23 @@ const StudentListScreen = ({navigation}: any) => {
 
   return (
     <View style={[styles.container, {backgroundColor: theme.colors.background}]}>
-      <Searchbar
-        placeholder="Search students..."
-        onChangeText={onChangeSearch}
-        value={searchQuery}
-        style={styles.searchbar}
-      />
+      <View style={styles.topContainer}>
+        <Searchbar
+          placeholder="Rechercher des élèves..."
+          onChangeText={onChangeSearch}
+          value={searchQuery}
+          style={styles.searchbar}
+        />
+        <Button
+          mode="contained"
+          icon="plus"
+          onPress={() => navigation.navigate('StudentEnrollment')}
+          style={styles.addButton}
+          buttonColor={theme.colors.primary}
+        >
+          Nouvel Élève
+        </Button>
+      </View>
 
       {loading ? (
         <View style={styles.center}>
@@ -96,19 +107,12 @@ const StudentListScreen = ({navigation}: any) => {
                   styles.emptyText,
                   {color: theme.colors.onSurfaceVariant},
                 ]}>
-                No students found.
+                Aucun élève trouvé.
               </Text>
             </View>
           }
         />
       )}
-
-      <FAB
-        icon="plus"
-        style={[styles.fab, {backgroundColor: theme.colors.primary}]}
-        onPress={() => navigation.navigate('StudentEnrollment')}
-        label="Enroll New"
-      />
     </View>
   );
 };
@@ -117,12 +121,20 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  topContainer: {
+    paddingBottom: 10,
+    backgroundColor: 'transparent',
+  },
   searchbar: {
     margin: 10,
     elevation: 2,
   },
+  addButton: {
+    marginHorizontal: 10,
+    borderRadius: 8,
+  },
   listContent: {
-    paddingBottom: 80,
+    paddingBottom: 120, // Increased to avoid floating navbar hiding the last items
   },
   thumbnailContainer: {
     justifyContent: 'center',
@@ -137,12 +149,7 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
   },
-  fab: {
-    position: 'absolute',
-    margin: 16,
-    right: 0,
-    bottom: 0,
-  },
 });
 
 export default StudentListScreen;
+

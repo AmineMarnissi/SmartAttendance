@@ -12,29 +12,29 @@ const PinSetupScreen = ({navigation}: any) => {
 
   const handleCreateUser = async () => {
     if (!name.trim()) {
-      Alert.alert('Missing name', 'Enter the user name.');
+      Alert.alert('Nom manquant', "Entrez le nom de l'utilisateur.");
       return;
     }
 
     if (!/^\d{4,}$/.test(pin)) {
-      Alert.alert('Invalid PIN', 'PIN must contain at least 4 digits.');
+      Alert.alert('Code PIN invalide', 'Le code PIN doit contenir au moins 4 chiffres.');
       return;
     }
 
     if (pin !== confirmPin) {
-      Alert.alert('PIN mismatch', 'PIN and confirmation do not match.');
+      Alert.alert('Les codes PIN ne correspondent pas', 'Le code PIN et la confirmation ne correspondent pas.');
       return;
     }
 
     setSaving(true);
     try {
       await AuthService.setupPin(name, role, pin);
-      Alert.alert('User created', 'You can now select the user and log in.', [
+      Alert.alert('Utilisateur créé', 'Vous pouvez maintenant sélectionner l\'utilisateur et vous connecter.', [
         {text: 'OK', onPress: () => navigation.navigate('Login')},
       ]);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      Alert.alert('Could not create user', message);
+      Alert.alert('Impossible de créer l\'utilisateur', message);
     } finally {
       setSaving(false);
     }
@@ -43,30 +43,30 @@ const PinSetupScreen = ({navigation}: any) => {
   return (
     <View style={styles.container}>
       <Surface style={styles.surface}>
-        <Text style={styles.title}>Create User</Text>
+        <Text style={styles.title}>Créer un utilisateur</Text>
         <Text style={styles.subtitle}>
-          Create an admin or teacher account, then use it to manage students and
-          scan attendance.
+          Créez un compte administrateur ou enseignant, puis utilisez-le pour gérer les élèves et
+          scanner les présences.
         </Text>
 
         <TextInput
-          label="Full name"
+          label="Nom complet"
           value={name}
           onChangeText={setName}
           autoCapitalize="words"
           style={styles.input}
         />
 
-        <Text style={styles.label}>Role</Text>
+        <Text style={styles.label}>Rôle</Text>
         <RadioButton.Group
           value={role}
           onValueChange={value => setRole(value as AuthRole)}>
-          <RadioButton.Item label="Teacher" value="teacher" />
-          <RadioButton.Item label="Admin" value="admin" />
+          <RadioButton.Item label="Enseignant" value="teacher" />
+          <RadioButton.Item label="Administrateur" value="admin" />
         </RadioButton.Group>
 
         <TextInput
-          label="PIN"
+          label="Code PIN"
           value={pin}
           onChangeText={setPin}
           secureTextEntry
@@ -74,7 +74,7 @@ const PinSetupScreen = ({navigation}: any) => {
           style={styles.input}
         />
         <TextInput
-          label="Confirm PIN"
+          label="Confirmer le code PIN"
           value={confirmPin}
           onChangeText={setConfirmPin}
           secureTextEntry
@@ -88,10 +88,10 @@ const PinSetupScreen = ({navigation}: any) => {
           loading={saving}
           disabled={saving}
           style={styles.button}>
-          Create User
+          Créer un utilisateur
         </Button>
         <Button onPress={() => navigation.navigate('Login')} disabled={saving}>
-          Back to Login
+          Retour à la connexion
         </Button>
       </Surface>
     </View>

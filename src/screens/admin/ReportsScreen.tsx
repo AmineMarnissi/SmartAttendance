@@ -5,6 +5,8 @@ import {classRepository} from '../../services/database/classRepository';
 import {attendanceRepository} from '../../services/database/attendanceRepository';
 import {CSVExportService} from '../../services/export/CSVExportService';
 import {Class} from '../../types/models';
+import {studentRepository} from '../../services/database/studentRepository';
+import {userRepository} from '../../services/database/userRepository';
 
 const ReportsScreen = () => {
   const theme = useTheme();
@@ -23,34 +25,68 @@ const ReportsScreen = () => {
   const exportClassReport = async (classId: number, className: string) => {
     setLoading(true);
     try {
-      // Fetch all attendance records for this class
-      const sessions = await attendanceRepository.getSessionsByClass(classId);
-      let reportData: any[] = [];
+      const [cls, sessions, students] = await Promise.all([
+        classRepository.getById(classId),
+        attendanceRepository.getSessionsByClass(classId),
+        studentRepository.getForClass(classId),
+      ]);
+      const teacher = cls?.teacher_id
+        ? await userRepository.getById(cls.teacher_id)
+        : null;
+      const generatedAt = new Date().toLocaleString();
+      const reportData: Record<string, unknown>[] = [];
 
       for (const session of sessions) {
         const records = await attendanceRepository.getRecordsBySession(
           session.id,
         );
-        const recordsWithContext = records.map(r => ({
-          date: session.date,
-          student_id: r.student_id,
-          status: r.status,
-          arrival_time: r.arrival_time || 'N/A',
-          method: r.method,
-        }));
-        reportData = [...reportData, ...recordsWithContext];
+        const recordsByStudent = new Map(
+          records.map(record => [record.student_id, record]),
+        );
+
+        students.forEach(student => {
+          const record = recordsByStudent.get(student.id);
+          reportData.push({
+            Professeur: teacher?.name ?? 'N/A',
+            Classe: cls?.name ?? className,
+            Niveau: cls?.grade ?? 'N/A',
+            'Date session': session.date,
+            'Heure session': session.start_time
+              ? new Date(session.start_time).toLocaleTimeString()
+              : 'N/A',
+            'Genere le': generatedAt,
+            'Code etudiant': student.student_code,
+            'Nom etudiant': `${student.first_name} ${student.last_name}`,
+            'Etat presence': record?.status ?? 'absent',
+            'Heure arrivee': record?.arrival_time
+              ? new Date(record.arrival_time).toLocaleTimeString()
+              : 'N/A',
+            Methode: record?.method ?? 'manual',
+            Confiance: record?.confidence
+              ? `${Math.round(record.confidence * 100)}%`
+              : '0%',
+          });
+        });
       }
 
-      await CSVExportService.exportAttendance(
+      if (reportData.length === 0) {
+        Alert.alert(
+          'Aucune donnée',
+          'Aucune session de présence trouvée pour cette classe.',
+        );
+        return;
+      }
+
+      await CSVExportService.exportAttendanceExcel(
         reportData,
-        `Attendance_Report_${className.replace(/\s/g, '_')}_${
+        `Rapport_Presence_${className.replace(/\s/g, '_')}_${
           new Date().toISOString().split('T')[0]
         }`,
       );
     } catch (error) {
       Alert.alert(
-        'Export Failed',
-        'An error occurred while generating the report.',
+        "Échec de l'exportation",
+        'Une erreur est survenue lors de la génération du rapport.',
       );
       console.error(error);
     } finally {
@@ -60,9 +96,10 @@ const ReportsScreen = () => {
 
   return (
     <ScrollView
-      style={[styles.container, {backgroundColor: theme.colors.background}]}>
+      style={[styles.container, {backgroundColor: theme.colors.background}]}
+      contentContainerStyle={styles.contentContainer}>
       <Text style={[styles.title, {color: theme.colors.onSurface}]}>
-        Export Reports
+        Exporter des rapports
       </Text>
       <Card
         style={[
@@ -71,21 +108,21 @@ const ReportsScreen = () => {
         ]}>
         <Card.Content>
           <Text style={{color: theme.colors.onSurfaceVariant}}>
-            Generate and share attendance reports in CSV format.
+            Générez et partagez des rapports de présence au format Excel.
           </Text>
         </Card.Content>
       </Card>
 
       <List.Section>
         <Text style={[styles.sectionTitle, {color: theme.colors.onSurface}]}>
-          Select Class for Report
+          Sélectionnez une classe pour le rapport
         </Text>
         {classes.map(cls => (
           <List.Item
             key={cls.id}
             title={cls.name}
             titleStyle={{color: theme.colors.onSurface}}
-            description={`Grade: ${cls.grade || 'N/A'}`}
+            description={`Niveau : ${cls.grade || 'N/A'}`}
             descriptionStyle={{color: theme.colors.onSurfaceVariant}}
             left={props => <List.Icon {...props} icon="file-export" />}
             right={() => (
@@ -94,7 +131,7 @@ const ReportsScreen = () => {
                 onPress={() => exportClassReport(cls.id, cls.name)}
                 loading={loading}
                 disabled={loading}>
-                Export
+                Exporter
               </Button>
             )}
           />
@@ -107,6 +144,9 @@ const ReportsScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  contentContainer: {
+    paddingBottom: 120,
   },
   title: {
     padding: 20,

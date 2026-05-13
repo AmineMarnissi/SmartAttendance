@@ -137,6 +137,20 @@ const projectFallbackBounds = (
   return clampBounds(projected, imageWidth, imageHeight);
 };
 
+const createCenteredFallbackBounds = (
+  imageWidth: number,
+  imageHeight: number,
+): FaceBounds => {
+  const width = imageWidth * 0.5;
+  const height = imageHeight * 0.45;
+  return {
+    x: (imageWidth - width) / 2,
+    y: imageHeight * 0.23,
+    width,
+    height,
+  };
+};
+
 const createEmbeddingFromCrop = (
   model: TfliteModel,
   image: NonNullable<ReturnType<typeof Skia.Image.MakeImageFromEncoded>>,
@@ -202,7 +216,11 @@ const createEmbeddingFromCrop = (
 export const extractFaceEmbeddingsFromPhoto = async (
   photoPath: string,
   model: TfliteModel,
-  fallbackBounds?: FaceBounds | PhotoEmbeddingFallback | null,
+  fallbackBounds?:
+    | FaceBounds
+    | PhotoEmbeddingFallback
+    | Array<FaceBounds | PhotoEmbeddingFallback>
+    | null,
 ) => {
   console.log('[PhotoEmbedding] Reading captured photo:', photoPath);
   const {base64, image} = await decodePhoto(photoPath);
@@ -224,23 +242,39 @@ export const extractFaceEmbeddingsFromPhoto = async (
     `${image.width()}x${image.height()}`,
   );
 
-  const fallbackFaceBounds = fallbackBounds
-    ? projectFallbackBounds(fallbackBounds, image.width(), image.height())
-    : null;
+  const fallbackFaceBounds = (
+    Array.isArray(fallbackBounds)
+      ? fallbackBounds
+      : fallbackBounds
+      ? [fallbackBounds]
+      : []
+  )
+    .map(bounds => projectFallbackBounds(bounds, image.width(), image.height()))
+    .filter(isValidFaceBounds);
   const detectedBounds = faces
     .map(face => face.bounds)
     .filter(isValidFaceBounds)
     .sort((a, b) => b.width * b.height - a.width * a.height);
   const boundsList =
-    detectedBounds.length > 0
+    fallbackFaceBounds.length > detectedBounds.length
+      ? fallbackFaceBounds
+      : detectedBounds.length > 0
       ? detectedBounds
-      : fallbackFaceBounds
-      ? [fallbackFaceBounds]
-      : [];
+      : [createCenteredFallbackBounds(image.width(), image.height())];
 
-  if (detectedBounds.length === 0 && fallbackFaceBounds != null) {
+  if (fallbackFaceBounds.length > detectedBounds.length) {
     console.warn(
-      '[PhotoEmbedding] Static detector found no valid face bounds; using last live face fallback.',
+      '[PhotoEmbedding] Static detector found fewer valid face bounds than live; using live face fallbacks.',
+      {
+        staticFaces: detectedBounds.length,
+        liveFallbacks: fallbackFaceBounds.length,
+      },
+    );
+  }
+
+  if (detectedBounds.length === 0 && fallbackFaceBounds.length === 0) {
+    console.warn(
+      '[PhotoEmbedding] No static face and no live fallback; using centered guide fallback.',
     );
   }
 

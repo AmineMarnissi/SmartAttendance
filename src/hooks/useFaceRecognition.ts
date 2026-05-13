@@ -41,12 +41,17 @@ const matchEmbedding = (
   liveEmbedding: Float32Array,
   enrolledEmbeddings: EnrolledEmbedding[],
   studentNames: Record<number, string>,
+  excludedStudentIds: Set<number> = new Set(),
 ) => {
   let bestStudentId: number | null = null;
   let bestConfidence = 0;
   let secondConfidence = 0;
 
   for (const enrolled of enrolledEmbeddings) {
+    if (excludedStudentIds.has(enrolled.studentId)) {
+      continue;
+    }
+
     const similarity = cosineSimilarity(liveEmbedding, enrolled.embedding);
     if (similarity > bestConfidence) {
       secondConfidence = bestConfidence;
@@ -84,6 +89,7 @@ export const useFaceRecognition = (classId?: number) => {
   );
   const [studentNames, setStudentNames] = useState<Record<number, string>>({});
   const lastLiveFaceRef = useRef<DetectedStudent | null>(null);
+  const lastLiveFacesRef = useRef<DetectedStudent[]>([]);
   const frameCounter = useRef(0);
   const bboxHistory = useRef<Record<number | string, {x: number, y: number, w: number, h: number}[]>>({});
   const embedder = useFaceEmbedder();
@@ -157,6 +163,7 @@ export const useFaceRecognition = (classId?: number) => {
         )[0] ?? null;
 
     lastLiveFaceRef.current = bestLiveFace;
+    lastLiveFacesRef.current = matches;
     setDetectedStudents(matches);
   }, []);
 
@@ -179,49 +186,62 @@ export const useFaceRecognition = (classId?: number) => {
         'worklet';
 
         const faces = detectFaces(frame);
-        const results: DetectedStudent[] = faces.map(face => {
-          const quality = estimateFaceQuality(
-            face.bounds,
-            frame.width,
-            frame.height,
-            face.yawAngle,
-            face.pitchAngle,
-          );
+        const results: DetectedStudent[] = faces
+          .map(face => {
+            if (face.bounds == null) {
+              return null;
+            }
 
-          // 2. Lissage (Smoothing)
-          const faceId = face.trackingId ?? 'unknown';
-          if (!bboxHistory.current[faceId]) {
-            bboxHistory.current[faceId] = [];
-          }
-          const history = bboxHistory.current[faceId];
-          history.push({
-            x: face.bounds.x,
-            y: face.bounds.y,
-            w: face.bounds.width,
-            h: face.bounds.height,
-          });
-          if (history.length > 5) history.shift();
+            const bounds = face.bounds;
+            const quality = estimateFaceQuality(
+              bounds,
+              frame.width,
+              frame.height,
+              face.yawAngle,
+              face.pitchAngle,
+            );
 
-          const avgX = history.reduce((sum, b) => sum + b.x, 0) / history.length;
-          const avgY = history.reduce((sum, b) => sum + b.y, 0) / history.length;
-          const avgW = history.reduce((sum, b) => sum + b.w, 0) / history.length;
-          const avgH = history.reduce((sum, b) => sum + b.h, 0) / history.length;
+            // 2. Lissage (Smoothing)
+            const faceId = face.trackingId ?? 'unknown';
+            if (!bboxHistory.current[faceId]) {
+              bboxHistory.current[faceId] = [];
+            }
+            const history = bboxHistory.current[faceId];
+            history.push({
+              x: bounds.x,
+              y: bounds.y,
+              w: bounds.width,
+              h: bounds.height,
+            });
+            if (history.length > 5) {
+              history.shift();
+            }
 
-          return {
-            studentId: null,
-            confidence: 0,
-            quality,
-            trackingId: face.trackingId,
-            bounds: {
-              x: avgX,
-              y: avgY,
-              width: avgW,
-              height: avgH,
-            },
-            frameWidth: frame.width,
-            frameHeight: frame.height,
-          };
-        });
+            const avgX =
+              history.reduce((sum, b) => sum + b.x, 0) / history.length;
+            const avgY =
+              history.reduce((sum, b) => sum + b.y, 0) / history.length;
+            const avgW =
+              history.reduce((sum, b) => sum + b.w, 0) / history.length;
+            const avgH =
+              history.reduce((sum, b) => sum + b.h, 0) / history.length;
+
+            return {
+              studentId: null,
+              confidence: 0,
+              quality,
+              trackingId: face.trackingId,
+              bounds: {
+                x: avgX,
+                y: avgY,
+                width: avgW,
+                height: avgH,
+              },
+              frameWidth: frame.width,
+              frameHeight: frame.height,
+            };
+          })
+          .filter((result): result is DetectedStudent => result != null);
 
         updateResultsOnJS(results);
       });
@@ -246,29 +266,47 @@ export const useFaceRecognition = (classId?: number) => {
         throw new Error('No enrolled face embeddings found for this class.');
       }
 
-      const fallbackFace: PhotoEmbeddingFallback | null = lastLiveFaceRef.current
-        ? {
-            bounds: lastLiveFaceRef.current.bounds,
-            frameWidth: lastLiveFaceRef.current.frameWidth,
-            frameHeight: lastLiveFaceRef.current.frameHeight,
-          }
-        : null;
+      const fallbackFaces: PhotoEmbeddingFallback[] =
+        lastLiveFacesRef.current.length > 0
+          ? lastLiveFacesRef.current.map(face => ({
+              bounds: face.bounds,
+              frameWidth: face.frameWidth,
+              frameHeight: face.frameHeight,
+            }))
+          : lastLiveFaceRef.current
+          ? [
+              {
+                bounds: lastLiveFaceRef.current.bounds,
+                frameWidth: lastLiveFaceRef.current.frameWidth,
+                frameHeight: lastLiveFaceRef.current.frameHeight,
+              },
+            ]
+          : [];
 
-      console.log('[ScanRecognition] Last live face fallback:', fallbackFace);
+      console.log('[ScanRecognition] Live face fallbacks:', fallbackFaces);
 
       const {embeddings} = await extractFaceEmbeddingsFromPhoto(
         photoPath,
         embedder.model,
-        fallbackFace,
+        fallbackFaces,
       );
 
       console.log('[ScanRecognition] Faces extracted from photo:', embeddings.length);
 
+      const usedStudentIds = new Set<number>();
       const matches = embeddings.map((face, index) => {
         const match =
           face.quality >= MIN_RECOGNITION_QUALITY
-            ? matchEmbedding(face.embedding, enrolledEmbeddings, studentNames)
+            ? matchEmbedding(
+                face.embedding,
+                enrolledEmbeddings,
+                studentNames,
+                usedStudentIds,
+              )
             : null;
+        if (match?.studentId != null) {
+          usedStudentIds.add(match.studentId);
+        }
 
         console.log('[ScanRecognition] Face result:', {
           index,

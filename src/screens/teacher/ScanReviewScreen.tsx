@@ -94,7 +94,7 @@ const ScanReviewScreen = ({navigation, route}: any) => {
       </Title>
       <Divider />
 
-      <ScrollView>
+      <ScrollView contentContainerStyle={styles.listContent}>
         <List.Section>
           {students.map(student => (
             <List.Item
@@ -150,7 +150,10 @@ const styles = StyleSheet.create({
     position: 'absolute',
     margin: 16,
     right: 0,
-    bottom: 0,
+    bottom: 24,
+  },
+  listContent: {
+    paddingBottom: 112,
   },
 });
 

@@ -25,7 +25,7 @@ const LoginScreen = ({navigation}: any) => {
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      Alert.alert('Could not load users', message);
+      Alert.alert('Impossible de charger les utilisateurs', message);
     } finally {
       setLoadingUsers(false);
     }
@@ -39,7 +39,7 @@ const LoginScreen = ({navigation}: any) => {
 
   const handleLogin = async () => {
     if (!selectedUser || !pin) {
-      Alert.alert('Error', 'Please select a user and enter PIN');
+      Alert.alert('Erreur', 'Veuillez sélectionner un utilisateur et entrer le code PIN');
       return;
     }
 
@@ -47,11 +47,11 @@ const LoginScreen = ({navigation}: any) => {
     try {
       const success = await AuthService.login(selectedUser.name, pin);
       if (!success) {
-        Alert.alert('Error', 'Invalid PIN');
+        Alert.alert('Erreur', 'Code PIN invalide');
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      Alert.alert('Login failed', message);
+      Alert.alert('Échec de la connexion', message);
     } finally {
       setLoading(false);
     }
@@ -69,13 +69,13 @@ const LoginScreen = ({navigation}: any) => {
 
         {!selectedUser ? (
           <List.Section>
-            <Text style={styles.sectionTitle}>Select User</Text>
+            <Text style={styles.sectionTitle}>Sélectionner l'utilisateur</Text>
 
             {loadingUsers ? (
-              <Text style={styles.emptyText}>Loading users…</Text>
+              <Text style={styles.emptyText}>Chargement des utilisateurs…</Text>
             ) : users.length === 0 ? (
               <Text style={styles.emptyText}>
-                No users found. Create an admin or teacher account to start.
+                Aucun utilisateur trouvé. Créez un compte administrateur ou enseignant pour commencer.
               </Text>
             ) : (
               users.map(user => (
@@ -93,10 +93,10 @@ const LoginScreen = ({navigation}: any) => {
               mode={users.length === 0 ? 'contained' : 'outlined'}
               onPress={() => navigation.navigate('PinSetup')}
               style={styles.button}>
-              Create User
+              Créer un utilisateur
             </Button>
             <Button onPress={loadUsers} disabled={loadingUsers}>
-              Refresh Users
+              Actualiser les utilisateurs
             </Button>
           </List.Section>
         ) : (
@@ -109,7 +109,7 @@ const LoginScreen = ({navigation}: any) => {
               onPress={clearSelectedUser}
             />
             <TextInput
-              label="Enter PIN"
+              label="Entrer le code PIN"
               value={pin}
               onChangeText={setPin}
               secureTextEntry
@@ -122,10 +122,10 @@ const LoginScreen = ({navigation}: any) => {
               loading={loading}
               disabled={loading}
               style={styles.button}>
-              Login
+              Connexion
             </Button>
             <Button onPress={clearSelectedUser} disabled={loading}>
-              Choose Different User
+              Choisir un autre utilisateur
             </Button>
           </View>
         )}
