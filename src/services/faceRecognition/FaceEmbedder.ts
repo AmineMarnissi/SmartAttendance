@@ -1,4 +1,5 @@
-import {useEffect, useMemo, useState} from 'react';
+import {useEffect} from 'react';
+import {create} from 'zustand';
 import {loadTensorflowModel, type TfliteModel} from 'react-native-fast-tflite';
 import {NitroModules} from 'react-native-nitro-modules';
 import {resolveFaceEmbeddingModelSource} from './faceEmbeddingModelSource';
@@ -7,21 +8,6 @@ export const FACE_EMBEDDING_MODEL = require('../../assets/models/mobilefacenet.t
 export const FACE_EMBEDDING_INPUT_SIZE = 112;
 export const FACE_EMBEDDING_CAPTURE_TARGETS = 3;
 
-type FaceEmbedderPlugin =
-  | {
-      model: TfliteModel;
-      state: 'loaded';
-    }
-  | {
-      model: undefined;
-      state: 'loading';
-    }
-  | {
-      model: undefined;
-      error: Error;
-      errorMessage?: string;
-      state: 'error';
-    };
 
 type FaceBounds = {
   x: number;
@@ -35,56 +21,57 @@ const FACE_CROP_HEIGHT_SCALE = 0.92;
 const FACE_CROP_PADDING_SCALE = 1.08;
 const FACE_CROP_CENTER_Y = 0.46;
 
-export const useFaceEmbedder = () => {
-  const [plugin, setPlugin] = useState<FaceEmbedderPlugin>({
-    model: undefined,
-    state: 'loading',
-  });
+type FaceEmbedderStore = {
+  state: 'idle' | 'loading' | 'loaded' | 'error';
+  model: TfliteModel | undefined;
+  boxedModel: ReturnType<typeof NitroModules.box> | undefined;
+  errorMessage: string | null;
+  load: () => Promise<void>;
+};
 
-  useEffect(() => {
-    let isMounted = true;
+// Singleton Zustand store — le modèle n'est chargé qu'une seule fois
 
-    const loadModel = async () => {
-      try {
-        setPlugin({model: undefined, state: 'loading'});
-        const modelSource = await resolveFaceEmbeddingModelSource({
-          bundledModel: FACE_EMBEDDING_MODEL,
-        });
-        const model = await loadTensorflowModel(modelSource, []);
-
-        if (isMounted) {
-          setPlugin({model, state: 'loaded'});
-        }
-      } catch (error) {
-        const loadError =
-          error instanceof Error ? error : new Error(String(error));
-        console.error('Failed to load face embedding model:', loadError);
-
-        if (isMounted) {
-          setPlugin({model: undefined, state: 'error', error: loadError, errorMessage: loadError.message});
-        }
-      }
-    };
-
-    loadModel();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  const model = plugin.state === 'loaded' ? plugin.model : undefined;
-  const boxedModel = useMemo(() => {
-    if (model == null) {
-      return undefined;
+const useFaceEmbedderStore = create<FaceEmbedderStore>((set, get) => ({
+  state: 'idle',
+  model: undefined,
+  boxedModel: undefined,
+  errorMessage: null,
+  load: async () => {
+    const {state} = get();
+    if (state === 'loading' || state === 'loaded') {
+      return; // Déjà chargé ou en cours — ne rien faire
     }
 
-    return NitroModules.box(model);
-  }, [model]);
+    set({state: 'loading', errorMessage: null});
+    try {
+      const modelSource = await resolveFaceEmbeddingModelSource({
+        bundledModel: FACE_EMBEDDING_MODEL,
+      });
+      const model = await loadTensorflowModel(modelSource, []);
+      const boxedModel = NitroModules.box(model);
+      set({state: 'loaded', model, boxedModel, errorMessage: null});
+      console.log('[FaceEmbedder] Model loaded (singleton)');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error('[FaceEmbedder] Failed to load model:', message);
+      set({state: 'error', model: undefined, boxedModel: undefined, errorMessage: message});
+    }
+  },
+}));
+
+export const useFaceEmbedder = () => {
+  const store = useFaceEmbedderStore();
+
+  useEffect(() => {
+    store.load();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return {
-    ...plugin,
-    boxedModel,
+    state: store.state,
+    model: store.model,
+    boxedModel: store.boxedModel,
+    errorMessage: store.errorMessage,
   };
 };
 
