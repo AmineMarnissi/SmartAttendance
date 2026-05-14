@@ -344,7 +344,7 @@ export const useFaceRecognition = (
 
       // Tout le traitement est synchrone — pas de runAsync
       try {
-        const faces = detectFaces(frame);
+        const faces = detectFaces(frame) ?? [];
         const results: DetectedStudent[] = [];
         const history = bboxHistory.value;
         const activeIds = new Set<string>();
@@ -410,7 +410,7 @@ export const useFaceRecognition = (
         console.log('[FaceRecognition] Worklet crash:', e.message || e);
       }
     },
-    [detectFaces, updateResultsOnJS, isActive, frameCounter, bboxHistory, isCameraReady],
+    [detectFaces, updateResultsOnJS, isActive, frameCounter, bboxHistory],
   );
 
   const recognizePhoto = useCallback(

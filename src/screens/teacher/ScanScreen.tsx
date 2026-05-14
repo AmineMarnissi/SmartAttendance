@@ -279,13 +279,11 @@ const ScanScreen = ({navigation, route}: any) => {
         <Text style={styles.statusText}>
           {modelState === 'loaded'
             ? isScanning
-              ? 'Analyse en cours, veuillez patienter...'
-              : detectedStudents.length > 0
-              ? `${detectedStudents.length} visage(s) détecté(s) - Prêt à scanner`
-              : 'Recherche de visages en cours...'
+              ? 'Analyzing captured photo...'
+              : `${detectedStudents.length} live face(s). ${cameraPosition} camera. Tap to recognize.`
             : modelState === 'error'
-            ? `Erreur: Impossible de charger le modèle`
-            : 'Chargement du modèle de reconnaissance...'}
+            ? `Model error: Failed to load`
+            : 'Loading face embedding model...'}
         </Text>
       </View>
     </View>
